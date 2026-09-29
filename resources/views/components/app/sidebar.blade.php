@@ -129,6 +129,20 @@
                 </a>
             @endcan
 
+            @can('letter-types.view')
+                <a
+                    href="{{ route('letter-types.index') }}"
+                    wire:navigate
+                    @class([
+                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
+                        'bg-white text-blue-950' => request()->routeIs('letter-types.*'),
+                        'text-blue-100 hover:bg-white/10 hover:text-white' => ! request()->routeIs('letter-types.*'),
+                    ])
+                >
+                    Jenis Surat
+                </a>
+            @endcan
+
             <p class="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wider text-blue-300">
                 Administrasi
             </p>

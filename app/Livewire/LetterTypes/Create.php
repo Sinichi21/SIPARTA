@@ -1,11 +1,14 @@
 <?php
 
+namespace App\Livewire\LetterTypes;
+
 use App\Models\LetterType;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
-new class extends Component {
+class Create extends Component
+{
     public string $code = '';
     public string $name = '';
     public string $description = '';
@@ -77,4 +80,8 @@ new class extends Component {
             navigate: true
         );
     }
-};
+    public function render()
+    {
+        return view('livewire.letter-types.create');
+    }
+}

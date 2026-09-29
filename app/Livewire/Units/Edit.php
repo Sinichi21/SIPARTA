@@ -13,9 +13,7 @@ class Edit extends Component
     public Unit $unit;
 
     public string $code = '';
-
     public string $name = '';
-
     public string $description = '';
 
     public function mount(Unit $unit): void
@@ -26,22 +24,20 @@ class Edit extends Component
 
         $this->code = $unit->code ?? '';
         $this->name = $unit->name;
-        $this->description =
-            $unit->description ?? '';
+        $this->description = $unit->description ?? '';
     }
 
-    protected function rules(): array
+    public function save(AuditService $audit)
     {
-        return [
+        Gate::authorize('units.manage');
+
+        $data = $this->validate([
             'code' => [
                 'nullable',
                 'string',
                 'max:50',
-
-                Rule::unique(
-                    'units',
-                    'code'
-                )->ignore($this->unit->id),
+                Rule::unique('units', 'code')
+                    ->ignore($this->unit->id),
             ],
 
             'name' => [
@@ -55,17 +51,9 @@ class Edit extends Component
                 'string',
                 'max:2000',
             ],
-        ];
-    }
+        ]);
 
-    public function save(AuditService $audit)
-    {
-        Gate::authorize('units.manage');
-
-        $data = $this->validate();
-
-        $oldValues =
-            $this->unit->getOriginal();
+        $old = $this->unit->getOriginal();
 
         $data['code'] = filled($data['code'])
             ? strtoupper(trim($data['code']))
@@ -73,16 +61,15 @@ class Edit extends Component
 
         $data['name'] = trim($data['name']);
 
-        $data['description'] =
-            filled($data['description'])
-                ? trim($data['description'])
-                : null;
+        $data['description'] = filled($data['description'])
+            ? trim($data['description'])
+            : null;
 
         $this->unit->update($data);
 
         $audit->updated(
             $this->unit,
-            $oldValues
+            $old
         );
 
         session()->flash(
@@ -95,7 +82,6 @@ class Edit extends Component
             navigate: true
         );
     }
-
     public function render()
     {
         return view('livewire.units.edit');

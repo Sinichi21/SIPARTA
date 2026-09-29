@@ -34,10 +34,10 @@
         x-data="{ sidebarOpen: false }"
         class="min-h-screen"
     >
-        <x-layouts.app.sidebar />
+        <x-app.sidebar />
 
         <div class="lg:pl-72">
-            <x-layouts.app.header />
+            <x-app.header />
 
             <main class="p-4 sm:p-6 lg:p-8">
                 {{ $slot }}

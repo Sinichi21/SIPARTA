@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Livewire\Letters;
+
 use App\Enums\LetterStatus;
 use App\Models\ActivityType;
 use App\Models\Letter;
@@ -9,23 +11,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
-new class extends Component {
+class Edit extends Component
+{
     public Letter $letter;
 
     public string $number = '';
     public string $subject = '';
     public ?int $activity_type_id = null;
-
     public string $letter_date = '';
     public string $start_date = '';
     public string $end_date = '';
-
     public string $location = '';
     public string $basis = '';
     public string $description = '';
-
     public array $personnel_ids = [];
-
     public string $personnelSearch = '';
 
     public function mount(Letter $letter): void
@@ -44,15 +43,12 @@ new class extends Component {
         );
 
         $this->letter = $letter;
-
         $this->number = $letter->number ?? '';
         $this->subject = $letter->subject;
         $this->activity_type_id = $letter->activity_type_id;
-
         $this->letter_date = $letter->letter_date?->format('Y-m-d') ?? '';
         $this->start_date = $letter->start_date?->format('Y-m-d') ?? '';
         $this->end_date = $letter->end_date?->format('Y-m-d') ?? '';
-
         $this->location = $letter->location ?? '';
         $this->basis = $letter->basis ?? '';
         $this->description = $letter->description ?? '';
@@ -86,11 +82,7 @@ new class extends Component {
             'location' => ['required', 'string', 'max:500'],
             'basis' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
-            'personnel_ids' => [
-                'required',
-                'array',
-                'min:1',
-            ],
+            'personnel_ids' => ['required', 'array', 'min:1'],
             'personnel_ids.*' => [
                 'integer',
                 'distinct',
@@ -116,15 +108,15 @@ new class extends Component {
         );
     }
 
-    public function with(): array
+    public function render()
     {
-        return [
+        return view('livewire.letters.edit', [
             'activityTypes' => ActivityType::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-
             'personnels' => Personnel::query()
+                ->with('unit')
                 ->where('is_active', true)
                 ->when(
                     filled($this->personnelSearch),
@@ -137,6 +129,6 @@ new class extends Component {
                 ->orderBy('name')
                 ->limit(100)
                 ->get(),
-        ];
+        ]);
     }
-};
+}

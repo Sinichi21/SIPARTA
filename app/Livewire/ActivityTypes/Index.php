@@ -1,11 +1,14 @@
 <?php
 
+namespace App\Livewire\ActivityTypes;
+
 use App\Models\ActivityType;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+class Index extends Component
+{
     use WithPagination;
 
     public string $search = '';
@@ -39,9 +42,9 @@ new class extends Component {
         ]);
     }
 
-    public function with(): array
+    public function render()
     {
-        return [
+        return view('livewire.activity-types.index', [
             'activityTypes' => ActivityType::query()
                 ->when(
                     filled($this->search),
@@ -65,6 +68,6 @@ new class extends Component {
                 )
                 ->orderBy('name')
                 ->paginate(15),
-        ];
+        ]);
     }
-};
+}

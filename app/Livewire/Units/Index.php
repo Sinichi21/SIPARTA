@@ -3,7 +3,6 @@
 namespace App\Livewire\Units;
 
 use App\Models\Unit;
-use App\Services\AuditService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,7 +12,6 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
-
     public string $status = 'active';
 
     public function mount(): void
@@ -31,24 +29,15 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function deactivate(
-        int $id,
-        AuditService $audit
-    ): void {
+    public function deactivate(int $id): void
+    {
         Gate::authorize('units.manage');
 
         $unit = Unit::findOrFail($id);
 
-        $oldValues = $unit->getOriginal();
-
         $unit->update([
             'is_active' => false,
         ]);
-
-        $audit->updated(
-            $unit,
-            $oldValues
-        );
 
         session()->flash(
             'success',
@@ -56,24 +45,15 @@ class Index extends Component
         );
     }
 
-    public function activate(
-        int $id,
-        AuditService $audit
-    ): void {
+    public function activate(int $id): void
+    {
         Gate::authorize('units.manage');
 
         $unit = Unit::findOrFail($id);
 
-        $oldValues = $unit->getOriginal();
-
         $unit->update([
             'is_active' => true,
         ]);
-
-        $audit->updated(
-            $unit,
-            $oldValues
-        );
 
         session()->flash(
             'success',
@@ -83,46 +63,31 @@ class Index extends Component
 
     public function render()
     {
-        $units = Unit::query()
-            ->withCount('personnels')
-            ->when(
-                filled($this->search),
-                function ($query) {
-                    $search = trim($this->search);
+        return view('livewire.units.index', [
+            'units' => Unit::query()
+                ->withCount('personnels')
+                ->when(
+                    filled($this->search),
+                    function ($query) {
+                        $search = trim($this->search);
 
-                    $query->where(
-                        function ($query) use ($search) {
+                        $query->where(function ($query) use ($search) {
                             $query
-                                ->where(
-                                    'name',
-                                    'ilike',
-                                    "%{$search}%"
-                                )
-                                ->orWhere(
-                                    'code',
-                                    'ilike',
-                                    "%{$search}%"
-                                );
-                        }
-                    );
-                }
-            )
-            ->when(
-                $this->status === 'active',
-                fn ($query) =>
-                    $query->where('is_active', true)
-            )
-            ->when(
-                $this->status === 'inactive',
-                fn ($query) =>
-                    $query->where('is_active', false)
-            )
-            ->orderBy('name')
-            ->paginate(15);
-
-        return view(
-            'livewire.units.index',
-            compact('units')
-        );
+                                ->where('name', 'ilike', "%{$search}%")
+                                ->orWhere('code', 'ilike', "%{$search}%");
+                        });
+                    }
+                )
+                ->when(
+                    $this->status === 'active',
+                    fn ($query) => $query->where('is_active', true)
+                )
+                ->when(
+                    $this->status === 'inactive',
+                    fn ($query) => $query->where('is_active', false)
+                )
+                ->orderBy('name')
+                ->paginate(15),
+        ]);
     }
 }

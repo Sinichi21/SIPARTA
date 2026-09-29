@@ -27,7 +27,7 @@
         </div>
 
         <div class="flex flex-wrap gap-2">
-            @if ($letter->status === LetterStatus::Draft)
+            @if ($letter->status === \App\Enums\LetterStatus::Draft)
                 @can('letters.update')
                     <a
                         href="{{ route('letters.edit', $letter) }}"
@@ -128,7 +128,7 @@
     </section>
 
     @if (
-        $letter->status !== LetterStatus::Cancelled
+        $letter->status !== \App\Enums\LetterStatus::Cancelled
         && auth()->user()->can('letters.cancel')
     )
         <section class="rounded-xl border border-red-200 bg-red-50 p-6">

@@ -1,12 +1,15 @@
 <?php
 
+namespace App\Livewire\ActivityTypes;
+
 use App\Models\ActivityType;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
-new class extends Component {
+class Edit extends Component
+{
     public ActivityType $activityType;
 
     public string $code = '';
@@ -84,4 +87,8 @@ new class extends Component {
             navigate: true
         );
     }
-};
+    public function render()
+    {
+        return view('livewire.activity-types.edit');
+    }
+}

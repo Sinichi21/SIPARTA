@@ -10,9 +10,7 @@ use Livewire\Component;
 class Create extends Component
 {
     public string $code = '';
-
     public string $name = '';
-
     public string $description = '';
 
     public function mount(): void
@@ -51,10 +49,9 @@ class Create extends Component
 
         $data['name'] = trim($data['name']);
 
-        $data['description'] =
-            filled($data['description'])
-                ? trim($data['description'])
-                : null;
+        $data['description'] = filled($data['description'])
+            ? trim($data['description'])
+            : null;
 
         $data['is_active'] = true;
 
@@ -72,7 +69,6 @@ class Create extends Component
             navigate: true
         );
     }
-
     public function render()
     {
         return view('livewire.units.create');

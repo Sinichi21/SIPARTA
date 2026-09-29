@@ -1,15 +1,16 @@
 <?php
 
-use App\Enums\LetterStatus;
+namespace App\Livewire\Letters;
+
 use App\Models\Letter;
 use App\Services\LetterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
-new class extends Component {
+class Show extends Component
+{
     public Letter $letter;
-
     public string $cancellationReason = '';
 
     public function mount(Letter $letter): void
@@ -22,6 +23,7 @@ new class extends Component {
         );
 
         $this->letter = $letter->load([
+            'letterType',
             'activityType',
             'personnels.unit',
             'creator',
@@ -34,12 +36,16 @@ new class extends Component {
     {
         Gate::authorize('letters.publish');
 
-        $service->publish(
-            $this->letter,
-            Auth::id()
-        );
-
-        $this->letter->refresh();
+        $this->letter = $service
+            ->publish($this->letter, Auth::id())
+            ->load([
+                'letterType',
+                'activityType',
+                'personnels.unit',
+                'creator',
+                'updater',
+                'canceller',
+            ]);
 
         session()->flash(
             'success',
@@ -60,17 +66,31 @@ new class extends Component {
             ],
         ]);
 
-        $service->cancel(
-            $this->letter,
-            $this->cancellationReason,
-            Auth::id()
-        );
+        $this->letter = $service
+            ->cancel(
+                $this->letter,
+                $this->cancellationReason,
+                Auth::id()
+            )
+            ->load([
+                'letterType',
+                'activityType',
+                'personnels.unit',
+                'creator',
+                'updater',
+                'canceller',
+            ]);
 
-        $this->letter->refresh();
+        $this->cancellationReason = '';
 
         session()->flash(
             'success',
             'SPT berhasil dibatalkan.'
         );
     }
-};
+
+    public function render()
+    {
+        return view('livewire.letters.show');
+    }
+}

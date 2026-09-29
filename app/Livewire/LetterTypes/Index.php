@@ -1,11 +1,14 @@
 <?php
 
+namespace App\Livewire\LetterTypes;
+
 use App\Models\LetterType;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+class Index extends Component
+{
     use WithPagination;
 
     public string $search = '';
@@ -26,9 +29,9 @@ new class extends Component {
         ]);
     }
 
-    public function with(): array
+    public function render()
     {
-        return [
+        return view('livewire.letter-types.index', [
             'letterTypes' => LetterType::query()
                 ->when(
                     filled($this->search),
@@ -52,6 +55,6 @@ new class extends Component {
                 )
                 ->orderBy('name')
                 ->paginate(15),
-        ];
+        ]);
     }
-};
+}

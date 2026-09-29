@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Livewire\Letters;
+
 use App\Models\ActivityType;
 use App\Models\Personnel;
 use App\Services\LetterService;
@@ -7,7 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
-new class extends Component {
+class Create extends Component
+{
     public string $number = '';
     public string $subject = '';
     public ?int $activity_type_id = null;
@@ -17,9 +20,7 @@ new class extends Component {
     public string $location = '';
     public string $basis = '';
     public string $description = '';
-
     public array $personnel_ids = [];
-
     public string $personnelSearch = '';
 
     public function mount(): void
@@ -63,10 +64,7 @@ new class extends Component {
             ],
         ]);
 
-        $letter = $service->createSpt(
-            $data,
-            Auth::id()
-        );
+        $letter = $service->createSpt($data, Auth::id());
 
         session()->flash(
             'success',
@@ -80,28 +78,27 @@ new class extends Component {
         );
     }
 
-    public function with(): array
+    public function render()
     {
-        return [
+        return view('livewire.letters.create', [
             'activityTypes' => ActivityType::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-
             'personnels' => Personnel::query()
+                ->with('unit')
                 ->where('is_active', true)
                 ->when(
                     filled($this->personnelSearch),
-                    fn ($query) =>
-                        $query->where(
-                            'name',
-                            'ilike',
-                            '%' . trim($this->personnelSearch) . '%'
-                        )
+                    fn ($query) => $query->where(
+                        'name',
+                        'ilike',
+                        '%' . trim($this->personnelSearch) . '%'
+                    )
                 )
                 ->orderBy('name')
                 ->limit(100)
                 ->get(),
-        ];
+        ]);
     }
-};
+}

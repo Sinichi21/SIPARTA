@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Livewire\Letters;
+
 use App\Models\ActivityType;
 use App\Models\Letter;
 use App\Models\Personnel;
@@ -7,7 +9,8 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+class Index extends Component
+{
     use WithPagination;
 
     public string $search = '';
@@ -24,21 +27,19 @@ new class extends Component {
 
     public function updated($property): void
     {
-        if (
-            in_array($property, [
-                'search',
-                'status',
-                'year',
-                'month',
-                'activityType',
-                'personnel',
-            ])
-        ) {
+        if (in_array($property, [
+            'search',
+            'status',
+            'year',
+            'month',
+            'activityType',
+            'personnel',
+        ], true)) {
             $this->resetPage();
         }
     }
 
-    public function with(): array
+    public function render()
     {
         $letters = Letter::query()
             ->with([
@@ -65,10 +66,7 @@ new class extends Component {
             )
             ->when(
                 filled($this->status),
-                fn ($query) => $query->where(
-                    'status',
-                    $this->status
-                )
+                fn ($query) => $query->where('status', $this->status)
             )
             ->when(
                 filled($this->year),
@@ -95,29 +93,26 @@ new class extends Component {
                 filled($this->personnel),
                 fn ($query) => $query->whereHas(
                     'personnels',
-                    fn ($personnelQuery) =>
-                        $personnelQuery->where(
-                            'personnels.id',
-                            $this->personnel
-                        )
+                    fn ($personnelQuery) => $personnelQuery->where(
+                        'personnels.id',
+                        $this->personnel
+                    )
                 )
             )
             ->orderByDesc('letter_date')
             ->orderByDesc('id')
             ->paginate(15);
 
-        return [
+        return view('livewire.letters.index', [
             'letters' => $letters,
-
             'activityTypes' => ActivityType::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-
             'personnels' => Personnel::query()
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-        ];
+        ]);
     }
-};
+}
