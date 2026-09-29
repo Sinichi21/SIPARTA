@@ -7,7 +7,6 @@ use App\Models\Letter;
 use App\Models\Personnel;
 use App\Models\Unit;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
@@ -89,14 +88,13 @@ class Index extends Component
 
     private function baseQuery(): Builder
     {
-        return Letter::query()
-            ->whereHas('letterType', fn (Builder $query) => $query->where('code', 'SPT'));
+        return Letter::query()->spt();
     }
 
-    private function filteredQuery(): Builder
+    private function filteredQuery(bool $applyYear = true): Builder
     {
         return $this->baseQuery()
-            ->when($this->year !== '', fn (Builder $q) => $q->whereYear('letter_date', (int) $this->year))
+            ->when($applyYear && $this->year !== '', fn (Builder $q) => $q->whereYear('letter_date', (int) $this->year))
             ->when($this->status !== '', fn (Builder $q) => $q->where('status', $this->status))
             ->when($this->activityTypeId !== '', fn (Builder $q) => $q->where('activity_type_id', (int) $this->activityTypeId))
             ->when($this->personnelId !== '', fn (Builder $q) => $q->whereHas('personnels', fn (Builder $p) => $p->whereKey((int) $this->personnelId)))
@@ -127,7 +125,7 @@ class Index extends Component
             ->paginate(10);
 
         $totalSpt = (clone $query)->count();
-        $monthSpt = (clone $query)
+        $monthSpt = $this->filteredQuery(false)
             ->whereYear('letter_date', now()->year)
             ->whereMonth('letter_date', now()->month)
             ->count();
@@ -140,13 +138,12 @@ class Index extends Component
 
         $activityCount = (clone $query)->whereNotNull('activity_type_id')->distinct('activity_type_id')->count('activity_type_id');
 
-        $monthlyRaw = $this->baseQuery()
-            ->when($this->recordType !== 'all', fn (Builder $q) => $q->where('record_type', $this->recordType))
-            ->selectRaw('EXTRACT(MONTH FROM letter_date)::int as month, COUNT(*) as total')
-            ->whereYear('letter_date', (int) ($this->year ?: now()->year))
-            ->groupByRaw('EXTRACT(MONTH FROM letter_date)')
-            ->orderByRaw('EXTRACT(MONTH FROM letter_date)')
-            ->pluck('total', 'month');
+        $monthlyRaw = (clone $query)
+            ->whereNotNull('letter_date')
+            ->get(['letter_date'])
+            ->countBy(
+                fn (Letter $letter) => (int) $letter->letter_date->month
+            );
 
         $monthly = collect(range(1, 12))->map(fn ($month) => [
             'month' => $month,
@@ -156,18 +153,29 @@ class Index extends Component
 
         $maxMonthly = max(1, (int) $monthly->max('total'));
 
-        $activities = $this->baseQuery()
-            ->when($this->recordType !== 'all', fn (Builder $q) => $q->where('record_type', $this->recordType))
-            ->join('activity_types', 'letters.activity_type_id', '=', 'activity_types.id')
-            ->select('activity_types.name', DB::raw('COUNT(*) as total'))
-            ->whereYear('letters.letter_date', (int) ($this->year ?: now()->year))
-            ->groupBy('activity_types.id', 'activity_types.name')
-            ->orderByDesc('total')
-            ->limit(5)
-            ->get();
+        $activities = (clone $query)
+            ->whereNotNull('activity_type_id')
+            ->with('activityType:id,name')
+            ->get(['id', 'activity_type_id'])
+            ->groupBy(
+                fn (Letter $letter) =>
+                    $letter->activityType?->name
+                    ?? 'Belum dikategorikan'
+            )
+            ->map(
+                fn ($items, $name) => (object) [
+                    'name' => $name,
+                    'total' => $items->count(),
+                ]
+            )
+            ->sortByDesc('total')
+            ->take(5)
+            ->values();
 
         $selectedLetter = $this->selectedLetterId
-            ? Letter::query()->with(['activityType', 'personnels.unit', 'attachments', 'letterType'])->find($this->selectedLetterId)
+            ? $this->baseQuery()
+                ->with(['activityType', 'personnels.unit', 'attachments', 'letterType'])
+                ->find($this->selectedLetterId)
             : null;
 
         return view('livewire.spt-recap.index', [
@@ -182,7 +190,14 @@ class Index extends Component
             'activityTypes' => ActivityType::query()->where('is_active', true)->orderBy('name')->get(),
             'personnels' => Personnel::query()->where('is_active', true)->orderBy('name')->get(),
             'units' => Unit::query()->where('is_active', true)->orderBy('name')->get(),
-            'years' => $this->baseQuery()->whereNotNull('letter_date')->selectRaw('EXTRACT(YEAR FROM letter_date)::int as year')->distinct()->orderByDesc('year')->pluck('year'),
+            'years' => $this->baseQuery()
+                ->whereNotNull('letter_date')
+                ->orderByDesc('letter_date')
+                ->get(['letter_date'])
+                ->pluck('letter_date')
+                ->map(fn ($date) => (int) $date->format('Y'))
+                ->unique()
+                ->values(),
             'selectedLetter' => $selectedLetter,
         ]);
     }

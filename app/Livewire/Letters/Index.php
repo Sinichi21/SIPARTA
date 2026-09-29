@@ -16,6 +16,7 @@ class Index extends Component
     #[\Livewire\Attributes\Url]
     public string $search = '';
     public string $status = '';
+    public string $year = '';
     public string $month = '';
     public string $activityType = '';
     public string $personnel = '';
@@ -45,15 +46,12 @@ class Index extends Component
     public function render()
     {
         $letters = Letter::query()
+            ->spt()
             ->with([
                 'activityType',
                 'personnels',
                 'creator',
             ])
-            ->whereHas(
-                'letterType',
-                fn ($query) => $query->where('code', 'SPT')
-            )
             ->when(
                 filled($this->search),
                 function ($query) {
@@ -145,18 +143,14 @@ class Index extends Component
                 ->orderBy('name')
                 ->get(),
             'years' => Letter::query()
-                ->whereHas(
-                    'letterType',
-                    fn ($query) =>
-                        $query->where('code', 'SPT')
-                )
+                ->spt()
                 ->whereNotNull('letter_date')
-                ->selectRaw(
-                    'EXTRACT(YEAR FROM letter_date)::int as year'
-                )
-                ->distinct()
-                ->orderByDesc('year')
-                ->pluck('year'),
+                ->orderByDesc('letter_date')
+                ->get(['letter_date'])
+                ->pluck('letter_date')
+                ->map(fn ($date) => (int) $date->format('Y'))
+                ->unique()
+                ->values(),
         ]);
     }
 }
