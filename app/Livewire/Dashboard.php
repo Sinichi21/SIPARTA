@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\LetterStatus;
+use App\Models\AuditLog;
 use App\Models\Letter;
 use App\Models\Personnel;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +25,22 @@ class Dashboard extends Component
             );
 
         return view('livewire.dashboard', [
+            'scheduledLetters' => auth()->user()->can('letters.view')
+                ? (clone $sptQuery)->with('activityType')
+                    ->where('record_type', 'normal')
+                    ->where('status', LetterStatus::Published->value)
+                    ->where(function ($query) {
+                        $query->whereDate('end_date', '>=', today())
+                            ->orWhere(function ($query) {
+                                $query->whereNull('end_date')->whereDate('start_date', '>=', today());
+                            });
+                    })
+                    ->orderBy('start_date')->limit(3)->get()
+                : collect(),
+            'recentActivities' => auth()->user()->can('audit-logs.view')
+                ? AuditLog::with('user')->latest('created_at')->limit(4)->get()
+                : collect(),
+            'archivedSpt' => (clone $sptQuery)->where('status', LetterStatus::Archived->value)->count(),
             'totalSpt' => (clone $sptQuery)->count(),
 
             'monthlySpt' => (clone $sptQuery)
@@ -54,7 +71,7 @@ class Dashboard extends Component
                 )
                 ->latest('letter_date')
                 ->latest('id')
-                ->limit(8)
+                ->limit(5)
                 ->get(),
         ]);
     }

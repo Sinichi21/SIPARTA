@@ -8,6 +8,7 @@ use App\Models\Unit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,11 +17,18 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $year = '';
+
     public string $unitId = '';
+
     public string $status = '';
+
     public string $activityTypeId = '';
+
     public string $recordType = 'normal';
+
+    #[Locked]
     public ?int $selectedPersonnelId = null;
 
     public function mount(): void
@@ -46,12 +54,35 @@ class Index extends Component
 
     public function showDetail(int $personnelId): void
     {
+        Gate::authorize('reports.view');
         $this->selectedPersonnelId = $personnelId;
     }
 
     public function closeDetail(): void
     {
         $this->selectedPersonnelId = null;
+    }
+
+    public function exportHistory()
+    {
+        Gate::authorize('reports.view');
+        $personnel = Personnel::findOrFail($this->selectedPersonnelId);
+        $history = $personnel->letters()->with('activityType')
+            ->whereHas('letterType', fn (Builder $q) => $q->where('code', 'SPT'))
+            ->when($this->recordType !== 'all', fn (Builder $q) => $q->where('record_type', $this->recordType))
+            ->orderByDesc('letter_date')->get();
+
+        return response()->streamDownload(function () use ($history) {
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, ['Nomor SPT', 'Tanggal', 'Kegiatan', 'Lokasi', 'Status'], ';', '"', '');
+            foreach ($history as $letter) {
+                $row = [$letter->number, $letter->letter_date?->format('Y-m-d'), $letter->subject ?: $letter->activityType?->name, $letter->location, $letter->status->label()];
+                $row = array_map(fn ($value) => preg_match('/^[=+@\-\t\r\n]/', (string) $value) ? "'".$value : $value, $row);
+                fputcsv($output, $row, ';', '"', '');
+            }
+            fclose($output);
+        }, 'riwayat-spt-personil-'.$personnel->id.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function render()
@@ -136,6 +167,10 @@ class Index extends Component
             ? Personnel::query()->with('unit')->find($this->selectedPersonnelId)
             : null;
 
+        $selectedSptQuery = $selectedPersonnel?->letters()
+            ->whereHas('letterType', fn (Builder $q) => $q->where('code', 'SPT'))
+            ->when($this->recordType !== 'all', fn (Builder $q) => $q->where('record_type', $this->recordType));
+
         $selectedHistory = $selectedPersonnel
             ? $selectedPersonnel->letters()
                 ->with('activityType')
@@ -159,6 +194,8 @@ class Index extends Component
             'activityTypes' => ActivityType::query()->where('is_active', true)->orderBy('name')->get(),
             'selectedPersonnel' => $selectedPersonnel,
             'selectedHistory' => $selectedHistory,
+            'selectedTotalSpt' => $selectedSptQuery ? (clone $selectedSptQuery)->count() : 0,
+            'selectedYearSpt' => $selectedSptQuery ? (clone $selectedSptQuery)->whereYear('letter_date', now()->year)->count() : 0,
         ]);
     }
 }

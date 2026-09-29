@@ -9,6 +9,8 @@ use App\Models\Unit;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -17,13 +19,22 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $year = '';
+
     public string $status = '';
+
     public string $activityTypeId = '';
+
     public string $personnelId = '';
+
     public string $unitId = '';
+
     public string $location = '';
+
     public string $recordType = 'normal';
+
+    #[Locked]
     public ?int $selectedLetterId = null;
 
     public function mount(): void
@@ -50,12 +61,30 @@ class Index extends Component
     public function showDetail(int $letterId): void
     {
         Gate::authorize('letters.view');
+        $this->resetErrorBag();
+        $this->baseQuery()->findOrFail($letterId);
         $this->selectedLetterId = $letterId;
     }
 
     public function closeDetail(): void
     {
         $this->selectedLetterId = null;
+    }
+
+    public function downloadAttachment(int $attachmentId)
+    {
+        Gate::authorize('reports.view');
+        Gate::authorize('letters.view');
+        $letter = $this->baseQuery()->findOrFail($this->selectedLetterId);
+        $attachment = $letter->attachments()->findOrFail($attachmentId);
+
+        if (! Storage::exists($attachment->path)) {
+            $this->addError('download', 'Dokumen tidak ditemukan di penyimpanan.');
+
+            return null;
+        }
+
+        return Storage::download($attachment->path, $attachment->original_name);
     }
 
     private function baseQuery(): Builder

@@ -1,6 +1,3 @@
-<div>
-    {{-- He who is contented is rich. - Laozi --}}
-</div>
 <div class="mx-auto max-w-4xl space-y-6">
     <div>
         <h1 class="text-2xl font-bold">Edit Personil</h1>

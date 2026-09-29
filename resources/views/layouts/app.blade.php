@@ -27,19 +27,20 @@
 </head>
 
 <body
-    class="min-h-screen bg-slate-50 text-slate-900 antialiased
+    class="admin-app min-h-screen bg-slate-50 text-slate-900 antialiased
            dark:bg-slate-950 dark:text-slate-100"
 >
     <div
         x-data="{ sidebarOpen: false }"
         class="min-h-screen"
     >
+        <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" aria-hidden="true"></div>
         <x-app.sidebar />
 
-        <div class="lg:pl-72">
+        <div class="app-workspace">
             <x-app.header />
 
-            <main class="p-4 sm:p-6 lg:p-8">
+            <main id="main-content" class="app-content p-4 sm:p-6">
                 {{ $slot }}
             </main>
         </div>

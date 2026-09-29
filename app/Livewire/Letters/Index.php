@@ -13,6 +13,7 @@ class Index extends Component
 {
     use WithPagination;
 
+    #[\Livewire\Attributes\Url]
     public string $search = '';
     public string $status = '';
     public string $year = '';
