@@ -10,15 +10,27 @@
             </p>
         </div>
 
-        @can('personnels.create')
-            <a
-                href="{{ route('personnels.create') }}"
-                wire:navigate
-                class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
-            >
-                + Tambah Personil
-            </a>
-        @endcan
+        <div class="flex flex-wrap items-center gap-2">
+            @can('personnels.merge')
+                <a
+                    href="{{ route('personnel-duplicates.index') }}"
+                    wire:navigate
+                    class="inline-flex items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-100"
+                >
+                    Deteksi Duplikat
+                </a>
+            @endcan
+
+            @can('personnels.create')
+                <a
+                    href="{{ route('personnels.create') }}"
+                    wire:navigate
+                    class="inline-flex items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+                >
+                    + Tambah Personil
+                </a>
+            @endcan
+        </div>
     </div>
 
     @if (session('success'))

@@ -55,6 +55,16 @@
                     <textarea wire:model="basis" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
                 </div>
 
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Jenis Record *</label>
+                    <select wire:model="record_type" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        <option value="normal">SPT Normal</option>
+                        <option value="attendance_correction">Koreksi Absensi</option>
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500">Gunakan Koreksi Absensi hanya untuk administrasi lupa absen, bukan penugasan lapangan baru.</p>
+                    @error('record_type') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="md:col-span-2">
                     <label class="mb-1 block text-sm font-medium">Keterangan</label>
                     <textarea wire:model="description" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>

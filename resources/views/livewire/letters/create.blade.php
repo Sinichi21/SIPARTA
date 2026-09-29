@@ -65,6 +65,16 @@
                     <textarea wire:model="basis" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
                 </div>
 
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Jenis Record *</label>
+                    <select wire:model="record_type" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        <option value="normal">SPT Normal</option>
+                        <option value="attendance_correction">Koreksi Absensi</option>
+                    </select>
+                    <p class="mt-1 text-xs text-slate-500">Gunakan Koreksi Absensi hanya untuk administrasi lupa absen, bukan penugasan lapangan baru.</p>
+                    @error('record_type') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="md:col-span-2">
                     <label class="mb-1 block text-sm font-medium">Keterangan</label>
                     <textarea wire:model="description" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
@@ -73,15 +83,62 @@
         </section>
 
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-blue-900">
-                    Personil
-                </h2>
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-blue-900">
+                        Personil
+                    </h2>
+                    <p class="mt-1 text-xs text-slate-500">
+                        {{ count($personnel_ids) }} dari {{ $totalActivePersonnel }} personil aktif dipilih.
+                    </p>
+                </div>
 
-                <span class="text-sm text-slate-500">
-                    {{ count($personnel_ids) }} dipilih
-                </span>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        wire:click="selectAllPersonnel"
+                        wire:loading.attr="disabled"
+                        wire:target="selectAllPersonnel"
+                        class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
+                    >
+                        <span wire:loading.remove wire:target="selectAllPersonnel">
+                            Pilih Semua Personil Aktif
+                        </span>
+                        <span wire:loading wire:target="selectAllPersonnel">
+                            Memilih...
+                        </span>
+                    </button>
+
+                    @if (filled($personnelSearch))
+                        <button
+                            type="button"
+                            wire:click="selectVisiblePersonnel"
+                            wire:loading.attr="disabled"
+                            wire:target="selectVisiblePersonnel"
+                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                        >
+                            Pilih Hasil Pencarian
+                        </button>
+                    @endif
+
+                    @if (count($personnel_ids) > 0)
+                        <button
+                            type="button"
+                            wire:click="clearAllPersonnel"
+                            class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                        >
+                            Batalkan Semua
+                        </button>
+                    @endif
+                </div>
             </div>
+
+            @if ($totalActivePersonnel > 100 && blank($personnelSearch))
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                    Daftar di bawah menampilkan maksimal 100 personil agar halaman tetap ringan.
+                    Tombol <strong>Pilih Semua Personil Aktif</strong> tetap memilih seluruh {{ $totalActivePersonnel }} personil aktif.
+                </div>
+            @endif
 
             <input
                 type="search"
@@ -91,7 +148,7 @@
             >
 
             <div class="mt-4 max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
-                @foreach ($personnels as $personnel)
+                @forelse ($personnels as $personnel)
                     <label class="flex cursor-pointer items-center gap-3 p-3 hover:bg-blue-50">
                         <input
                             type="checkbox"
@@ -113,7 +170,11 @@
                             </span>
                         </span>
                     </label>
-                @endforeach
+                @empty
+                    <div class="p-6 text-center text-sm text-slate-500">
+                        Personil tidak ditemukan.
+                    </div>
+                @endforelse
             </div>
 
             @error('personnel_ids')

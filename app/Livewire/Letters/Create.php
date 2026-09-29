@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Letters;
 
+use App\Enums\LetterRecordType;
 use App\Models\ActivityType;
 use App\Models\Personnel;
 use App\Services\LetterService;
@@ -20,6 +21,7 @@ class Create extends Component
     public string $location = '';
     public string $basis = '';
     public string $description = '';
+    public string $record_type = 'normal';
     public array $personnel_ids = [];
     public string $personnelSearch = '';
 
@@ -32,6 +34,47 @@ class Create extends Component
         $this->letter_date = $today;
         $this->start_date = $today;
         $this->end_date = $today;
+    }
+
+    public function selectAllPersonnel(): void
+    {
+        Gate::authorize('letters.create');
+
+        $this->personnel_ids = Personnel::query()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->resetValidation('personnel_ids');
+    }
+
+    public function clearAllPersonnel(): void
+    {
+        Gate::authorize('letters.create');
+
+        $this->personnel_ids = [];
+
+        $this->resetValidation('personnel_ids');
+    }
+
+    public function selectVisiblePersonnel(): void
+    {
+        Gate::authorize('letters.create');
+
+        $visibleIds = $this->personnelQuery()
+            ->limit(100)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->personnel_ids = array_values(array_unique([
+            ...$this->personnel_ids,
+            ...$visibleIds,
+        ]));
+
+        $this->resetValidation('personnel_ids');
     }
 
     public function save(LetterService $service)
@@ -56,6 +99,7 @@ class Create extends Component
             'location' => ['required', 'string', 'max:500'],
             'basis' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
+            'record_type' => ['required', 'in:normal,attendance_correction'],
             'personnel_ids' => ['required', 'array', 'min:1'],
             'personnel_ids.*' => [
                 'integer',
@@ -78,6 +122,22 @@ class Create extends Component
         );
     }
 
+    private function personnelQuery()
+    {
+        return Personnel::query()
+            ->with('unit')
+            ->where('is_active', true)
+            ->when(
+                filled($this->personnelSearch),
+                fn ($query) => $query->where(
+                    'name',
+                    'ilike',
+                    '%' . trim($this->personnelSearch) . '%'
+                )
+            )
+            ->orderBy('name');
+    }
+
     public function render()
     {
         return view('livewire.letters.create', [
@@ -85,20 +145,14 @@ class Create extends Component
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-            'personnels' => Personnel::query()
-                ->with('unit')
-                ->where('is_active', true)
-                ->when(
-                    filled($this->personnelSearch),
-                    fn ($query) => $query->where(
-                        'name',
-                        'ilike',
-                        '%' . trim($this->personnelSearch) . '%'
-                    )
-                )
-                ->orderBy('name')
+
+            'personnels' => $this->personnelQuery()
                 ->limit(100)
                 ->get(),
+
+            'totalActivePersonnel' => Personnel::query()
+                ->where('is_active', true)
+                ->count(),
         ]);
     }
 }

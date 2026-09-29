@@ -1,40 +1,7 @@
-<header
-    class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur
-           dark:border-slate-800 dark:bg-slate-900/95"
->
-    <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-
-        <button
-            type="button"
-            @click="sidebarOpen = true"
-            class="rounded-lg border border-slate-200 p-2 lg:hidden"
-        >
-            <span class="sr-only">
-                Buka menu
-            </span>
-
-            <svg
-                class="size-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-            >
-                <path d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-        </button>
-
-        <div class="hidden lg:block">
-            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Sistem Informasi Persuratan
-            </p>
-        </div>
-
-        <div class="text-right">
-            <p class="text-sm font-medium">
-                {{ auth()->user()?->name }}
-            </p>
-        </div>
-
+<header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div class="flex h-16 items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <button type="button" @click="sidebarOpen = true" class="rounded-lg border border-slate-200 p-2 lg:hidden"><span class="sr-only">Buka menu</span><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="hidden max-w-xl flex-1 md:block"><div class="relative"><svg class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="text" placeholder="Cari nomor SPT, nama personil, kegiatan, atau lokasi..." class="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400"></div></div>
+        <div class="ml-auto flex items-center gap-4"><div class="hidden text-right sm:block"><p class="text-sm font-bold text-slate-800">{{ auth()->user()?->name }}</p><p class="text-xs text-slate-400">{{ auth()->user()?->getRoleNames()->first() ?: 'Pengguna' }}</p></div><div class="grid size-10 place-items-center rounded-full bg-blue-50 font-bold text-blue-700">{{ strtoupper(substr(auth()->user()?->name ?? 'U',0,1)) }}</div></div>
     </div>
 </header>

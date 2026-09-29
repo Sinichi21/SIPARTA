@@ -64,3 +64,15 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Sidebar tetap dapat di-scroll, tetapi scrollbar disembunyikan agar tampilan lebih rapi. */
+.sidebar-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}

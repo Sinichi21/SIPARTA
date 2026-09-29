@@ -52,6 +52,41 @@ class AuditService
         );
     }
 
+    public function merged(
+        Model $subject,
+        array $oldValues,
+        array $metadata = []
+    ): AuditLog {
+        $newValues = $this->safeAttributes(
+            $subject->getAttributes()
+        );
+
+        $newValues['_merge'] = $metadata;
+
+        return $this->write(
+            'MERGE',
+            $subject,
+            $this->safeAttributes($oldValues),
+            $newValues
+        );
+    }
+
+    public function removedImportedPersonnel(
+        Model $subject,
+        array $oldValues,
+        int $detachedLetters
+    ): AuditLog {
+        return $this->write(
+            'CLEANUP',
+            $subject,
+            $this->safeAttributes($oldValues),
+            [
+                'deleted_at' => now()->toISOString(),
+                'detached_letter_relations' => $detachedLetters,
+            ]
+        );
+    }
+
     private function changed(
         string $action,
         Model $subject,

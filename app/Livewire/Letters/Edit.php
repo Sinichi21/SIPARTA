@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Letters;
 
+use App\Enums\LetterRecordType;
 use App\Enums\LetterStatus;
 use App\Models\ActivityType;
 use App\Models\Letter;
@@ -24,6 +25,7 @@ class Edit extends Component
     public string $location = '';
     public string $basis = '';
     public string $description = '';
+    public string $record_type = 'normal';
     public array $personnel_ids = [];
     public string $personnelSearch = '';
 
@@ -52,6 +54,7 @@ class Edit extends Component
         $this->location = $letter->location ?? '';
         $this->basis = $letter->basis ?? '';
         $this->description = $letter->description ?? '';
+        $this->record_type = $letter->record_type?->value ?? LetterRecordType::Normal->value;
 
         $this->personnel_ids = $letter
             ->personnels()
@@ -82,6 +85,7 @@ class Edit extends Component
             'location' => ['required', 'string', 'max:500'],
             'basis' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
+            'record_type' => ['required', 'in:normal,attendance_correction'],
             'personnel_ids' => ['required', 'array', 'min:1'],
             'personnel_ids.*' => [
                 'integer',

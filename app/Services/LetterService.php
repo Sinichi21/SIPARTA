@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\LetterRecordType;
 use App\Enums\LetterStatus;
 use App\Models\Letter;
 use App\Models\LetterType;
@@ -72,6 +73,7 @@ class LetterService
                     : null,
 
                 'status' => LetterStatus::Draft,
+                'record_type' => LetterRecordType::from($data['record_type'] ?? LetterRecordType::Normal->value),
                 'created_by' => $userId,
             ]);
 
@@ -152,6 +154,7 @@ class LetterService
                     ? trim($data['description'])
                     : null,
 
+                'record_type' => LetterRecordType::from($data['record_type'] ?? LetterRecordType::Normal->value),
                 'updated_by' => $userId,
             ]);
 

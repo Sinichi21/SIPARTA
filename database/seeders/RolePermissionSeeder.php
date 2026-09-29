@@ -28,11 +28,13 @@ class RolePermissionSeeder extends Seeder
             'letters.cancel',
             'letters.archive',
             'letters.export',
+            'letters.import',
 
             'personnels.view',
             'personnels.create',
             'personnels.update',
             'personnels.deactivate',
+            'personnels.merge',
 
             'units.view',
             'units.manage',

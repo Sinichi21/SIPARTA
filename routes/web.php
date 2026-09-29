@@ -15,6 +15,10 @@ use App\Livewire\LetterTypes\Index as LetterTypeIndex;
 use App\Livewire\Personnel\Create as PersonnelCreate;
 use App\Livewire\Personnel\Edit as PersonnelEdit;
 use App\Livewire\Personnel\Index as PersonnelIndex;
+use App\Livewire\PersonnelDuplicates\Index as PersonnelDuplicatesIndex;
+use App\Livewire\SptRecap\Index as SptRecapIndex;
+use App\Livewire\PersonnelRecap\Index as PersonnelRecapIndex;
+use App\Livewire\SptImport\Index as SptImportIndex;
 use App\Livewire\Units\Create as UnitCreate;
 use App\Livewire\Units\Edit as UnitEdit;
 use App\Livewire\Units\Index as UnitIndex;
@@ -44,6 +48,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/personnel/{personnel}/edit', PersonnelEdit::class)
         ->name('personnels.edit');
+
+    Route::get('/personnel-duplicates', PersonnelDuplicatesIndex::class)
+        ->name('personnel-duplicates.index');
 
     /*
     |--------------------------------------------------------------------------
@@ -111,6 +118,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/spt/{letter}/edit', LetterEdit::class)
         ->name('letters.edit');
+
+    Route::get('/spt-recap', SptRecapIndex::class)
+        ->name('spt-recap.index');
+
+    Route::get('/personnel-recap', PersonnelRecapIndex::class)
+        ->name('personnel-recap.index');
+
+    Route::get('/spt-import', SptImportIndex::class)
+        ->name('spt-import.index');
 
     /*
     |--------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\LetterRecordType;
 use App\Enums\LetterStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,9 @@ class Letter extends Model
         'basis',
         'description',
         'status',
+        'source',
+        'record_type',
+        'import_batch_id',
         'created_by',
         'updated_by',
         'approved_by',
@@ -47,6 +51,7 @@ class Letter extends Model
             'cancelled_at' => 'datetime',
 
             'status' => LetterStatus::class,
+            'record_type' => LetterRecordType::class,
         ];
     }
 
@@ -86,6 +91,11 @@ class Letter extends Model
     public function canceller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    public function importBatch(): BelongsTo
+    {
+        return $this->belongsTo(ImportBatch::class);
     }
 
     public function attachments(): HasMany

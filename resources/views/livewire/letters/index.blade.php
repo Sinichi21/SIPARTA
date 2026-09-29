@@ -77,6 +77,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-blue-900">Kegiatan</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-blue-900">Lokasi</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-blue-900">Personil</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-blue-900">Jenis Record</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-blue-900">Status</th>
                         <th class="px-4 py-3 text-right text-xs font-semibold text-blue-900">Aksi</th>
                     </tr>
@@ -103,6 +104,12 @@
 
                             <td class="px-4 py-3 text-sm">
                                 {{ $letter->personnels->count() }} personil
+                            </td>
+
+                            <td class="px-4 py-3 text-sm">
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $letter->record_type?->value === 'attendance_correction' ? 'bg-violet-50 text-violet-700' : 'bg-slate-100 text-slate-600' }}">
+                                    {{ $letter->record_type?->label() ?? 'SPT Normal' }}
+                                </span>
                             </td>
 
                             <td class="px-4 py-3 text-sm">
@@ -133,7 +140,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-10 text-center text-sm text-slate-500">
+                            <td colspan="8" class="px-4 py-10 text-center text-sm text-slate-500">
                                 Belum ada data SPT.
                             </td>
                         </tr>

@@ -60,6 +60,11 @@
             </div>
 
             <div>
+                <dt class="text-xs font-semibold uppercase text-slate-500">Jenis Record</dt>
+                <dd class="mt-1"><span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $letter->record_type?->value === 'attendance_correction' ? 'bg-violet-50 text-violet-700' : 'bg-slate-100 text-slate-600' }}">{{ $letter->record_type?->label() ?? 'SPT Normal' }}</span></dd>
+            </div>
+
+            <div>
                 <dt class="text-xs font-semibold uppercase text-slate-500">Tanggal Surat</dt>
                 <dd class="mt-1">{{ $letter->letter_date?->format('d/m/Y') }}</dd>
             </div>
