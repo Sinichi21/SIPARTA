@@ -63,6 +63,20 @@
                 </x-app.nav-link>
             </div>
         @endcan
+
+        @can('settings.view')
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Administrasi Surat</p>
+
+                <x-app.nav-link
+                    :href="route('administration-profiles.index')"
+                    :active="request()->routeIs('administration-profiles.*')"
+                    icon="building"
+                >
+                    Kop & Administrasi
+                </x-app.nav-link>
+            </div>
+        @endcan
 </nav>
     <div class="sidebar-footer">
         <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">

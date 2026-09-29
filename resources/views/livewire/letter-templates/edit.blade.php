@@ -29,7 +29,7 @@
             <div>
                 <h2 class="font-bold">Preview dengan Data SPT</h2>
                 <p class="mt-1 text-xs text-slate-500">
-                    Preview tidak mengubah SPT maupun template sampai tombol Simpan Perubahan ditekan.
+                    Kop menggunakan profil yang dipilih pada template, atau profil default sistem.
                 </p>
             </div>
 
@@ -49,14 +49,31 @@
         @if($renderedPreview)
             <div class="overflow-auto rounded-xl border border-slate-200 bg-slate-100 p-4">
                 <article class="mx-auto min-h-[1120px] w-full max-w-[794px] bg-white p-12 shadow-sm">
+                    <x-letterhead-preview :profile="$letterheadProfile" class="mb-8" />
+
                     <div class="prose max-w-none">
                         {!! $renderedPreview !!}
                     </div>
+
+                    @if($letterheadProfile?->signatory_name)
+                        <div class="ml-auto mt-16 w-64 text-sm text-slate-900">
+                            <p>{{ $letterheadProfile->city ?: 'Tempat' }}, {{ $previewLetter?->letter_date?->translatedFormat('d F Y') }}</p>
+                            <p class="mt-1">{{ $letterheadProfile->signatory_position ?: 'Pejabat Penandatangan' }}</p>
+
+                            <div class="h-20"></div>
+
+                            <p class="font-semibold underline">{{ $letterheadProfile->signatory_name }}</p>
+
+                            @if($letterheadProfile->signatory_nip)
+                                <p>NIP. {{ $letterheadProfile->signatory_nip }}</p>
+                            @endif
+                        </div>
+                    @endif
                 </article>
             </div>
         @else
             <div class="rounded-xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
-                Pilih SPT untuk melihat hasil placeholder pada template.
+                Pilih SPT untuk melihat preview kop dan hasil placeholder.
             </div>
         @endif
     </section>

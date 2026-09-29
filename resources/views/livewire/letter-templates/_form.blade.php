@@ -23,7 +23,20 @@
             @error('letter_type_id')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
         </label>
 
-        <div class="flex flex-wrap items-end gap-5 pb-2">
+        <label class="grid gap-1.5 text-sm font-medium">
+            <span>Profil Kop</span>
+            <select wire:model.live="letterhead_profile_id" class="rounded-xl border-slate-200">
+                <option value="">Gunakan kop default sistem</option>
+                @foreach($letterheadProfiles as $profile)
+                    <option value="{{ $profile->id }}">
+                        {{ $profile->name }}{{ $profile->is_default ? ' (Default)' : '' }}
+                    </option>
+                @endforeach
+            </select>
+            @error('letterhead_profile_id')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+        </label>
+
+        <div class="flex flex-wrap items-end gap-5 pb-2 md:col-span-2">
             <label class="inline-flex items-center gap-2 text-sm">
                 <input type="checkbox" wire:model="is_default" class="rounded border-slate-300">
                 Template default
@@ -62,6 +75,16 @@
                 <span>@{{unit_tim}}</span>
                 <span>@{{dasar}}</span>
                 <span>@{{keterangan}}</span>
+                <span>@{{instansi}}</span>
+                <span>@{{instansi_induk}}</span>
+                <span>@{{alamat_instansi}}</span>
+                <span>@{{telepon_instansi}}</span>
+                <span>@{{email_instansi}}</span>
+                <span>@{{website_instansi}}</span>
+                <span>@{{kota_surat}}</span>
+                <span>@{{nama_penandatangan}}</span>
+                <span>@{{nip_penandatangan}}</span>
+                <span>@{{jabatan_penandatangan}}</span>
             </div>
         </details>
     </div>

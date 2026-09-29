@@ -1,6 +1,8 @@
 <?php
 
-use App\Livewire\ActivityTypes\Create as ActivityTypeCreate;
+use App\Livewire\AdministrationProfiles\Create as AdministrationProfileCreate;
+use App\Livewire\AdministrationProfiles\Edit as AdministrationProfileEdit;
+use App\Livewire\AdministrationProfiles\Index as AdministrationProfileIndex;use App\Livewire\ActivityTypes\Create as ActivityTypeCreate;
 use App\Livewire\ActivityTypes\Edit as ActivityTypeEdit;
 use App\Livewire\ActivityTypes\Index as ActivityTypeIndex;
 use App\Livewire\AuditLogs\Index as AuditLogIndex;
@@ -148,6 +150,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         LetterTemplateEdit::class
     )->name('letter-templates.edit');
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kop & Administrasi Surat
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/administration-profiles',
+        AdministrationProfileIndex::class
+    )->name('administration-profiles.index');
+
+    Route::get(
+        '/administration-profiles/create',
+        AdministrationProfileCreate::class
+    )->name('administration-profiles.create');
+
+    Route::get(
+        '/administration-profiles/{letterheadProfile}/edit',
+        AdministrationProfileEdit::class
+    )->name('administration-profiles.edit');
     /*
     |--------------------------------------------------------------------------
     | Audit Log

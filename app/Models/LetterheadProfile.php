@@ -4,16 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class LetterTemplate extends Model
+class LetterheadProfile extends Model
 {
     protected $fillable = [
-        'letter_type_id',
-        'letterhead_profile_id',
         'name',
-        'code',
-        'content_html',
-        'version',
+        'organization_name',
+        'parent_organization',
+        'address',
+        'phone',
+        'email',
+        'website',
+        'city',
+        'logo_path',
+        'logo_original_name',
+        'signatory_name',
+        'signatory_nip',
+        'signatory_position',
         'is_default',
         'is_active',
         'created_by',
@@ -23,22 +31,9 @@ class LetterTemplate extends Model
     protected function casts(): array
     {
         return [
-            'version' => 'integer',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
         ];
-    }
-
-    public function letterType(): BelongsTo
-    {
-        return $this->belongsTo(LetterType::class);
-    }
-
-    public function letterheadProfile(): BelongsTo
-    {
-        return $this->belongsTo(
-            LetterheadProfile::class
-        );
     }
 
     public function creator(): BelongsTo
@@ -49,5 +44,10 @@ class LetterTemplate extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function templates(): HasMany
+    {
+        return $this->hasMany(LetterTemplate::class);
     }
 }
