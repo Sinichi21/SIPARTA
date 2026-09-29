@@ -1,33 +1,41 @@
 <div class="mx-auto max-w-5xl space-y-6">
     <div>
-        <h1 class="text-2xl font-bold">Edit SPT</h1>
+        <h1 class="text-2xl font-bold">Tambah SPT</h1>
         <p class="mt-1 text-sm text-slate-500">
-            Hanya draft yang dapat diedit.
+            Buat Surat Perintah Tugas baru.
         </p>
     </div>
 
     <form wire:submit="save" class="space-y-6">
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-5 text-lg font-semibold text-blue-900">
+                Informasi SPT
+            </h2>
+
             <div class="grid gap-5 md:grid-cols-2">
                 <div>
                     <label class="mb-1 block text-sm font-medium">Nomor SPT</label>
                     <input wire:model="number" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('number') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
                     <label class="mb-1 block text-sm font-medium">Jenis Kegiatan *</label>
                     <select wire:model="activity_type_id" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        <option value="">Pilih kegiatan</option>
                         @foreach ($activityTypes as $activityType)
                             <option value="{{ $activityType->id }}">
                                 {{ $activityType->name }}
                             </option>
                         @endforeach
                     </select>
+                    @error('activity_type_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="mb-1 block text-sm font-medium">Perihal *</label>
                     <input wire:model="subject" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('subject') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -38,6 +46,7 @@
                 <div>
                     <label class="mb-1 block text-sm font-medium">Lokasi *</label>
                     <input wire:model="location" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('location') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -48,10 +57,11 @@
                 <div>
                     <label class="mb-1 block text-sm font-medium">Tanggal Selesai *</label>
                     <input type="date" wire:model="end_date" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('end_date') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="mb-1 block text-sm font-medium">Dasar</label>
+                    <label class="mb-1 block text-sm font-medium">Dasar Surat</label>
                     <textarea wire:model="basis" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
                 </div>
 
@@ -63,9 +73,15 @@
         </section>
 
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-lg font-semibold text-blue-900">
-                Personil
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-blue-900">
+                    Personil
+                </h2>
+
+                <span class="text-sm text-slate-500">
+                    {{ count($personnel_ids) }} dipilih
+                </span>
+            </div>
 
             <input
                 type="search"
@@ -76,30 +92,38 @@
 
             <div class="mt-4 max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
                 @foreach ($personnels as $personnel)
-                    <label class="flex items-center gap-3 p-3">
+                    <label class="flex cursor-pointer items-center gap-3 p-3 hover:bg-blue-50">
                         <input
                             type="checkbox"
                             wire:model="personnel_ids"
                             value="{{ $personnel->id }}"
+                            class="rounded border-slate-300 text-blue-700"
                         >
 
-                        <span class="text-sm">
-                            {{ $personnel->name }}
+                        <span>
+                            <span class="block text-sm font-medium">
+                                {{ $personnel->name }}
+                            </span>
+
+                            <span class="text-xs text-slate-500">
+                                {{ $personnel->nip ?: 'Tanpa NIP' }}
+                                @if ($personnel->position)
+                                    · {{ $personnel->position }}
+                                @endif
+                            </span>
                         </span>
                     </label>
                 @endforeach
             </div>
 
             @error('personnel_ids')
-                <p class="mt-2 text-xs text-red-600">
-                    {{ $message }}
-                </p>
+                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
             @enderror
         </section>
 
         <div class="flex justify-end gap-3">
             <a
-                href="{{ route('letters.show', $letter) }}"
+                href="{{ route('letters.index') }}"
                 wire:navigate
                 class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium"
             >
@@ -109,9 +133,15 @@
             <button
                 type="submit"
                 wire:loading.attr="disabled"
-                class="rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white"
+                wire:target="save"
+                class="rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
             >
-                Simpan Perubahan
+                <span wire:loading.remove wire:target="save">
+                    Simpan Draft
+                </span>
+                <span wire:loading wire:target="save">
+                    Menyimpan...
+                </span>
             </button>
         </div>
     </form>
