@@ -35,6 +35,8 @@ class Edit extends Component
 
     public string $record_type = 'normal';
 
+    public string $personnel_scope = Letter::PERSONNEL_SCOPE_SELECTED;
+
     public array $personnel_ids = [];
 
     public string $personnelSearch = '';
@@ -65,12 +67,78 @@ class Edit extends Component
         $this->basis = $letter->basis ?? '';
         $this->description = $letter->description ?? '';
         $this->record_type = $letter->record_type?->value ?? LetterRecordType::Normal->value;
+        $this->personnel_scope = $letter->personnel_scope
+            ?? Letter::PERSONNEL_SCOPE_SELECTED;
 
         $this->personnel_ids = $letter
             ->personnels()
             ->pluck('personnels.id')
             ->map(fn ($id) => (string) $id)
             ->all();
+    }
+
+    public function useSelectedPersonnelScope(): void
+    {
+        Gate::authorize('letters.update');
+
+        $this->personnel_scope = Letter::PERSONNEL_SCOPE_SELECTED;
+
+        $this->resetValidation([
+            'personnel_scope',
+            'personnel_ids',
+        ]);
+    }
+
+    public function useAllPersonnelScope(): void
+    {
+        Gate::authorize('letters.update');
+
+        $this->personnel_scope = Letter::PERSONNEL_SCOPE_ALL;
+        $this->personnel_ids = [];
+
+        $this->resetValidation([
+            'personnel_scope',
+            'personnel_ids',
+        ]);
+    }
+
+    public function selectAllPersonnel(): void
+    {
+        Gate::authorize('letters.update');
+
+        $this->personnel_ids = $this->personnelQuery()
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->resetValidation('personnel_ids');
+    }
+
+    public function selectVisiblePersonnel(): void
+    {
+        Gate::authorize('letters.update');
+
+        $visibleIds = $this->personnelQuery()
+            ->limit(100)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $this->personnel_ids = array_values(array_unique([
+            ...array_map('intval', $this->personnel_ids),
+            ...$visibleIds,
+        ]));
+
+        $this->resetValidation('personnel_ids');
+    }
+
+    public function clearAllPersonnel(): void
+    {
+        Gate::authorize('letters.update');
+
+        $this->personnel_ids = [];
+
+        $this->resetValidation('personnel_ids');
     }
 
     public function save(LetterService $service)
@@ -96,13 +164,23 @@ class Edit extends Component
             'basis' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'record_type' => ['required', 'in:normal,attendance_correction'],
-            'personnel_ids' => ['required', 'array', 'min:1'],
+            'personnel_scope' => ['required', 'in:selected,all'],
+            'personnel_ids' => $this->personnel_scope === Letter::PERSONNEL_SCOPE_SELECTED
+                ? ['required', 'array', 'min:1']
+                : ['array', 'max:0'],
             'personnel_ids.*' => [
                 'integer',
                 'distinct',
                 'exists:personnels,id',
             ],
         ]);
+
+        if (
+            $data['personnel_scope']
+            === Letter::PERSONNEL_SCOPE_ALL
+        ) {
+            $data['personnel_ids'] = [];
+        }
 
         $service->updateSpt(
             $this->letter,
@@ -122,6 +200,33 @@ class Edit extends Component
         );
     }
 
+    private function personnelQuery()
+    {
+        return Personnel::query()
+            ->with('unit')
+            ->where(function ($query) {
+                $query->where('is_active', true);
+
+                if ($this->letter->source === 'import') {
+                    $query->orWhereIn(
+                        'id',
+                        $this->letter
+                            ->personnels()
+                            ->select('personnels.id')
+                    );
+                }
+            })
+            ->when(
+                filled($this->personnelSearch),
+                fn ($query) => $query->where(
+                    'name',
+                    'ilike',
+                    '%'.trim($this->personnelSearch).'%'
+                )
+            )
+            ->orderBy('name');
+    }
+
     public function render()
     {
         return view('livewire.letters.edit', [
@@ -129,25 +234,13 @@ class Edit extends Component
                 ->where(fn ($query) => $query->where('is_active', true)->orWhere('id', $this->letter->activity_type_id))
                 ->orderBy('name')
                 ->get(),
-            'personnels' => Personnel::query()
-                ->with('unit')
-                ->where(function ($query) {
-                    $query->where('is_active', true);
-                    if ($this->letter->source === 'import') {
-                        $query->orWhereIn('id', $this->letter->personnels()->select('personnels.id'));
-                    }
-                })
-                ->when(
-                    filled($this->personnelSearch),
-                    fn ($query) => $query->where(
-                        'name',
-                        'ilike',
-                        '%'.trim($this->personnelSearch).'%'
-                    )
-                )
-                ->orderBy('name')
+
+            'personnels' => $this->personnelQuery()
                 ->limit(100)
                 ->get(),
+
+            'totalSelectablePersonnel' => $this->personnelQuery()
+                ->count(),
         ]);
     }
 }

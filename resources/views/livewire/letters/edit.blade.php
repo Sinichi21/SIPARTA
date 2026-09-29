@@ -80,31 +80,140 @@
         </section>
 
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-lg font-semibold text-blue-900">
-                Personil
-            </h2>
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-blue-900">
+                        Personil
+                    </h2>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        @if($personnel_scope === 'all')
+                            SPT berlaku untuk seluruh pegawai. Tidak dibuat relasi personil individual.
+                        @else
+                            {{ count($personnel_ids) }} dari {{ $totalSelectablePersonnel }} personil tersedia dipilih.
+                        @endif
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        wire:click="selectAllPersonnel"
+                        wire:loading.attr="disabled"
+                        wire:target="selectAllPersonnel"
+                        @disabled($personnel_scope === 'all')
+                        class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
+                    >
+                        <span wire:loading.remove wire:target="selectAllPersonnel">
+                            Pilih Semua Personil Tersedia
+                        </span>
+                        <span wire:loading wire:target="selectAllPersonnel">
+                            Memilih...
+                        </span>
+                    </button>
+
+                    @if(filled($personnelSearch))
+                        <button
+                            type="button"
+                            wire:click="selectVisiblePersonnel"
+                            wire:loading.attr="disabled"
+                            wire:target="selectVisiblePersonnel"
+                            @disabled($personnel_scope === 'all')
+                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                        >
+                            Pilih Hasil Pencarian
+                        </button>
+                    @endif
+
+                    @if(count($personnel_ids) > 0)
+                        <button
+                            type="button"
+                            wire:click="clearAllPersonnel"
+                            @disabled($personnel_scope === 'all')
+                            class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60"
+                        >
+                            Batalkan Semua
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    wire:click="useSelectedPersonnelScope"
+                    class="rounded-lg border px-3 py-2 text-xs font-semibold transition {{ $personnel_scope === 'selected' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }}"
+                >
+                    Personil Tertentu
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="useAllPersonnelScope"
+                    class="rounded-lg border px-3 py-2 text-xs font-semibold transition {{ $personnel_scope === 'all' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }}"
+                >
+                    Seluruh Pegawai
+                </button>
+            </div>
+
+            @if($personnel_scope === 'all')
+                <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
+                    SPT akan dicatat dengan cakupan <strong>Seluruh Pegawai</strong>.
+                    Relasi personil individual akan dikosongkan sehingga Rekap Personil tetap akurat.
+                    Daftar di bawah tetap ditampilkan sebagai referensi.
+                </div>
+            @endif
+
+            @if($letter->source === 'import')
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                    Personil lama yang sudah terkait dengan SPT hasil import tetap dapat dipertahankan walaupun saat ini berstatus nonaktif.
+                </div>
+            @endif
+
+            @error('personnel_scope')
+                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+            @enderror
 
             <input
                 type="search"
                 wire:model.live.debounce.300ms="personnelSearch"
+                @disabled($personnel_scope === 'all')
                 placeholder="Cari personil..."
                 class="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2"
             >
 
             <div class="mt-4 max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
-                @foreach ($personnels as $personnel)
-                    <label class="flex items-center gap-3 p-3">
+                @forelse($personnels as $personnel)
+                    <label class="flex cursor-pointer items-center gap-3 p-3 hover:bg-blue-50">
                         <input
                             type="checkbox"
                             wire:model="personnel_ids"
+                            @disabled($personnel_scope === 'all')
                             value="{{ $personnel->id }}"
+                            class="rounded border-slate-300 text-blue-700"
                         >
 
-                        <span class="text-sm">
-                            {{ $personnel->name }}
+                        <span>
+                            <span class="block text-sm font-medium">
+                                {{ $personnel->name }}
+                            </span>
+
+                            <span class="text-xs text-slate-500">
+                                {{ $personnel->nip ?: 'Tanpa NIP' }}
+                                @if($personnel->position)
+                                    · {{ $personnel->position }}
+                                @endif
+                                @if(! $personnel->is_active)
+                                    · Tidak Aktif
+                                @endif
+                            </span>
                         </span>
                     </label>
-                @endforeach
+                @empty
+                    <div class="p-6 text-center text-sm text-slate-500">
+                        Personil tidak ditemukan.
+                    </div>
+                @endforelse
             </div>
 
             @error('personnel_ids')
