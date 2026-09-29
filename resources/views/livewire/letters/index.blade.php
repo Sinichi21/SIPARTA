@@ -126,7 +126,13 @@
                             </td>
 
                             <td class="px-4 py-3 text-sm">
-                                {{ $letter->personnels->count() }} personil
+                                @if($letter->assignsAllPersonnel())
+                                    <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                                        Seluruh Pegawai
+                                    </span>
+                                @else
+                                    {{ $letter->personnels->count() }} personil
+                                @endif
                             </td>
 
                             <td class="px-4 py-3 text-sm">

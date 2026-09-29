@@ -4,6 +4,7 @@ namespace App\Livewire\Letters;
 
 use App\Enums\LetterRecordType;
 use App\Models\ActivityType;
+use App\Models\Letter;
 use App\Models\Personnel;
 use App\Services\LetterService;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,7 @@ class Create extends Component
     public string $basis = '';
     public string $description = '';
     public string $record_type = 'normal';
+    public string $personnel_scope = Letter::PERSONNEL_SCOPE_SELECTED;
     public array $personnel_ids = [];
     public string $personnelSearch = '';
 
@@ -34,6 +36,30 @@ class Create extends Component
         $this->letter_date = $today;
         $this->start_date = $today;
         $this->end_date = $today;
+    }
+
+    public function useSelectedPersonnelScope(): void
+    {
+        Gate::authorize('letters.create');
+
+        $this->personnel_scope = Letter::PERSONNEL_SCOPE_SELECTED;
+        $this->resetValidation([
+            'personnel_scope',
+            'personnel_ids',
+        ]);
+    }
+
+    public function useAllPersonnelScope(): void
+    {
+        Gate::authorize('letters.create');
+
+        $this->personnel_scope = Letter::PERSONNEL_SCOPE_ALL;
+        $this->personnel_ids = [];
+
+        $this->resetValidation([
+            'personnel_scope',
+            'personnel_ids',
+        ]);
     }
 
     public function selectAllPersonnel(): void
@@ -100,13 +126,23 @@ class Create extends Component
             'basis' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'record_type' => ['required', 'in:normal,attendance_correction'],
-            'personnel_ids' => ['required', 'array', 'min:1'],
+            'personnel_scope' => ['required', 'in:selected,all'],
+            'personnel_ids' => $this->personnel_scope === Letter::PERSONNEL_SCOPE_SELECTED
+                ? ['required', 'array', 'min:1']
+                : ['array', 'max:0'],
             'personnel_ids.*' => [
                 'integer',
                 'distinct',
                 'exists:personnels,id',
             ],
         ]);
+
+        if (
+            $data['personnel_scope']
+            === Letter::PERSONNEL_SCOPE_ALL
+        ) {
+            $data['personnel_ids'] = [];
+        }
 
         $letter = $service->createSpt($data, Auth::id());
 

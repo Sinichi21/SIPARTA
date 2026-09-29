@@ -89,7 +89,11 @@
                         Personil
                     </h2>
                     <p class="mt-1 text-xs text-slate-500">
-                        {{ count($personnel_ids) }} dari {{ $totalActivePersonnel }} personil aktif dipilih.
+                        @if($personnel_scope === 'all')
+                            SPT berlaku untuk seluruh pegawai. Tidak dibuat relasi personil individual.
+                        @else
+                            {{ count($personnel_ids) }} dari {{ $totalActivePersonnel }} personil aktif dipilih.
+                        @endif
                     </p>
                 </div>
 
@@ -99,6 +103,7 @@
                         wire:click="selectAllPersonnel"
                         wire:loading.attr="disabled"
                         wire:target="selectAllPersonnel"
+                        @disabled($personnel_scope === 'all')
                         class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
                     >
                         <span wire:loading.remove wire:target="selectAllPersonnel">
@@ -133,6 +138,36 @@
                 </div>
             </div>
 
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button
+                    type="button"
+                    wire:click="useSelectedPersonnelScope"
+                    class="rounded-lg border px-3 py-2 text-xs font-semibold transition {{ $personnel_scope === 'selected' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }}"
+                >
+                    Personil Tertentu
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="useAllPersonnelScope"
+                    class="rounded-lg border px-3 py-2 text-xs font-semibold transition {{ $personnel_scope === 'all' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }}"
+                >
+                    Seluruh Pegawai
+                </button>
+            </div>
+
+            @if($personnel_scope === 'all')
+                <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
+                    SPT akan dicatat dengan cakupan <strong>Seluruh Pegawai</strong>.
+                    Nama personil tidak ditempel satu per satu sehingga rekap personil individual tetap akurat.
+                    Daftar personil di bawah tetap ditampilkan sebagai referensi.
+                </div>
+            @endif
+
+            @error('personnel_scope')
+                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+
             @if ($totalActivePersonnel > 100 && blank($personnelSearch))
                 <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
                     Daftar di bawah menampilkan maksimal 100 personil agar halaman tetap ringan.
@@ -143,6 +178,7 @@
             <input
                 type="search"
                 wire:model.live.debounce.300ms="personnelSearch"
+                @disabled($personnel_scope === 'all')
                 placeholder="Cari personil..."
                 class="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2"
             >
@@ -153,6 +189,7 @@
                         <input
                             type="checkbox"
                             wire:model="personnel_ids"
+                            @disabled($personnel_scope === 'all')
                             value="{{ $personnel->id }}"
                             class="rounded border-slate-300 text-blue-700"
                         >

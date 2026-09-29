@@ -1,7 +1,24 @@
 <div class="space-y-6">
-    <div><h1 class="text-3xl font-bold tracking-tight text-slate-900">Import SPT Lama</h1><p class="mt-1 text-sm text-slate-500">Masukkan arsip SPT lama tanpa harus membuat ulang surat melalui template.</p></div>
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-900">
+            Import SPT Lama
+        </h1>
+        <p class="mt-1 text-sm text-slate-500">
+            Masukkan arsip SPT lama tanpa harus membuat ulang surat melalui template.
+        </p> 
+        <p class="mt-2 text-xs text-blue-700">
+            Nilai personil ALL PEGAWAI, SEMUA PEGAWAI, atau SELURUH PEGAWAI
+            akan disimpan sebagai cakupan seluruh pegawai dan tidak dibuat
+            sebagai data personil.
+        </p>
+    </div>
 
     <div class="grid grid-cols-4 gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">@foreach([1=>'Upload File',2=>'Mapping Kolom',3=>'Preview',4=>'Selesai'] as $number=>$label)<div class="rounded-xl px-3 py-3 text-center text-sm font-semibold {{ $step >= $number ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400' }}">{{ $number }}. {{ $label }}</div>@endforeach</div>
+    <p class="mt-2 text-xs text-blue-700">
+        Nilai personil ALL PEGAWAI, SEMUA PEGAWAI, atau SELURUH PEGAWAI
+        akan disimpan sebagai cakupan seluruh pegawai dan tidak dibuat
+        sebagai data personil.
+    </p>
 
     @if($step === 1)
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center"><div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"><svg class="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 21h14a2 2 0 0 0 2-2v-4"/></svg></div><h2 class="text-lg font-bold">Upload file arsip SPT</h2><p class="mt-1 text-sm text-slate-500">Format didukung: CSV dan XLSX, maksimal 10 MB.</p><input type="file" wire:model="file" accept=".csv,.xlsx" class="mx-auto mt-5 block max-w-sm text-sm">@error('file')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror<div class="mt-6"><button wire:click="readFile" wire:loading.attr="disabled" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Baca File</button></div></div></div>

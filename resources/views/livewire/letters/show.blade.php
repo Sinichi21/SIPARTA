@@ -22,7 +22,7 @@
         <div class="spt-summary-metrics">
             <div><x-app.icon name="calendar" /><span>Tanggal SPT<strong>{{ $letter->letter_date?->translatedFormat('d F Y') ?: '-' }}</strong></span></div>
             <div><x-app.icon name="clock" /><span>Periode Penugasan<strong>{{ $letter->start_date?->translatedFormat('d M Y') ?: '-' }} &ndash; {{ $letter->end_date?->translatedFormat('d M Y') ?: '-' }}</strong></span></div>
-            <div><x-app.icon name="users" /><span>Personil Ditugaskan<strong>{{ $letter->personnels->count() }} orang</strong></span></div>
+            <div><x-app.icon name="users" /><span>Personil Ditugaskan<strong>{{ $letter->assignsAllPersonnel() ? 'Seluruh Pegawai' : $letter->personnels->count().' orang' }}</strong></span></div>
         </div>
     </section>
 
@@ -67,11 +67,19 @@
                 <div class="spt-text-section"><h3>Keterangan</h3><p>{{ $letter->description ?: 'Tidak ada keterangan tambahan.' }}</p></div>
             </section>
             <section class="spt-section-card !p-0">
-                <h2 class="spt-section-heading m-0 px-5 py-4"><x-app.icon name="users" /> Daftar Personil <span class="count-badge">{{ $letter->personnels->count() }} orang</span></h2>
+                <h2 class="spt-section-heading m-0 px-5 py-4"><x-app.icon name="users" /> Daftar Personil <span class="count-badge">{{ $letter->assignsAllPersonnel() ? 'Seluruh Pegawai' : $letter->personnels->count().' orang' }}</span></h2>
                 <div class="overflow-x-auto"><table class="spt-personnel-table"><thead><tr><th>No</th><th>Nama / NIP</th><th>Jabatan</th><th>Unit / Tim</th></tr></thead><tbody>
                     @forelse($letter->personnels as $person)
                         <tr><td>{{ $loop->iteration }}</td><td><strong>{{ $person->name }}</strong><span>{{ $person->nip ?: 'NIP belum tersedia' }}</span></td><td>{{ $person->position ?: '-' }}</td><td>{{ $person->unit?->name ?: '-' }}</td></tr>
-                    @empty<tr><td colspan="4" class="detail-empty">Belum ada personil yang ditugaskan.</td></tr>@endforelse
+                    @empty<tr>
+                        <td colspan="4" class="detail-empty">
+                            @if($letter->assignsAllPersonnel())
+                                SPT ini berlaku untuk seluruh pegawai. Daftar personil individual tidak disimpan.
+                            @else
+                                Belum ada personil yang ditugaskan.
+                            @endif
+                        </td>
+                    </tr>@endforelse
                 </tbody></table></div>
             </section>
         </div>
