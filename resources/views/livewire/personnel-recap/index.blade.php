@@ -10,13 +10,30 @@
     </div>
 
     @if(($allPersonnelSpt ?? 0) > 0)
-        <div class="rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-900">
-            <span class="font-semibold">
-                {{ number_format($allPersonnelSpt) }} SPT Seluruh Pegawai
-            </span>
-            <span class="text-blue-700">
-                pada filter aktif. SPT ini tetap tercatat dalam rekap, tetapi tidak ditambahkan ke jumlah SPT personil individual.
-            </span>
+        <div class="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-900 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <span class="font-semibold">
+                    {{ number_format($allPersonnelSpt) }} SPT Seluruh Pegawai
+                </span>
+                <span class="text-blue-700">
+                    pada filter aktif. SPT ini tetap tercatat dalam rekap, tetapi tidak ditambahkan ke jumlah SPT personil individual.
+                </span>
+            </div>
+
+            <button
+                type="button"
+                wire:click="openAllPersonnelSpt"
+                wire:loading.attr="disabled"
+                wire:target="openAllPersonnelSpt"
+                class="shrink-0 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-60"
+            >
+                <span wire:loading.remove wire:target="openAllPersonnelSpt">
+                    Lihat SPT
+                </span>
+                <span wire:loading wire:target="openAllPersonnelSpt">
+                    Membuka...
+                </span>
+            </button>
         </div>
     @endif
 
@@ -48,6 +65,118 @@
     </div>
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="flex items-center gap-3 border-b border-slate-100 px-5 py-4"><h2 class="text-lg font-bold">Daftar Rekap Personil</h2><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">{{ $personnels->total() }} data</span></div><div class="overflow-x-auto"><table class="w-full min-w-[1100px] text-sm"><thead class="bg-slate-50 text-left text-xs uppercase text-slate-500"><tr><th class="px-4 py-3">No</th><th class="px-4 py-3">Nama Personil</th><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Unit/Tim</th><th class="px-4 py-3">Jumlah SPT</th><th class="px-4 py-3">SPT Terakhir</th><th class="px-4 py-3">Tanggal Terakhir</th><th class="px-4 py-3">Kegiatan Terakhir</th><th class="px-4 py-3">Lokasi Terakhir</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right">Aksi</th></tr></thead><tbody class="divide-y divide-slate-100">@forelse($personnels as $person)<tr class="hover:bg-blue-50/40"><td class="px-4 py-3 text-slate-500">{{ $personnels->firstItem()+$loop->index }}</td><td class="px-4 py-3 font-semibold">{{ $person->name }}</td><td class="px-4 py-3 text-slate-600">{{ $person->nip ?: '-' }}</td><td class="px-4 py-3">{{ $person->unit?->name ?: '-' }}</td><td class="px-4 py-3 font-semibold text-blue-700">{{ $person->spt_count }}</td><td class="px-4 py-3 font-medium">{{ $person->latest_spt?->number ?: '-' }}</td><td class="px-4 py-3">{{ $person->latest_spt?->letter_date?->translatedFormat('d M Y') ?: '-' }}</td><td class="px-4 py-3">{{ $person->latest_spt?->activityType?->name ?: ($person->latest_spt?->subject ?: '-') }}</td><td class="px-4 py-3">{{ $person->latest_spt?->location ?: '-' }}</td><td class="px-4 py-3"><span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $person->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $person->is_active ? 'Aktif' : 'Tidak Aktif' }}</span></td><td class="px-4 py-3 text-right"><button wire:click="showDetail({{ $person->id }})" class="rounded-lg p-2 text-blue-600 hover:bg-blue-50">Detail</button></td></tr>@empty<tr><td colspan="11" class="px-6 py-12 text-center text-slate-500">Belum ada data personil.</td></tr>@endforelse</tbody></table></div><div class="border-t border-slate-100 px-5 py-4">{{ $personnels->links() }}</div></div>
+
+    @if($showAllPersonnelSpt)
+        <x-app.detail-drawer title="SPT Seluruh Pegawai">
+            <section class="drawer-section">
+                <div class="flex items-start gap-3">
+                    <span class="detail-icon">
+                        <x-app.icon name="users" />
+                    </span>
+
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">
+                            SPT Seluruh Pegawai
+                        </h3>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Daftar ini mengikuti filter tahun, jenis record, dan jenis kegiatan pada Rekap Personil.
+                            Data ini tidak ditambahkan ke jumlah SPT personil individual.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="drawer-section">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <h3 class="drawer-section-title">
+                        Daftar SPT
+                    </h3>
+
+                    <span class="count-badge">
+                        {{ number_format($allPersonnelSptRows->count()) }} data
+                    </span>
+                </div>
+
+                <div class="detail-table-wrap">
+                    <table class="detail-table history-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nomor SPT</th>
+                                <th>Tanggal</th>
+                                <th>Kegiatan</th>
+                                <th>Lokasi</th>
+                                <th>Jenis</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @forelse($allPersonnelSptRows as $letter)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+
+                                    <td>
+                                        <a
+                                            href="{{ route('letters.show', $letter) }}"
+                                            wire:navigate
+                                            class="font-semibold text-blue-700 hover:underline"
+                                        >
+                                            {{ $letter->number ?: 'Draft #'.$letter->id }}
+                                        </a>
+                                    </td>
+
+                                    <td>
+                                        {{ $letter->letter_date
+                                            ?->translatedFormat('d M Y')
+                                            ?: '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ $letter->subject
+                                            ?: $letter->activityType?->name
+                                            ?: '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ $letter->location ?: '-' }}
+                                    </td>
+
+                                    <td>
+                                        <span
+                                            class="status-badge
+                                            {{ $letter->record_type?->value === 'attendance_correction'
+                                                ? 'status-warning'
+                                                : 'status-success' }}"
+                                        >
+                                            {{ $letter->record_type?->label()
+                                                ?? 'SPT Normal' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="detail-empty">
+                                        Tidak ada SPT Seluruh Pegawai pada filter aktif.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <x-slot:footer>
+                <button
+                    type="button"
+                    wire:click="closeAllPersonnelSpt"
+                    class="detail-button detail-button-outline"
+                >
+                    Tutup
+                </button>
+            </x-slot:footer>
+        </x-app.detail-drawer>
+    @endif
 
     @if($selectedPersonnel)
         @include('livewire.personnel-recap.detail')

@@ -24,6 +24,7 @@ class Index extends Component
     public string $recordType = 'normal';
     public ?int $selectedPersonnelId = null;
     public bool $showAllHistory = false;
+    public bool $showAllPersonnelSpt = false;
 
     public function mount(): void
     {
@@ -86,6 +87,16 @@ class Index extends Component
         }
 
         $this->showAllHistory = ! $this->showAllHistory;
+    }
+
+    public function openAllPersonnelSpt(): void
+    {
+        $this->showAllPersonnelSpt = true;
+    }
+
+    public function closeAllPersonnelSpt(): void
+    {
+        $this->showAllPersonnelSpt = false;
     }
 
     /**
@@ -414,6 +425,45 @@ class Index extends Component
             )
             ->count();
 
+        $allPersonnelSptRows = collect();
+
+        if ($this->showAllPersonnelSpt) {
+            $allPersonnelSptRows = Letter::query()
+                ->whereHas(
+                    'letterType',
+                    fn (Builder $q) => $q->where('code', 'SPT')
+                )
+                ->where(
+                    'personnel_scope',
+                    Letter::PERSONNEL_SCOPE_ALL
+                )
+                ->when(
+                    $this->recordType !== 'all',
+                    fn (Builder $q) => $q->where(
+                        'record_type',
+                        $this->recordType
+                    )
+                )
+                ->when(
+                    $this->year !== '',
+                    fn (Builder $q) => $q->whereYear(
+                        'letter_date',
+                        (int) $this->year
+                    )
+                )
+                ->when(
+                    $this->activityTypeId !== '',
+                    fn (Builder $q) => $q->where(
+                        'activity_type_id',
+                        (int) $this->activityTypeId
+                    )
+                )
+                ->with('activityType')
+                ->orderByDesc('letter_date')
+                ->orderByDesc('id')
+                ->get();
+        }
+
         /*
          * SPT bulan ini memang selalu berarti bulan berjalan.
          * Filter record type tetap diterapkan.
@@ -609,6 +659,7 @@ class Index extends Component
                 'activePersonnel' => $activePersonnel,
                 'totalAssignments' => $totalAssignments,
                 'allPersonnelSpt' => $allPersonnelSpt,
+                'allPersonnelSptRows' => $allPersonnelSptRows,
                 'monthAssignments' => $monthAssignments,
                 'unitStats' => $unitStats,
                 'maxUnit' => $maxUnit,
