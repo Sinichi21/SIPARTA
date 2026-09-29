@@ -16,14 +16,15 @@ class Index extends Component
     #[\Livewire\Attributes\Url]
     public string $search = '';
     public string $status = '';
-    public string $year = '';
     public string $month = '';
     public string $activityType = '';
     public string $personnel = '';
+    public string $recordType = 'normal';
 
     public function mount(): void
     {
         Gate::authorize('letters.view');
+        $this->year = (string) now()->year;
     }
 
     public function updated($property): void
@@ -35,6 +36,7 @@ class Index extends Component
             'month',
             'activityType',
             'personnel',
+            'recordType',
         ], true)) {
             $this->resetPage();
         }
@@ -59,9 +61,30 @@ class Index extends Component
 
                     $query->where(function ($query) use ($search) {
                         $query
-                            ->where('number', 'ilike', "%{$search}%")
-                            ->orWhere('subject', 'ilike', "%{$search}%")
-                            ->orWhere('location', 'ilike', "%{$search}%");
+                            ->where(
+                                'number',
+                                'ilike',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'subject',
+                                'ilike',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'location',
+                                'ilike',
+                                "%{$search}%"
+                            )
+                            ->orWhereHas(
+                                'personnels',
+                                fn ($personnelQuery) =>
+                                    $personnelQuery->where(
+                                        'name',
+                                        'ilike',
+                                        "%{$search}%"
+                                    )
+                            );
                     });
                 }
             )
@@ -100,6 +123,13 @@ class Index extends Component
                     )
                 )
             )
+            ->when(
+                $this->recordType !== 'all',
+                fn ($query) => $query->where(
+                    'record_type',
+                    $this->recordType
+                )
+            )
             ->orderByDesc('letter_date')
             ->orderByDesc('id')
             ->paginate(15);
@@ -114,6 +144,19 @@ class Index extends Component
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
+            'years' => Letter::query()
+                ->whereHas(
+                    'letterType',
+                    fn ($query) =>
+                        $query->where('code', 'SPT')
+                )
+                ->whereNotNull('letter_date')
+                ->selectRaw(
+                    'EXTRACT(YEAR FROM letter_date)::int as year'
+                )
+                ->distinct()
+                ->orderByDesc('year')
+                ->pluck('year'),
         ]);
     }
 }

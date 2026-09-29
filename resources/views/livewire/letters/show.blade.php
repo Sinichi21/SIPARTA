@@ -31,9 +31,37 @@
             <section class="spt-section-card">
                 <h2 class="spt-section-heading"><x-app.icon name="list" /> Informasi Penugasan</h2>
                 <dl class="spt-information-grid">
-                    <div><dt>Jenis Kegiatan</dt><dd>{{ $letter->activityType?->name ?: '-' }}</dd></div>
-                    <div><dt>Lokasi</dt><dd>{{ $letter->location ?: '-' }}</dd></div>
-                    <div class="md:col-span-2"><dt>Unit / Tim Kerja</dt><dd>{{ $letter->personnels->pluck('unit.name')->filter()->unique()->implode(', ') ?: '-' }}</dd></div>
+                    <div class="md:col-span-2">
+                        <dt>Kegiatan</dt>
+                        <dd>
+                            {{ $letter->subject
+                                ?: $letter->activityType?->name
+                                ?: '-' }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Jenis Kegiatan</dt>
+                        <dd>
+                            {{ $letter->activityType?->name
+                                ?: 'Belum dikategorikan' }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Lokasi</dt>
+                        <dd>
+                            {{ $letter->location ?: '-' }}
+                        </dd>
+                    </div>
+                    <div class="md:col-span-2">
+                        <dt>Unit / Tim Kerja</dt>
+                        <dd>
+                            {{ $letter->personnels
+                                ->pluck('unit.name')
+                                ->filter()
+                                ->unique()
+                                ->implode(', ') ?: '-' }}
+                        </dd>
+                    </div>
                 </dl>
                 <div class="spt-text-section"><h3>Dasar Penugasan</h3><p>{{ $letter->basis ?: 'Belum ada dasar penugasan yang dicatat.' }}</p></div>
                 <div class="spt-text-section"><h3>Keterangan</h3><p>{{ $letter->description ?: 'Tidak ada keterangan tambahan.' }}</p></div>

@@ -47,14 +47,37 @@
                 @endforeach
             </select>
 
-            <input
-                type="number"
-                wire:model.live="year"
-                placeholder="Tahun"
-                min="2000"
-                max="2100"
+            <select
+                wire:model.live="recordType"
                 class="rounded-lg border border-slate-300 px-3 py-2"
             >
+                <option value="normal">
+                    SPT Normal
+                </option>
+
+                <option value="attendance_correction">
+                    Koreksi Absensi
+                </option>
+
+                <option value="all">
+                    Semua Jenis Record
+                </option>
+            </select>
+
+            <select
+                wire:model.live="year"
+                class="rounded-lg border border-slate-300 px-3 py-2"
+            >
+                <option value="">
+                    Semua Tahun
+                </option>
+
+                @foreach ($years as $yearOption)
+                    <option value="{{ $yearOption }}">
+                        {{ $yearOption }}
+                    </option>
+                @endforeach
+            </select>
 
             <select wire:model.live="month" class="rounded-lg border border-slate-300 px-3 py-2">
                 <option value="">Semua bulan</option>
@@ -95,7 +118,7 @@
                             </td>
 
                             <td class="px-4 py-3 text-sm">
-                                {{ $letter->activityType?->name ?: '-' }}
+                                {{ $letter->activityType?->name ?: $letter->subject ?: '-' }}
                             </td>
 
                             <td class="px-4 py-3 text-sm">
