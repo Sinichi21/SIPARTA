@@ -71,6 +71,30 @@ class AuditService
         );
     }
 
+    public function attachmentUploaded(Model $subject): AuditLog
+    {
+        return $this->write(
+            'UPLOAD',
+            $subject,
+            null,
+            $this->safeAttributes(
+                $subject->getAttributes()
+            )
+        );
+    }
+
+    public function attachmentDeleted(Model $subject): AuditLog
+    {
+        return $this->write(
+            'DELETE',
+            $subject,
+            $this->safeAttributes(
+                $subject->getAttributes()
+            ),
+            null
+        );
+    }
+
     public function removedImportedPersonnel(
         Model $subject,
         array $oldValues,
