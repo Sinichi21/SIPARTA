@@ -86,9 +86,90 @@
         <div class="spt-detail-side">
             <section class="spt-section-card">
                 <h2 class="spt-section-heading"><x-app.icon name="document" /> Dokumen Pendukung <span class="count-badge">{{ $letter->attachments->count() }}</span></h2>
+
+                @can('letters.update')
+                    @if($letter->canBeEdited())
+                        <div class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <label class="block text-xs font-semibold text-slate-700">
+                                Tambah Dokumen
+                            </label>
+
+                            <input
+                                type="file"
+                                wire:model="attachmentUpload"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                class="mt-2 block w-full text-xs text-slate-600"
+                            >
+
+                            <p class="mt-1 text-[11px] text-slate-500">
+                                PDF, Word, Excel, JPG, atau PNG. Maksimal 10 MB.
+                            </p>
+
+                            @error('attachmentUpload')
+                                <p role="alert" class="mt-2 text-xs text-red-600">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+
+                            <button
+                                type="button"
+                                wire:click="uploadAttachment"
+                                wire:loading.attr="disabled"
+                                wire:target="attachmentUpload,uploadAttachment"
+                                class="mt-3 rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                            >
+                                <span wire:loading.remove wire:target="uploadAttachment">
+                                    Unggah Dokumen
+                                </span>
+                                <span wire:loading wire:target="uploadAttachment">
+                                    Mengunggah...
+                                </span>
+                            </button>
+                        </div>
+                    @endif
+                @endcan
+
                 <div class="space-y-3">@forelse($letter->attachments as $attachment)
-                    <div class="document-card"><x-app.icon class="shrink-0 text-red-500" /><div class="min-w-0 flex-1"><p class="break-words text-xs font-semibold">{{ $attachment->original_name }}</p><p class="mt-1 text-xs text-slate-500">{{ strtoupper(pathinfo($attachment->original_name, PATHINFO_EXTENSION)) ?: 'Dokumen' }} &middot; {{ number_format(($attachment->size ?? 0) / 1024, 0, ',', '.') }} KB</p></div><button type="button" wire:click="downloadAttachment({{ $attachment->id }})" wire:loading.attr="disabled" class="icon-button" aria-label="Unduh {{ $attachment->original_name }}"><x-app.icon name="download" /></button></div>
-                @empty<div class="spt-document-empty"><x-app.icon name="archive" /><p>Belum ada dokumen terlampir.</p></div>@endforelse</div>
+                    <div class="document-card">
+                        <x-app.icon class="shrink-0 text-red-500" />
+
+                        <div class="min-w-0 flex-1">
+                            <p class="break-words text-xs font-semibold">{{ $attachment->original_name }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ strtoupper(pathinfo($attachment->original_name, PATHINFO_EXTENSION)) ?: 'Dokumen' }} &middot; {{ number_format(($attachment->size ?? 0) / 1024, 0, ',', '.') }} KB</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            wire:click="downloadAttachment({{ $attachment->id }})"
+                            wire:loading.attr="disabled"
+                            class="icon-button"
+                            aria-label="Unduh {{ $attachment->original_name }}"
+                        >
+                            <x-app.icon name="download" />
+                        </button>
+
+                        @can('letters.update')
+                            @if($letter->canBeEdited())
+                                <button
+                                    type="button"
+                                    wire:click="deleteAttachment({{ $attachment->id }})"
+                                    wire:confirm="Hapus dokumen {{ $attachment->original_name }}?"
+                                    wire:loading.attr="disabled"
+                                    class="icon-button text-red-600"
+                                    aria-label="Hapus {{ $attachment->original_name }}"
+                                >
+                                    <x-app.icon name="trash" />
+                                </button>
+                            @endif
+                        @endcan
+                    </div>
+                @empty
+                    <div class="spt-document-empty">
+                        <x-app.icon name="archive" />
+                        <p>Belum ada dokumen terlampir.</p>
+                    </div>
+                @endforelse</div>
+
                 @error('download')<p role="alert" class="mt-3 text-xs text-red-600">{{ $message }}</p>@enderror
             </section>
             <section class="spt-section-card">

@@ -126,7 +126,7 @@ class LetterService
             $data,
             $userId
         ) {
-            $letter = Letter::query()->lockForUpdate()->findOrFail($letter->id);
+            $letter = $this->lockSptForUpdate($letter);
 
             if (! $letter->canBeEdited()) {
                 throw ValidationException::withMessages([
@@ -240,6 +240,8 @@ class LetterService
             $letter,
             $userId
         ) {
+            $letter = $this->lockSptForUpdate($letter);
+
             if ($letter->status !== LetterStatus::Draft) {
                 throw ValidationException::withMessages([
                     'status' => 'Hanya SPT berstatus draft yang dapat diterbitkan.',
@@ -284,6 +286,22 @@ class LetterService
         });
     }
 
+    private function lockSptForUpdate(Letter $letter): Letter
+    {
+        $locked = Letter::query()
+            ->with('letterType')
+            ->lockForUpdate()
+            ->findOrFail($letter->id);
+
+        if ($locked->letterType?->code !== 'SPT') {
+            throw ValidationException::withMessages([
+                'letter_type' => 'Operasi ini hanya berlaku untuk Surat Perintah Tugas (SPT).',
+            ]);
+        }
+
+        return $locked;
+    }
+
     public function cancel(
         Letter $letter,
         string $reason,
@@ -294,6 +312,19 @@ class LetterService
             $reason,
             $userId
         ) {
+            $letter = $this->lockSptForUpdate($letter);
+
+            $reason = trim($reason);
+
+            if (
+                mb_strlen($reason) < 5
+                || mb_strlen($reason) > 1000
+            ) {
+                throw ValidationException::withMessages([
+                    'cancellationReason' => 'Alasan pembatalan harus terdiri dari 5 sampai 1000 karakter.',
+                ]);
+            }
+
             if ($letter->status === LetterStatus::Cancelled) {
                 throw ValidationException::withMessages([
                     'status' => 'SPT sudah dibatalkan.',
@@ -321,7 +352,7 @@ class LetterService
                 'status' => LetterStatus::Cancelled,
                 'cancelled_at' => now(),
                 'cancelled_by' => $userId,
-                'cancellation_reason' => trim($reason),
+                'cancellation_reason' => $reason,
                 'updated_by' => $userId,
             ]);
 
