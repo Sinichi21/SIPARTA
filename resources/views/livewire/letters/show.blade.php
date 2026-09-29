@@ -1,165 +1,84 @@
-<div class="mx-auto max-w-5xl space-y-6">
-    @if (session('success'))
-        <div class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-            {{ session('success') }}
-        </div>
-    @endif
+<div class="spt-detail-page">
+    <nav aria-label="Breadcrumb" class="spt-breadcrumb"><a href="{{ route('letters.index') }}" wire:navigate>Data SPT</a><span aria-hidden="true">/</span><span aria-current="page">Detail SPT</span></nav>
+    @if(session('success'))<div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{{ session('success') }}</div>@endif
+    @error('status')<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{{ $message }}</div>@enderror
 
-    @error('status')
-        <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-            {{ $message }}
-        </div>
-    @enderror
-
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-            <p class="text-sm font-medium text-blue-700">
-                Surat Perintah Tugas
-            </p>
-
-            <h1 class="mt-1 text-2xl font-bold">
-                {{ $letter->number ?: 'Draft SPT #' . $letter->id }}
-            </h1>
-
-            <p class="mt-1 text-sm text-slate-500">
-                {{ $letter->subject }}
-            </p>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-            @if ($letter->status === \App\Enums\LetterStatus::Draft)
-                @can('letters.update')
-                    <a
-                        href="{{ route('letters.edit', $letter) }}"
-                        wire:navigate
-                        class="rounded-lg border border-blue-300 px-4 py-2 text-sm font-medium text-blue-700"
-                    >
-                        Edit
-                    </a>
-                @endcan
-
-                @can('letters.publish')
-                    <button
-                        type="button"
-                        wire:click="publish"
-                        wire:confirm="Terbitkan SPT ini? Setelah diterbitkan data tidak dapat diedit langsung."
-                        class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white"
-                    >
-                        Terbitkan
-                    </button>
-                @endcan
+    <header class="spt-detail-heading">
+        <div class="min-w-0"><p class="spt-eyebrow">Surat Perintah Tugas</p><h1>Detail SPT</h1><p class="mt-1 text-sm text-slate-500">Informasi surat, penugasan personil, dan dokumen pendukung.</p></div>
+        <div class="spt-page-actions">
+            <a href="{{ route('letters.index') }}" wire:navigate class="spt-action spt-action-back">Kembali</a>
+            <x-letters.edit-action :letter="$letter" show-disabled />
+            @if($letter->status === \App\Enums\LetterStatus::Draft)
+                @can('letters.publish')<button type="button" wire:click="publish" wire:loading.attr="disabled" wire:confirm="Terbitkan SPT ini? Setelah diterbitkan data tidak dapat diedit langsung." class="spt-action spt-action-primary"><x-app.icon name="shield" /> Terbitkan SPT</button>@endcan
             @endif
+        </div>
+    </header>
+
+    @if($letter->source === 'import')
+        @can('letters.update')<div class="import-correction-warning"><x-app.icon name="shield" /><div><h2>SPT hasil import</h2><p>Data dapat diedit untuk memperbaiki kesalahan import. Pastikan koreksi sesuai dokumen asli karena perubahan memengaruhi rekap dan riwayat penugasan.</p></div></div>@endcan
+    @endif
+    <section class="spt-summary-card">
+        <div class="spt-summary-title"><span class="spt-document-icon"><x-app.icon name="document" /></span><div class="min-w-0"><div class="mb-3 flex flex-wrap gap-2"><x-app.status-badge :status="$letter->status" /><span class="status-badge {{ $letter->source === 'import' ? 'status-warning' : 'status-info' }}">{{ $letter->source === 'import' ? 'Import Arsip' : 'Dibuat dari Sistem' }}</span><span class="status-badge status-neutral">{{ $letter->record_type?->label() ?? 'SPT Normal' }}</span></div><h2>{{ $letter->number ?: 'Draft SPT #'.$letter->id }}</h2><p>{{ $letter->subject }}</p></div></div>
+        <div class="spt-summary-metrics">
+            <div><x-app.icon name="calendar" /><span>Tanggal SPT<strong>{{ $letter->letter_date?->translatedFormat('d F Y') ?: '-' }}</strong></span></div>
+            <div><x-app.icon name="clock" /><span>Periode Penugasan<strong>{{ $letter->start_date?->translatedFormat('d M Y') ?: '-' }} &ndash; {{ $letter->end_date?->translatedFormat('d M Y') ?: '-' }}</strong></span></div>
+            <div><x-app.icon name="users" /><span>Personil Ditugaskan<strong>{{ $letter->personnels->count() }} orang</strong></span></div>
+        </div>
+    </section>
+
+    <div class="spt-detail-grid">
+        <div class="spt-detail-main">
+            <section class="spt-section-card">
+                <h2 class="spt-section-heading"><x-app.icon name="list" /> Informasi Penugasan</h2>
+                <dl class="spt-information-grid">
+                    <div><dt>Jenis Kegiatan</dt><dd>{{ $letter->activityType?->name ?: '-' }}</dd></div>
+                    <div><dt>Lokasi</dt><dd>{{ $letter->location ?: '-' }}</dd></div>
+                    <div class="md:col-span-2"><dt>Unit / Tim Kerja</dt><dd>{{ $letter->personnels->pluck('unit.name')->filter()->unique()->implode(', ') ?: '-' }}</dd></div>
+                </dl>
+                <div class="spt-text-section"><h3>Dasar Penugasan</h3><p>{{ $letter->basis ?: 'Belum ada dasar penugasan yang dicatat.' }}</p></div>
+                <div class="spt-text-section"><h3>Keterangan</h3><p>{{ $letter->description ?: 'Tidak ada keterangan tambahan.' }}</p></div>
+            </section>
+            <section class="spt-section-card !p-0">
+                <h2 class="spt-section-heading m-0 px-5 py-4"><x-app.icon name="users" /> Daftar Personil <span class="count-badge">{{ $letter->personnels->count() }} orang</span></h2>
+                <div class="overflow-x-auto"><table class="spt-personnel-table"><thead><tr><th>No</th><th>Nama / NIP</th><th>Jabatan</th><th>Unit / Tim</th></tr></thead><tbody>
+                    @forelse($letter->personnels as $person)
+                        <tr><td>{{ $loop->iteration }}</td><td><strong>{{ $person->name }}</strong><span>{{ $person->nip ?: 'NIP belum tersedia' }}</span></td><td>{{ $person->position ?: '-' }}</td><td>{{ $person->unit?->name ?: '-' }}</td></tr>
+                    @empty<tr><td colspan="4" class="detail-empty">Belum ada personil yang ditugaskan.</td></tr>@endforelse
+                </tbody></table></div>
+            </section>
+        </div>
+        <div class="spt-detail-side">
+            <section class="spt-section-card">
+                <h2 class="spt-section-heading"><x-app.icon name="document" /> Dokumen Pendukung <span class="count-badge">{{ $letter->attachments->count() }}</span></h2>
+                <div class="space-y-3">@forelse($letter->attachments as $attachment)
+                    <div class="document-card"><x-app.icon class="shrink-0 text-red-500" /><div class="min-w-0 flex-1"><p class="break-words text-xs font-semibold">{{ $attachment->original_name }}</p><p class="mt-1 text-xs text-slate-500">{{ strtoupper(pathinfo($attachment->original_name, PATHINFO_EXTENSION)) ?: 'Dokumen' }} &middot; {{ number_format(($attachment->size ?? 0) / 1024, 0, ',', '.') }} KB</p></div><button type="button" wire:click="downloadAttachment({{ $attachment->id }})" wire:loading.attr="disabled" class="icon-button" aria-label="Unduh {{ $attachment->original_name }}"><x-app.icon name="download" /></button></div>
+                @empty<div class="spt-document-empty"><x-app.icon name="archive" /><p>Belum ada dokumen terlampir.</p></div>@endforelse</div>
+                @error('download')<p role="alert" class="mt-3 text-xs text-red-600">{{ $message }}</p>@enderror
+            </section>
+            <section class="spt-section-card">
+                <h2 class="spt-section-heading"><x-app.icon name="clock" /> Informasi Pencatatan</h2>
+                <dl class="spt-audit-fields">
+                    <div><dt>Dibuat oleh</dt><dd>{{ $letter->creator?->name ?: '-' }}</dd></div>
+                    <div><dt>Dibuat pada</dt><dd>{{ $letter->created_at?->translatedFormat('d M Y, H:i') ?: '-' }}</dd></div>
+                    @if($letter->updater)<div><dt>Diperbarui oleh</dt><dd>{{ $letter->updater->name }}</dd></div>@endif
+                    @if($letter->updated_at)<div><dt>Pembaruan terakhir</dt><dd>{{ $letter->updated_at->translatedFormat('d M Y, H:i') }}</dd></div>@endif
+                    @if($letter->published_at)<div><dt>Diterbitkan pada</dt><dd>{{ $letter->published_at->translatedFormat('d M Y, H:i') }}</dd></div>@endif
+                </dl>
+                @if(! $letter->canBeEdited())
+                    @can('letters.update')<p class="spt-edit-note"><x-app.icon name="shield" /><span>SPT dari sistem hanya dapat diedit saat berstatus draft.</span></p>@endcan
+                @endif
+            </section>
         </div>
     </div>
 
-    <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <dl class="grid gap-5 md:grid-cols-2">
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Status</dt>
-                <dd class="mt-1 font-medium">{{ $letter->status->label() }}</dd>
-            </div>
-
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Jenis Record</dt>
-                <dd class="mt-1"><span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $letter->record_type?->value === 'attendance_correction' ? 'bg-violet-50 text-violet-700' : 'bg-slate-100 text-slate-600' }}">{{ $letter->record_type?->label() ?? 'SPT Normal' }}</span></dd>
-            </div>
-
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Tanggal Surat</dt>
-                <dd class="mt-1">{{ $letter->letter_date?->format('d/m/Y') }}</dd>
-            </div>
-
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Jenis Kegiatan</dt>
-                <dd class="mt-1">{{ $letter->activityType?->name ?: '-' }}</dd>
-            </div>
-
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Lokasi</dt>
-                <dd class="mt-1">{{ $letter->location }}</dd>
-            </div>
-
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Periode</dt>
-                <dd class="mt-1">
-                    {{ $letter->start_date?->format('d/m/Y') }}
-                    –
-                    {{ $letter->end_date?->format('d/m/Y') }}
-                </dd>
-            </div>
-
-            <div>
-                <dt class="text-xs font-semibold uppercase text-slate-500">Dibuat oleh</dt>
-                <dd class="mt-1">{{ $letter->creator?->name ?: '-' }}</dd>
-            </div>
-        </dl>
-
-        <div class="mt-6">
-            <h2 class="text-sm font-semibold uppercase text-slate-500">
-                Dasar
-            </h2>
-            <p class="mt-2 whitespace-pre-line text-sm">
-                {{ $letter->basis ?: '-' }}
-            </p>
-        </div>
-
-        <div class="mt-6">
-            <h2 class="text-sm font-semibold uppercase text-slate-500">
-                Personil
-            </h2>
-
-            <ol class="mt-3 list-decimal space-y-2 pl-5">
-                @foreach ($letter->personnels as $personnel)
-                    <li class="text-sm">
-                        <span class="font-medium">{{ $personnel->name }}</span>
-                        @if ($personnel->nip)
-                            <span class="text-slate-500"> — {{ $personnel->nip }}</span>
-                        @endif
-                    </li>
-                @endforeach
-            </ol>
-        </div>
-
-        @if ($letter->description)
-            <div class="mt-6">
-                <h2 class="text-sm font-semibold uppercase text-slate-500">
-                    Keterangan
-                </h2>
-                <p class="mt-2 whitespace-pre-line text-sm">
-                    {{ $letter->description }}
-                </p>
-            </div>
-        @endif
-    </section>
-
-    @if (
-        $letter->status !== \App\Enums\LetterStatus::Cancelled
-        && auth()->user()->can('letters.cancel')
-    )
-        <section class="rounded-xl border border-red-200 bg-red-50 p-6">
-            <h2 class="font-semibold text-red-900">
-                Batalkan SPT
-            </h2>
-
-            <textarea
-                wire:model="cancellationReason"
-                rows="3"
-                placeholder="Alasan pembatalan..."
-                class="mt-3 w-full rounded-lg border border-red-200 bg-white px-3 py-2"
-            ></textarea>
-
-            @error('cancellationReason')
-                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-            @enderror
-
-            <button
-                type="button"
-                wire:click="cancel"
-                wire:confirm="Yakin membatalkan SPT ini?"
-                class="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white"
-            >
-                Batalkan SPT
-            </button>
-        </section>
+    @if($letter->status === \App\Enums\LetterStatus::Cancelled)
+        <section class="spt-cancellation-info"><h2 class="font-semibold">SPT Dibatalkan</h2><p class="mt-2 whitespace-pre-line text-sm">{{ $letter->cancellation_reason ?: '-' }}</p><p class="mt-2 text-xs">{{ $letter->canceller?->name ?: '-' }} &middot; {{ $letter->cancelled_at?->translatedFormat('d M Y, H:i') ?: '-' }}</p></section>
+    @else
+        @can('letters.cancel')
+            <details class="spt-cancel-section" @if($errors->has('cancellationReason')) open @endif>
+                <summary><span>Batalkan SPT</span><span class="text-xs font-normal">Tampilkan formulir pembatalan</span></summary>
+                <div class="p-5"><label for="cancellation-reason" class="text-sm font-medium">Alasan pembatalan</label><textarea id="cancellation-reason" wire:model="cancellationReason" rows="3" placeholder="Jelaskan alasan pembatalan (minimal 5 karakter)..." class="mt-2 w-full"></textarea>@error('cancellationReason')<p role="alert" class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror<button type="button" wire:click="cancel" wire:loading.attr="disabled" wire:confirm="Yakin membatalkan SPT ini?" class="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white">Batalkan SPT</button></div>
+            </details>
+        @endcan
     @endif
 </div>

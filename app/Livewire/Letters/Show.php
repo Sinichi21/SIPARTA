@@ -6,11 +6,13 @@ use App\Models\Letter;
 use App\Services\LetterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
 class Show extends Component
 {
     public Letter $letter;
+
     public string $cancellationReason = '';
 
     public function mount(Letter $letter): void
@@ -29,6 +31,7 @@ class Show extends Component
             'creator',
             'updater',
             'canceller',
+            'attachments',
         ]);
     }
 
@@ -45,6 +48,7 @@ class Show extends Component
                 'creator',
                 'updater',
                 'canceller',
+                'attachments',
             ]);
 
         session()->flash(
@@ -79,6 +83,7 @@ class Show extends Component
                 'creator',
                 'updater',
                 'canceller',
+                'attachments',
             ]);
 
         $this->cancellationReason = '';
@@ -92,5 +97,19 @@ class Show extends Component
     public function render()
     {
         return view('livewire.letters.show');
+    }
+
+    public function downloadAttachment(int $attachmentId)
+    {
+        Gate::authorize('letters.view');
+        $attachment = $this->letter->attachments()->findOrFail($attachmentId);
+
+        if (! Storage::exists($attachment->path)) {
+            $this->addError('download', 'Dokumen tidak ditemukan di penyimpanan.');
+
+            return null;
+        }
+
+        return Storage::download($attachment->path, $attachment->original_name);
     }
 }

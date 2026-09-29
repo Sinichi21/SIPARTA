@@ -15,8 +15,7 @@ class LetterService
     public function __construct(
         private readonly AuditService $audit,
         private readonly LetterNumberService $numberService,
-    ) {
-    }
+    ) {}
 
     public function createSpt(array $data, int $userId): Letter
     {
@@ -44,8 +43,7 @@ class LetterService
 
             if ($personnelIds !== $validPersonnelIds) {
                 throw ValidationException::withMessages([
-                    'personnel_ids' =>
-                        'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
+                    'personnel_ids' => 'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
                 ]);
             }
 
@@ -100,10 +98,11 @@ class LetterService
             $data,
             $userId
         ) {
-            if ($letter->status !== LetterStatus::Draft) {
+            $letter = Letter::query()->lockForUpdate()->findOrFail($letter->id);
+
+            if (! $letter->canBeEdited()) {
                 throw ValidationException::withMessages([
-                    'status' =>
-                        'Hanya SPT berstatus draft yang dapat diubah.',
+                    'status' => 'Hanya SPT draft atau hasil import yang dapat diubah.',
                 ]);
             }
 
@@ -113,9 +112,16 @@ class LetterService
                 )
             );
 
+            $previousPersonnelIds = $letter->personnels()->pluck('personnels.id')->map(fn ($id) => (int) $id)->all();
+
             $validPersonnelIds = Personnel::query()
                 ->whereIn('id', $personnelIds)
-                ->where('is_active', true)
+                ->where(function ($query) use ($letter, $previousPersonnelIds) {
+                    $query->where('is_active', true);
+                    if ($letter->source === 'import') {
+                        $query->orWhereIn('id', $previousPersonnelIds);
+                    }
+                })
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
@@ -125,8 +131,7 @@ class LetterService
 
             if ($personnelIds !== $validPersonnelIds) {
                 throw ValidationException::withMessages([
-                    'personnel_ids' =>
-                        'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
+                    'personnel_ids' => 'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
                 ]);
             }
 
@@ -160,10 +165,15 @@ class LetterService
 
             $letter->personnels()->sync($validPersonnelIds);
 
-            $this->audit->updated(
+            $audit = $this->audit->updated(
                 $letter,
                 $oldValues
             );
+
+            $audit->update([
+                'old_values' => array_merge($audit->old_values ?? [], ['personnel_ids' => $previousPersonnelIds]),
+                'new_values' => array_merge($audit->new_values ?? [], ['personnel_ids' => $validPersonnelIds, 'import_correction' => $letter->source === 'import']),
+            ]);
 
             return $letter->fresh([
                 'letterType',
@@ -185,15 +195,13 @@ class LetterService
         ) {
             if ($letter->status !== LetterStatus::Draft) {
                 throw ValidationException::withMessages([
-                    'status' =>
-                        'Hanya SPT berstatus draft yang dapat diterbitkan.',
+                    'status' => 'Hanya SPT berstatus draft yang dapat diterbitkan.',
                 ]);
             }
 
             if ($letter->personnels()->count() < 1) {
                 throw ValidationException::withMessages([
-                    'personnel_ids' =>
-                        'SPT harus mempunyai minimal satu personil.',
+                    'personnel_ids' => 'SPT harus mempunyai minimal satu personil.',
                 ]);
             }
 
@@ -237,8 +245,7 @@ class LetterService
         ) {
             if ($letter->status === LetterStatus::Cancelled) {
                 throw ValidationException::withMessages([
-                    'status' =>
-                        'SPT sudah dibatalkan.',
+                    'status' => 'SPT sudah dibatalkan.',
                 ]);
             }
 
@@ -253,8 +260,7 @@ class LetterService
                 )
             ) {
                 throw ValidationException::withMessages([
-                    'status' =>
-                        'Status SPT ini tidak dapat dibatalkan.',
+                    'status' => 'Status SPT ini tidak dapat dibatalkan.',
                 ]);
             }
 

@@ -3,7 +3,6 @@
 namespace App\Livewire\Letters;
 
 use App\Enums\LetterRecordType;
-use App\Enums\LetterStatus;
 use App\Models\ActivityType;
 use App\Models\Letter;
 use App\Models\Personnel;
@@ -17,16 +16,27 @@ class Edit extends Component
     public Letter $letter;
 
     public string $number = '';
+
     public string $subject = '';
+
     public ?int $activity_type_id = null;
+
     public string $letter_date = '';
+
     public string $start_date = '';
+
     public string $end_date = '';
+
     public string $location = '';
+
     public string $basis = '';
+
     public string $description = '';
+
     public string $record_type = 'normal';
+
     public array $personnel_ids = [];
+
     public string $personnelSearch = '';
 
     public function mount(Letter $letter): void
@@ -39,9 +49,9 @@ class Edit extends Component
         );
 
         abort_unless(
-            $letter->status === LetterStatus::Draft,
+            $letter->canBeEdited(),
             403,
-            'Hanya SPT berstatus draft yang dapat diedit.'
+            'Hanya SPT draft atau hasil import yang dapat diedit.'
         );
 
         $this->letter = $letter;
@@ -116,18 +126,23 @@ class Edit extends Component
     {
         return view('livewire.letters.edit', [
             'activityTypes' => ActivityType::query()
-                ->where('is_active', true)
+                ->where(fn ($query) => $query->where('is_active', true)->orWhere('id', $this->letter->activity_type_id))
                 ->orderBy('name')
                 ->get(),
             'personnels' => Personnel::query()
                 ->with('unit')
-                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->where('is_active', true);
+                    if ($this->letter->source === 'import') {
+                        $query->orWhereIn('id', $this->letter->personnels()->select('personnels.id'));
+                    }
+                })
                 ->when(
                     filled($this->personnelSearch),
                     fn ($query) => $query->where(
                         'name',
                         'ilike',
-                        '%' . trim($this->personnelSearch) . '%'
+                        '%'.trim($this->personnelSearch).'%'
                     )
                 )
                 ->orderBy('name')

@@ -60,6 +60,11 @@ class Letter extends Model
         return $this->belongsTo(LetterType::class);
     }
 
+    public function canBeEdited(): bool
+    {
+        return $this->status === LetterStatus::Draft || $this->source === 'import';
+    }
+
     public function activityType(): BelongsTo
     {
         return $this->belongsTo(ActivityType::class);

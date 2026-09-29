@@ -1,49 +1,60 @@
 <aside
-    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-gradient-to-b from-[#123b6d] to-[#082d56] text-white transition-transform duration-200 lg:translate-x-0"
+    id="app-sidebar"
+    :class="{ 'sidebar-expanded': sidebarOpen }"
+    @keydown.escape.window="sidebarOpen = false"
+    x-trap.inert.noscroll="sidebarOpen && window.innerWidth < 1024"
+    class="app-sidebar fixed inset-y-0 left-0 z-50 flex flex-col text-white"
 >
-    <div class="flex h-16 items-center gap-3 border-b border-white/10 px-4">
-        <div class="flex size-11 items-center justify-center rounded-2xl bg-blue-500/25 ring-1 ring-white/10">
-            <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
-        </div>
-        <div><p class="font-bold leading-tight">Persuratan Komdigi</p><p class="mt-1 text-xs text-blue-200">Administrasi SPT</p></div>
+    <div class="sidebar-brand">
+        <span class="sidebar-brand-icon"><x-app.icon name="document" class="size-6" /></span>
+        <div class="min-w-0 flex-1"><p>Persuratan Komdigi</p><span>Administrasi &amp; Penugasan</span></div>
+        <button type="button" @click="sidebarOpen = false" class="sidebar-mobile-close lg:hidden" aria-label="Tutup menu"><x-app.icon name="close" /></button>
     </div>
-
-    <nav aria-label="Navigasi utama" class="sidebar-scroll flex-1 overflow-y-auto px-3 py-5 text-sm">
+    <nav aria-label="Navigasi utama" class="sidebar-scroll sidebar-navigation">
         @can('dashboard.view')
-            <a href="{{ route('dashboard') }}" wire:navigate @class(['flex items-center gap-3 rounded-xl px-3 py-2.5 font-semibold transition','bg-blue-500 text-white shadow-lg shadow-blue-950/20'=>request()->routeIs('dashboard'),'text-blue-100 hover:bg-white/10'=>!request()->routeIs('dashboard')])>
-                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>Dashboard
-            </a>
+            <x-app.nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="home">Dashboard</x-app.nav-link>
         @endcan
 
-        <p class="px-4 pb-2 pt-6 text-[11px] font-semibold uppercase tracking-[.14em] text-blue-300">Persuratan</p>
-
-        @can('letters.view')
-            <div x-data="{ open: {{ request()->routeIs('letters.*','spt-recap.*','personnel-recap.*','spt-import.*') ? 'true' : 'false' }} }">
-                <button type="button" :aria-expanded="open" @click="open = !open" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 font-semibold text-blue-100 hover:bg-white/10">
-                    <span class="flex items-center gap-3"><svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>SPT</span><svg class="size-4 transition" :class="open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                <div x-cloak x-show="open" class="mt-1 space-y-1 pl-6">
-                    <a href="{{ route('letters.index') }}" wire:navigate @class(['block rounded-lg px-4 py-2.5','bg-blue-500 text-white'=>request()->routeIs('letters.index','letters.show','letters.edit'),'text-blue-200 hover:bg-white/10'=>!request()->routeIs('letters.index','letters.show','letters.edit')])>Data SPT</a>
-                    @can('reports.view')
-                        <a href="{{ route('spt-recap.index') }}" wire:navigate @class(['block rounded-lg px-4 py-2.5','bg-blue-500 text-white'=>request()->routeIs('spt-recap.*'),'text-blue-200 hover:bg-white/10'=>!request()->routeIs('spt-recap.*')])>Rekap SPT</a>
-                        <a href="{{ route('personnel-recap.index') }}" wire:navigate @class(['block rounded-lg px-4 py-2.5','bg-blue-500 text-white'=>request()->routeIs('personnel-recap.*'),'text-blue-200 hover:bg-white/10'=>!request()->routeIs('personnel-recap.*')])>Rekap Personil</a>
-                    @endcan
-                    @can('letters.import')<a href="{{ route('spt-import.index') }}" wire:navigate @class(['block rounded-lg px-4 py-2.5','bg-blue-500 text-white'=>request()->routeIs('spt-import.*'),'text-blue-200 hover:bg-white/10'=>!request()->routeIs('spt-import.*')])>Import SPT Lama</a>@endcan
+        @canany(['letters.view', 'reports.view', 'letters.import'])
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Persuratan</p>
+                @php($sptActive = request()->routeIs('letters.*', 'spt-recap.*', 'personnel-recap.*', 'spt-import.*'))
+                <div x-data="{ open: {{ $sptActive ? 'true' : 'false' }} }" wire:key="spt-menu-{{ $sptActive ? 'active' : 'inactive' }}">
+                    <button type="button" @click="open = !open" :aria-expanded="open" aria-controls="spt-submenu" @class(['sidebar-link sidebar-group-toggle', 'is-parent-active' => $sptActive])>
+                        <x-app.icon name="document" /><span>SPT</span><x-app.icon name="chevron" class="sidebar-chevron" x-bind:class="{ 'rotate-180': open }" />
+                    </button>
+                    <div id="spt-submenu" x-cloak x-show="open" class="sidebar-submenu">
+                        @can('letters.view')<x-app.nav-link :href="route('letters.index')" :active="request()->routeIs('letters.*')" sub>Data SPT</x-app.nav-link>@endcan
+                        @can('reports.view')
+                            <x-app.nav-link :href="route('spt-recap.index')" :active="request()->routeIs('spt-recap.*')" sub>Rekap SPT</x-app.nav-link>
+                            <x-app.nav-link :href="route('personnel-recap.index')" :active="request()->routeIs('personnel-recap.*')" sub>Rekap Personil</x-app.nav-link>
+                        @endcan
+                        @can('letters.import')<x-app.nav-link :href="route('spt-import.index')" :active="request()->routeIs('spt-import.*')" sub>Import SPT Lama</x-app.nav-link>@endcan
+                    </div>
                 </div>
             </div>
+        @endcanany
+
+        @canany(['personnels.view', 'personnels.merge', 'units.view', 'activity-types.view', 'letter-types.view'])
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Master Data</p>
+                @can('personnels.view')<x-app.nav-link :href="route('personnels.index')" :active="request()->routeIs('personnels.*')" icon="users">Personil</x-app.nav-link>@endcan
+                @can('personnels.merge')<x-app.nav-link :href="route('personnel-duplicates.index')" :active="request()->routeIs('personnel-duplicates.*')" sub>Deteksi Duplikat</x-app.nav-link>@endcan
+                @can('units.view')<x-app.nav-link :href="route('units.index')" :active="request()->routeIs('units.*')" icon="building">Unit / Tim Kerja</x-app.nav-link>@endcan
+                @can('activity-types.view')<x-app.nav-link :href="route('activity-types.index')" :active="request()->routeIs('activity-types.*')" icon="list">Jenis Kegiatan</x-app.nav-link>@endcan
+                @can('letter-types.view')<x-app.nav-link :href="route('letter-types.index')" :active="request()->routeIs('letter-types.*')" icon="document">Jenis Surat</x-app.nav-link>@endcan
+            </div>
+        @endcanany
+
+        @can('audit-logs.view')
+            <div class="sidebar-section"><p class="sidebar-section-label">Pengaturan</p><x-app.nav-link :href="route('audit-logs.index')" :active="request()->routeIs('audit-logs.*')" icon="clock">Log Aktivitas</x-app.nav-link></div>
         @endcan
-
-        <p class="px-4 pb-2 pt-6 text-[11px] font-semibold uppercase tracking-[.14em] text-blue-300">Master Data</p>
-        @can('personnels.view')<a href="{{ route('personnels.index') }}" wire:navigate @class(['flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium','bg-blue-500 text-white'=>request()->routeIs('personnels.*'),'text-blue-100 hover:bg-white/10'=>!request()->routeIs('personnels.*')])><x-app.icon name="users" />Personil</a>@endcan
-        @can('personnels.merge')<a href="{{ route('personnel-duplicates.index') }}" wire:navigate @class(['ml-6 block rounded-lg px-4 py-2 text-xs font-semibold','bg-amber-400/20 text-amber-100'=>request()->routeIs('personnel-duplicates.*'),'text-blue-200 hover:bg-white/10'=>!request()->routeIs('personnel-duplicates.*')])>Deteksi Duplikat</a>@endcan
-        @can('units.view')<a href="{{ route('units.index') }}" wire:navigate @class(['flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium','bg-blue-500 text-white'=>request()->routeIs('units.*'),'text-blue-100 hover:bg-white/10'=>!request()->routeIs('units.*')])><x-app.icon name="building" />Unit / Tim Kerja</a>@endcan
-        @can('activity-types.view')<a href="{{ route('activity-types.index') }}" wire:navigate @class(['flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium','bg-blue-500 text-white'=>request()->routeIs('activity-types.*'),'text-blue-100 hover:bg-white/10'=>!request()->routeIs('activity-types.*')])><x-app.icon name="list" />Jenis Kegiatan</a>@endcan
-        @can('letter-types.view')<a href="{{ route('letter-types.index') }}" wire:navigate @class(['flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium','bg-blue-500 text-white'=>request()->routeIs('letter-types.*'),'text-blue-100 hover:bg-white/10'=>!request()->routeIs('letter-types.*')])><x-app.icon name="document" />Jenis Surat</a>@endcan
-
-        <p class="px-4 pb-2 pt-6 text-[11px] font-semibold uppercase tracking-[.14em] text-blue-300">Pengaturan</p>
-        @can('audit-logs.view')<a href="{{ route('audit-logs.index') }}" wire:navigate @class(['flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium','bg-blue-500 text-white'=>request()->routeIs('audit-logs.*'),'text-blue-100 hover:bg-white/10'=>!request()->routeIs('audit-logs.*')])><x-app.icon name="clock" />Log Aktivitas</a>@endcan
     </nav>
-
-    <div class="border-t border-white/10 p-4"><div class="rounded-2xl bg-white/5 p-4"><p class="truncate text-sm font-semibold">{{ auth()->user()?->name }}</p><p class="truncate text-xs text-blue-200">{{ auth()->user()?->email }}</p><form method="POST" action="{{ route('logout') }}" class="mt-3">@csrf<button class="w-full rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-blue-100 hover:bg-white/10">Keluar</button></form></div></div>
+    <div class="sidebar-footer">
+        <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">
+            <span class="sidebar-avatar">{{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'U', 0, 1)) }}</span>
+            <span class="min-w-0"><strong>{{ auth()->user()?->name }}</strong><span>{{ auth()->user()?->getRoleNames()->first() ?: 'Pengguna' }}</span></span>
+        </a>
+        <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="sidebar-logout" aria-label="Keluar dari aplikasi" title="Keluar"><x-app.icon name="logout" /></button></form>
+    </div>
 </aside>

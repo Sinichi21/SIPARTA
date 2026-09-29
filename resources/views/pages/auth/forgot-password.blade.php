@@ -1,31 +1,14 @@
-<x-layouts::auth :title="__('Forgot password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Forgot password')" :description="__('Enter your email to receive a password reset link')" />
-
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
-
-        <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
+<x-layouts::auth title="Lupa Kata Sandi">
+    <div class="auth-form-content">
+        <div class="auth-form-icon"><x-app.icon name="shield" /></div>
+        <x-auth-header title="Lupa kata sandi?" description="Masukkan email akun Anda. Kami akan mengirimkan tautan untuk mengatur ulang kata sandi." />
+        <x-auth-session-status class="auth-status" :status="session('status')" />
+        <form method="POST" action="{{ route('password.email') }}" class="auth-form">
             @csrf
-
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                type="email"
-                required
-                autofocus
-                placeholder="email@example.com"
-            />
-
-            <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
-                {{ __('Email password reset link') }}
-            </flux:button>
+            <flux:input name="email" label="Alamat email" :value="old('email')" type="email" required autofocus autocomplete="email" placeholder="nama@instansi.go.id" />
+            <flux:button variant="primary" type="submit" class="auth-submit w-full" data-test="email-password-reset-link-button">Kirim tautan reset <x-app.icon name="arrow" class="ml-2 size-4" /></flux:button>
         </form>
-
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
-            <span>{{ __('Or, return to') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
-        </div>
+        <p class="auth-form-note">Periksa kotak masuk dan folder spam setelah meminta tautan reset.</p>
+        <a href="{{ route('login') }}" wire:navigate class="auth-back-link"><x-app.icon name="arrow" class="size-4 rotate-180" /> Kembali ke halaman masuk</a>
     </div>
 </x-layouts::auth>

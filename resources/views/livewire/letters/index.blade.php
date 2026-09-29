@@ -117,25 +117,10 @@
                             </td>
 
                             <td class="px-4 py-3 text-right">
-                                <a
-                                    href="{{ route('letters.show', $letter) }}"
-                                    wire:navigate
-                                    class="text-sm font-medium text-blue-700"
-                                >
-                                    Lihat
-                                </a>
-
-                                @if ($letter->status->value === 'draft')
-                                    @can('letters.update')
-                                        <a
-                                            href="{{ route('letters.edit', $letter) }}"
-                                            wire:navigate
-                                            class="ml-3 text-sm font-medium text-slate-700"
-                                        >
-                                            Edit
-                                        </a>
-                                    @endcan
-                                @endif
+                                <div class="spt-row-actions">
+                                    <a href="{{ route('letters.show', $letter) }}" wire:navigate class="spt-action spt-action-view"><x-app.icon name="document" /> Detail</a>
+                                    <x-letters.edit-action :letter="$letter" />
+                                </div>
                             </td>
                         </tr>
                     @empty

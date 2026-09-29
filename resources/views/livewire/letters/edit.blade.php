@@ -2,11 +2,18 @@
     <div>
         <h1 class="text-2xl font-bold">Edit SPT</h1>
         <p class="mt-1 text-sm text-slate-500">
-            Hanya draft yang dapat diedit.
+            {{ $letter->source === 'import' ? 'Koreksi data surat hasil import.' : 'Perbarui data surat yang masih berstatus draft.' }}
         </p>
     </div>
 
-    <form wire:submit="save" class="space-y-6">
+    @if($letter->source === 'import')
+        <div role="note" class="import-correction-warning">
+            <x-app.icon name="shield" />
+            <div><h2>Perhatian: koreksi SPT hasil import</h2><p>Gunakan edit hanya untuk memperbaiki kesalahan import. Cocokkan nomor surat, tanggal, kegiatan, dan personil dengan dokumen asli. Perubahan memengaruhi rekap dan riwayat penugasan serta dicatat dalam log aktivitas. Status dan sumber import tetap dipertahankan.</p></div>
+        </div>
+    @endif
+    @if($errors->any())<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><p class="font-semibold">Periksa kembali data berikut:</p><ul class="mt-2 list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    <form wire:submit="save" @if($letter->source === 'import') wire:confirm="Simpan koreksi SPT hasil import? Pastikan perubahan sesuai dokumen asli. Rekap dan riwayat penugasan akan ikut berubah." @endif class="space-y-6">
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div class="grid gap-5 md:grid-cols-2">
                 <div>
