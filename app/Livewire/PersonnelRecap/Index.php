@@ -115,10 +115,7 @@ class Index extends Component
     private function applySptFilters($query)
     {
         return $query
-            ->whereHas(
-                'letterType',
-                fn (Builder $q) => $q->where('code', 'SPT')
-            )
+            ->spt()
             ->when(
                 $this->recordType !== 'all',
                 fn ($q) => $q->where(
@@ -144,7 +141,7 @@ class Index extends Component
 
     public function exportHistory()
     {
-        Gate::authorize('reports.export');
+        Gate::authorize('reports.view');
 
         if (! $this->selectedPersonnelId) {
             return null;
@@ -177,10 +174,24 @@ class Index extends Component
             now()->format('Ymd-His')
         );
 
+        $csvSafe = static function ($value): string {
+            $value = (string) ($value ?? '');
+
+            if (
+                $value !== ''
+                && preg_match('/^[=+\-@\t\r]/u', $value)
+            ) {
+                return "'".$value;
+            }
+
+            return $value;
+        };
+
         return response()->streamDownload(
             function () use (
                 $personnel,
-                $letters
+                $letters,
+                $csvSafe
             ) {
                 $handle = fopen(
                     'php://output',
@@ -207,26 +218,36 @@ class Index extends Component
 
                 foreach ($letters as $letter) {
                     fputcsv($handle, [
-                        $personnel->name,
-                        $personnel->nip ?? '',
-                        $personnel->unit?->name ?? '',
-                        $letter->number ?? '',
-                        $letter->letter_date
-                            ?->format('Y-m-d') ?? '',
-                        $letter->start_date
-                            ?->format('Y-m-d') ?? '',
-                        $letter->end_date
-                            ?->format('Y-m-d') ?? '',
-                        $letter->subject
-                            ?: $letter
-                                ->activityType
-                                ?->name
-                            ?: '',
-                        $letter->location ?? '',
-                        $letter
-                            ->record_type
-                            ?->label()
-                            ?? 'SPT Normal',
+                        $csvSafe($personnel->name),
+                        $csvSafe($personnel->nip ?? ''),
+                        $csvSafe($personnel->unit?->name ?? ''),
+                        $csvSafe($letter->number ?? ''),
+                        $csvSafe(
+                            $letter->letter_date
+                                ?->format('Y-m-d') ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->start_date
+                                ?->format('Y-m-d') ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->end_date
+                                ?->format('Y-m-d') ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->subject
+                                ?: $letter
+                                    ->activityType
+                                    ?->name
+                                ?: ''
+                        ),
+                        $csvSafe($letter->location ?? ''),
+                        $csvSafe(
+                            $letter
+                                ->record_type
+                                ?->label()
+                                ?? 'SPT Normal'
+                        ),
                     ]);
                 }
 
@@ -394,10 +415,7 @@ class Index extends Component
          * masing-masing personil.
          */
         $allPersonnelSpt = Letter::query()
-            ->whereHas(
-                'letterType',
-                fn (Builder $q) => $q->where('code', 'SPT')
-            )
+            ->spt()
             ->where(
                 'personnel_scope',
                 Letter::PERSONNEL_SCOPE_ALL
@@ -429,10 +447,7 @@ class Index extends Component
 
         if ($this->showAllPersonnelSpt) {
             $allPersonnelSptRows = Letter::query()
-                ->whereHas(
-                    'letterType',
-                    fn (Builder $q) => $q->where('code', 'SPT')
-                )
+                ->spt()
                 ->where(
                     'personnel_scope',
                     Letter::PERSONNEL_SCOPE_ALL
@@ -509,65 +524,68 @@ class Index extends Component
         /*
          * Statistik unit mengikuti filter utama rekap.
          */
-        $unitStats = Unit::query()
-            ->leftJoin(
+        $unitAssignmentCounts = DB::table('letter_personnel')
+            ->join(
                 'personnels',
-                'units.id',
+                'letter_personnel.personnel_id',
                 '=',
-                'personnels.unit_id'
+                'personnels.id'
             )
-            ->leftJoin(
-                'letter_personnel',
-                'personnels.id',
-                '=',
-                'letter_personnel.personnel_id'
-            )
-            ->leftJoin(
+            ->join(
                 'letters',
                 'letter_personnel.letter_id',
                 '=',
                 'letters.id'
             )
-            ->leftJoin(
+            ->join(
                 'letter_types',
                 'letters.letter_type_id',
                 '=',
                 'letter_types.id'
             )
-            ->where(function ($q) {
-                $q
-                    ->where('letter_types.code', 'SPT')
-                    ->orWhereNull('letter_types.code');
-            })
-            ->select('units.name')
-            ->selectRaw(
-                "
-                COUNT(
-                    CASE
-                        WHEN letter_types.code = 'SPT'
-                        AND (? = 'all' OR letters.record_type = ?)
-                        AND (? = '' OR EXTRACT(YEAR FROM letters.letter_date) = CAST(? AS INTEGER))
-                        AND (? = '' OR letters.activity_type_id = CAST(NULLIF(?, '') AS BIGINT))
-                        THEN 1
-                    END
-                ) as total
-                ",
-                [
-                    $this->recordType,
-                    $this->recordType,
-                    $this->year,
-                    $this->year,
-                    $this->activityTypeId,
-                    $this->activityTypeId,
+            ->where('letter_types.code', 'SPT')
+            ->when(
+                $this->recordType !== 'all',
+                fn ($q) => $q->where(
+                    'letters.record_type',
+                    $this->recordType
+                )
+            )
+            ->when(
+                $this->year !== '',
+                fn ($q) => $q->whereYear(
+                    'letters.letter_date',
+                    (int) $this->year
+                )
+            )
+            ->when(
+                $this->activityTypeId !== '',
+                fn ($q) => $q->where(
+                    'letters.activity_type_id',
+                    (int) $this->activityTypeId
+                )
+            )
+            ->whereNotNull('personnels.unit_id')
+            ->select('personnels.unit_id')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('personnels.unit_id')
+            ->pluck('total', 'personnels.unit_id');
+
+        $unitStats = Unit::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(
+                fn (Unit $unit) => (object) [
+                    'name' => $unit->name,
+                    'total' => (int) (
+                        $unitAssignmentCounts[$unit->id]
+                        ?? 0
+                    ),
                 ]
             )
-            ->groupBy(
-                'units.id',
-                'units.name'
-            )
-            ->orderByDesc('total')
-            ->limit(6)
-            ->get();
+            ->sortByDesc('total')
+            ->take(6)
+            ->values();
 
         $maxUnit = max(
             1,
@@ -604,11 +622,7 @@ class Index extends Component
              */
             $selectedCurrentYearQuery =
                 $selectedPersonnel->letters()
-                    ->whereHas(
-                        'letterType',
-                        fn (Builder $q) =>
-                            $q->where('code', 'SPT')
-                    )
+                    ->spt()
                     ->when(
                         $this->recordType !== 'all',
                         fn ($q) => $q->where(
