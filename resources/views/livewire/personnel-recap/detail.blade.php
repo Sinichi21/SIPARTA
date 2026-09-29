@@ -183,8 +183,8 @@
         @else
 
             <p class="detail-empty">
-                Belum ada riwayat penugasan SPT
-                pada filter yang sedang dipilih.
+                Belum ada riwayat penugasan SPT.
+                Pada filter yang sedang dipilih.
             </p>
 
         @endif

@@ -1,22 +1,40 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Services\SptImportService;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\TestCase;
 
-it('recognizes all personnel aliases during SPT import', function (string $value) {
-    expect(SptImportService::isAllPersonnelValue($value))->toBeTrue();
-})->with([
-    'ALL PEGAWAI',
-    'Semua Pegawai',
-    'seluruh pegawai',
-    'ALL PERSONIL',
-    'Semua Personil',
-    'SELURUH PERSONIL',
-]);
+class SptImportPersonnelScopeTest extends TestCase
+{
+    public static function allPersonnelAliases(): array
+    {
+        return [
+            ['ALL PEGAWAI'],
+            ['Semua Pegawai'],
+            ['seluruh pegawai'],
+            ['ALL PERSONIL'],
+            ['Semua Personil'],
+            ['SELURUH PERSONIL'],
+        ];
+    }
 
-it('does not classify an ordinary personnel name as all personnel', function () {
-    expect(
-        SptImportService::isAllPersonnelValue(
-            'I Wayan Contoh, S.Kom.'
-        )
-    )->toBeFalse();
-});
+    #[DataProvider('allPersonnelAliases')]
+    public function test_recognizes_all_personnel_aliases_during_spt_import(
+        string $value
+    ): void {
+        $this->assertTrue(
+            SptImportService::isAllPersonnelValue($value)
+        );
+    }
+
+    public function test_does_not_classify_an_ordinary_personnel_name_as_all_personnel(): void
+    {
+        $this->assertFalse(
+            SptImportService::isAllPersonnelValue(
+                'I Wayan Contoh, S.Kom.'
+            )
+        );
+    }
+}

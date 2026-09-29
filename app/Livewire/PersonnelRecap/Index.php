@@ -695,6 +695,9 @@ class Index extends Component
                 'selectedHistory' =>
                     $selectedHistory,
 
+                'showAllHistory' =>
+                    $this->showAllHistory,
+
                 'selectedFilteredCount' =>
                     $selectedFilteredCount,
 
