@@ -9,6 +9,17 @@
         @endforeach
     </div>
 
+    @if(($allPersonnelSpt ?? 0) > 0)
+        <div class="rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm text-blue-900">
+            <span class="font-semibold">
+                {{ number_format($allPersonnelSpt) }} SPT Seluruh Pegawai
+            </span>
+            <span class="text-blue-700">
+                pada filter aktif. SPT ini tetap tercatat dalam rekap, tetapi tidak ditambahkan ke jumlah SPT personil individual.
+            </span>
+        </div>
+    @endif
+
     <div class="grid gap-4 xl:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2"><h2 class="font-bold">Jumlah Penugasan per Unit</h2><div class="mt-5 space-y-4">@forelse($unitStats as $unit)<div><div class="mb-1 flex justify-between text-sm"><span class="text-slate-600">{{ $unit->name }}</span><span class="font-semibold">{{ $unit->total }}</span></div><div class="h-3 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-blue-500" style="width: {{ ($unit->total / $maxUnit) * 100 }}%"></div></div></div>@empty<div class="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">Belum ada data unit.</div>@endforelse</div></div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h2 class="font-bold">Distribusi Status Personil</h2><div class="mt-6 grid place-items-center"><div class="grid size-36 place-items-center rounded-full" style="background: conic-gradient(#22c55e 0 {{ $totalPersonnel ? ($activePersonnel/$totalPersonnel)*100 : 0 }}%, #ef4444 0 100%);"><div class="grid size-24 place-items-center rounded-full bg-white"><span class="text-2xl font-bold">{{ $totalPersonnel }}</span></div></div></div><div class="mt-6 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500">Aktif</span><span class="font-semibold">{{ $activePersonnel }}</span></div><div class="flex justify-between"><span class="text-slate-500">Tidak Aktif</span><span class="font-semibold">{{ $totalPersonnel-$activePersonnel }}</span></div></div></div>

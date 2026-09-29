@@ -25,26 +25,53 @@ class LetterService
                 ->where('is_active', true)
                 ->firstOrFail();
 
-            $personnelIds = array_values(
-                array_unique(
-                    array_map('intval', $data['personnel_ids'])
-                )
-            );
+            $personnelScope = $data['personnel_scope']
+                ?? Letter::PERSONNEL_SCOPE_SELECTED;
 
-            $validPersonnelIds = Personnel::query()
-                ->whereIn('id', $personnelIds)
-                ->where('is_active', true)
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-
-            sort($personnelIds);
-            sort($validPersonnelIds);
-
-            if ($personnelIds !== $validPersonnelIds) {
+            if (! in_array(
+                $personnelScope,
+                [
+                    Letter::PERSONNEL_SCOPE_SELECTED,
+                    Letter::PERSONNEL_SCOPE_ALL,
+                ],
+                true
+            )) {
                 throw ValidationException::withMessages([
-                    'personnel_ids' => 'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
+                    'personnel_scope' => 'Cakupan personil tidak valid.',
                 ]);
+            }
+
+            $personnelIds = [];
+            $validPersonnelIds = [];
+
+            if (
+                $personnelScope
+                === Letter::PERSONNEL_SCOPE_SELECTED
+            ) {
+                $personnelIds = array_values(
+                    array_unique(
+                        array_map(
+                            'intval',
+                            $data['personnel_ids'] ?? []
+                        )
+                    )
+                );
+
+                $validPersonnelIds = Personnel::query()
+                    ->whereIn('id', $personnelIds)
+                    ->where('is_active', true)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                sort($personnelIds);
+                sort($validPersonnelIds);
+
+                if ($personnelIds !== $validPersonnelIds) {
+                    throw ValidationException::withMessages([
+                        'personnel_ids' => 'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
+                    ]);
+                }
             }
 
             $letter = Letter::create([
@@ -72,6 +99,7 @@ class LetterService
 
                 'status' => LetterStatus::Draft,
                 'record_type' => LetterRecordType::from($data['record_type'] ?? LetterRecordType::Normal->value),
+                'personnel_scope' => $personnelScope,
                 'created_by' => $userId,
             ]);
 
@@ -106,33 +134,51 @@ class LetterService
                 ]);
             }
 
-            $personnelIds = array_values(
-                array_unique(
-                    array_map('intval', $data['personnel_ids'])
-                )
-            );
+            $personnelScope = $data['personnel_scope']
+                ?? $letter->personnel_scope
+                ?? Letter::PERSONNEL_SCOPE_SELECTED;
 
-            $previousPersonnelIds = $letter->personnels()->pluck('personnels.id')->map(fn ($id) => (int) $id)->all();
-
-            $validPersonnelIds = Personnel::query()
-                ->whereIn('id', $personnelIds)
-                ->where(function ($query) use ($letter, $previousPersonnelIds) {
-                    $query->where('is_active', true);
-                    if ($letter->source === 'import') {
-                        $query->orWhereIn('id', $previousPersonnelIds);
-                    }
-                })
-                ->pluck('id')
+            $personnelIds = [];
+            $previousPersonnelIds = $letter->personnels()
+                ->pluck('personnels.id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
+            $validPersonnelIds = [];
 
-            sort($personnelIds);
-            sort($validPersonnelIds);
+            if (
+                $personnelScope
+                === Letter::PERSONNEL_SCOPE_SELECTED
+            ) {
+                $personnelIds = array_values(
+                    array_unique(
+                        array_map(
+                            'intval',
+                            $data['personnel_ids'] ?? []
+                        )
+                    )
+                );
 
-            if ($personnelIds !== $validPersonnelIds) {
-                throw ValidationException::withMessages([
-                    'personnel_ids' => 'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
-                ]);
+                $validPersonnelIds = Personnel::query()
+                    ->whereIn('id', $personnelIds)
+                    ->where(function ($query) use ($letter, $previousPersonnelIds) {
+                        $query->where('is_active', true);
+
+                        if ($letter->source === 'import') {
+                            $query->orWhereIn('id', $previousPersonnelIds);
+                        }
+                    })
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                sort($personnelIds);
+                sort($validPersonnelIds);
+
+                if ($personnelIds !== $validPersonnelIds) {
+                    throw ValidationException::withMessages([
+                        'personnel_ids' => 'Terdapat personil yang tidak tersedia atau sudah nonaktif.',
+                    ]);
+                }
             }
 
             $oldValues = $letter->getOriginal();
@@ -160,6 +206,7 @@ class LetterService
                     : null,
 
                 'record_type' => LetterRecordType::from($data['record_type'] ?? LetterRecordType::Normal->value),
+                'personnel_scope' => $personnelScope,
                 'updated_by' => $userId,
             ]);
 
@@ -199,9 +246,13 @@ class LetterService
                 ]);
             }
 
-            if ($letter->personnels()->count() < 1) {
+            if (
+                $letter->personnel_scope
+                    !== Letter::PERSONNEL_SCOPE_ALL
+                && $letter->personnels()->count() < 1
+            ) {
                 throw ValidationException::withMessages([
-                    'personnel_ids' => 'SPT harus mempunyai minimal satu personil.',
+                    'personnel_ids' => 'SPT harus mempunyai minimal satu personil atau menggunakan cakupan Seluruh Pegawai.',
                 ]);
             }
 

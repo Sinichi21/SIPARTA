@@ -3,6 +3,7 @@
 namespace App\Livewire\PersonnelRecap;
 
 use App\Models\ActivityType;
+use App\Models\Letter;
 use App\Models\Personnel;
 use App\Models\Unit;
 use Illuminate\Database\Eloquent\Builder;
@@ -376,6 +377,44 @@ class Index extends Component
             ->count();
 
         /*
+         * SPT dengan cakupan Seluruh Pegawai tidak ditempelkan ke
+         * personil individual. Angkanya ditampilkan terpisah agar
+         * data historis tetap terlihat tanpa mengubah jumlah SPT
+         * masing-masing personil.
+         */
+        $allPersonnelSpt = Letter::query()
+            ->whereHas(
+                'letterType',
+                fn (Builder $q) => $q->where('code', 'SPT')
+            )
+            ->where(
+                'personnel_scope',
+                Letter::PERSONNEL_SCOPE_ALL
+            )
+            ->when(
+                $this->recordType !== 'all',
+                fn (Builder $q) => $q->where(
+                    'record_type',
+                    $this->recordType
+                )
+            )
+            ->when(
+                $this->year !== '',
+                fn (Builder $q) => $q->whereYear(
+                    'letter_date',
+                    (int) $this->year
+                )
+            )
+            ->when(
+                $this->activityTypeId !== '',
+                fn (Builder $q) => $q->where(
+                    'activity_type_id',
+                    (int) $this->activityTypeId
+                )
+            )
+            ->count();
+
+        /*
          * SPT bulan ini memang selalu berarti bulan berjalan.
          * Filter record type tetap diterapkan.
          */
@@ -569,6 +608,7 @@ class Index extends Component
                 'totalPersonnel' => $totalPersonnel,
                 'activePersonnel' => $activePersonnel,
                 'totalAssignments' => $totalAssignments,
+                'allPersonnelSpt' => $allPersonnelSpt,
                 'monthAssignments' => $monthAssignments,
                 'unitStats' => $unitStats,
                 'maxUnit' => $maxUnit,

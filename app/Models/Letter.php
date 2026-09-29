@@ -14,6 +14,9 @@ class Letter extends Model
 {
     use SoftDeletes;
 
+    public const PERSONNEL_SCOPE_SELECTED = 'selected';
+    public const PERSONNEL_SCOPE_ALL = 'all';
+
     protected $fillable = [
         'letter_type_id',
         'activity_type_id',
@@ -28,6 +31,7 @@ class Letter extends Model
         'status',
         'source',
         'record_type',
+        'personnel_scope',
         'import_batch_id',
         'created_by',
         'updated_by',
@@ -76,6 +80,11 @@ class Letter extends Model
             Personnel::class,
             'letter_personnel'
         )->withTimestamps();
+    }
+
+    public function assignsAllPersonnel(): bool
+    {
+        return $this->personnel_scope === self::PERSONNEL_SCOPE_ALL;
     }
 
     public function creator(): BelongsTo

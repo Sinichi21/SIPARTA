@@ -38,6 +38,7 @@ class SptImportService
             $imported = 0;
             $failed = 0;
             $duplicates = 0;
+            $allPersonnelScope = 0;
             $errors = [];
 
             foreach ($rows as $index => $row) {
@@ -70,6 +71,21 @@ class SptImportService
                             ->value('id');
                     }
 
+                    $personnelNamesRaw = $this->mapped(
+                        $row,
+                        $mapping,
+                        'personnel_names'
+                    );
+                    $personnelNipsRaw = $this->mapped(
+                        $row,
+                        $mapping,
+                        'personnel_nips'
+                    );
+
+                    $assignsAllPersonnel = self::isAllPersonnelValue(
+                        $personnelNamesRaw
+                    );
+
                     $letter = Letter::create([
                         'letter_type_id' => $letterType->id,
                         'activity_type_id' => $activityTypeId,
@@ -83,19 +99,26 @@ class SptImportService
                         'status' => LetterStatus::Published,
                         'source' => 'import',
                         'record_type' => $recordType,
+                        'personnel_scope' => $assignsAllPersonnel
+                            ? Letter::PERSONNEL_SCOPE_ALL
+                            : Letter::PERSONNEL_SCOPE_SELECTED,
                         'import_batch_id' => $batch->id,
                         'created_by' => $userId,
                         'updated_by' => $userId,
                         'published_at' => now(),
                     ]);
 
-                    $personnelIds = $this->resolvePersonnels(
-                        $this->mapped($row, $mapping, 'personnel_names'),
-                        $this->mapped($row, $mapping, 'personnel_nips')
-                    );
+                    if ($assignsAllPersonnel) {
+                        $allPersonnelScope++;
+                    } else {
+                        $personnelIds = $this->resolvePersonnels(
+                            $personnelNamesRaw,
+                            $personnelNipsRaw
+                        );
 
-                    if ($personnelIds !== []) {
-                        $letter->personnels()->sync($personnelIds);
+                        if ($personnelIds !== []) {
+                            $letter->personnels()->sync($personnelIds);
+                        }
                     }
 
                     $imported++;
@@ -115,6 +138,7 @@ class SptImportService
                 'imported_rows' => $imported,
                 'summary' => [
                     'duplicates' => $duplicates,
+                    'all_personnel_scope' => $allPersonnelScope,
                     'errors' => array_slice($errors, 0, 50),
                 ],
                 'completed_at' => now(),
@@ -175,6 +199,40 @@ class SptImportService
             'trim',
             preg_split('/[;\n|]+/', $value) ?: []
         )));
+    }
+
+    public static function isAllPersonnelValue(?string $value): bool
+    {
+        if (blank($value)) {
+            return false;
+        }
+
+        $aliases = [
+            'all pegawai',
+            'all personil',
+            'semua pegawai',
+            'semua personil',
+            'seluruh pegawai',
+            'seluruh personil',
+        ];
+
+        $parts = preg_split('/[;\n|]+/', $value) ?: [];
+
+        foreach ($parts as $part) {
+            $normalized = Str::lower(trim($part));
+            $normalized = str_replace(
+                ['.', ',', '-', '_'],
+                ' ',
+                $normalized
+            );
+            $normalized = preg_replace('/\s+/', ' ', $normalized) ?: $normalized;
+
+            if (in_array($normalized, $aliases, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function normalizeRecordType(?string $value): LetterRecordType
