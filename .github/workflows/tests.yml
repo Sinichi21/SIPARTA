@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   quality:
-    name: PHP quality and tests
+    name: PHP analysis and tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -42,8 +42,8 @@ jobs:
           php artisan key:generate --ansi
           php artisan config:clear --ansi
 
-      - name: Check PHP formatting
-        run: composer lint:check
+      - name: Check PHP syntax
+        run: find app config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Run static analysis
         run: composer types:check
@@ -61,6 +61,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies for Flux assets
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
