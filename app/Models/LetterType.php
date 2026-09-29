@@ -28,4 +28,8 @@ class LetterType extends Model
     {
         return $this->hasMany(Letter::class);
     }
-}
+
+    public function templates(): HasMany
+    {
+        return $this->hasMany(LetterTemplate::class);
+    }}

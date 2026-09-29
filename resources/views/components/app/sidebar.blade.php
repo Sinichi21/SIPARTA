@@ -49,7 +49,21 @@
         @can('audit-logs.view')
             <div class="sidebar-section"><p class="sidebar-section-label">Pengaturan</p><x-app.nav-link :href="route('audit-logs.index')" :active="request()->routeIs('audit-logs.*')" icon="clock">Log Aktivitas</x-app.nav-link></div>
         @endcan
-    </nav>
+    
+        @can('settings.view')
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Pengaturan</p>
+
+                <x-app.nav-link
+                    :href="route('letter-templates.index')"
+                    :active="request()->routeIs('letter-templates.*')"
+                    icon="document"
+                >
+                    Template Surat
+                </x-app.nav-link>
+            </div>
+        @endcan
+</nav>
     <div class="sidebar-footer">
         <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">
             <span class="sidebar-avatar">{{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'U', 0, 1)) }}</span>

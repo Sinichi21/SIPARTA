@@ -12,6 +12,9 @@ use App\Livewire\Letters\Show as LetterShow;
 use App\Livewire\LetterTypes\Create as LetterTypeCreate;
 use App\Livewire\LetterTypes\Edit as LetterTypeEdit;
 use App\Livewire\LetterTypes\Index as LetterTypeIndex;
+use App\Livewire\LetterTemplates\Create as LetterTemplateCreate;
+use App\Livewire\LetterTemplates\Edit as LetterTemplateEdit;
+use App\Livewire\LetterTemplates\Index as LetterTemplateIndex;
 use App\Livewire\Personnel\Create as PersonnelCreate;
 use App\Livewire\Personnel\Edit as PersonnelEdit;
 use App\Livewire\Personnel\Index as PersonnelIndex;
@@ -127,6 +130,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/spt-import', SptImportIndex::class)
         ->name('spt-import.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Letter Templates
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/letter-templates', LetterTemplateIndex::class)
+        ->name('letter-templates.index');
+
+    Route::get('/letter-templates/create', LetterTemplateCreate::class)
+        ->name('letter-templates.create');
+
+    Route::get(
+        '/letter-templates/{letterTemplate}/edit',
+        LetterTemplateEdit::class
+    )->name('letter-templates.edit');
 
     /*
     |--------------------------------------------------------------------------
