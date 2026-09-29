@@ -6,7 +6,7 @@
         <form method="POST" action="{{ route('password.email') }}" class="auth-form">
             @csrf
             <flux:input name="email" label="Alamat email" :value="old('email')" type="email" required autofocus autocomplete="email" placeholder="nama@instansi.go.id" />
-            <flux:button variant="primary" type="submit" class="auth-submit w-full" data-test="email-password-reset-link-button">Kirim tautan reset <x-app.icon name="arrow" class="ml-2 size-4" /></flux:button>
+            <flux:button variant="primary" type="submit" class="auth-submit w-full" data-test="email-password-reset-link-button"><span class="inline-flex items-center gap-2">Kirim tautan reset <x-app.icon name="arrow" class="size-4" /></span></flux:button>
         </form>
         <p class="auth-form-note">Periksa kotak masuk dan folder spam setelah meminta tautan reset.</p>
         <a href="{{ route('login') }}" wire:navigate class="auth-back-link"><x-app.icon name="arrow" class="size-4 rotate-180" /> Kembali ke halaman masuk</a>

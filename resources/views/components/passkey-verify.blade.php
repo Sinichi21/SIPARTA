@@ -11,6 +11,8 @@
 @endassets
 
 <div
+    x-cloak
+    x-show="supported"
     x-data="{
         supported: false,
         loading: false,

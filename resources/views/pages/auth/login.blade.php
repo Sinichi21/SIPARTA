@@ -12,7 +12,7 @@
                 <flux:checkbox name="remember" label="Ingat saya" :checked="old('remember')" />
                 @if(Route::has('password.request'))<flux:link :href="route('password.request')" wire:navigate>Lupa kata sandi?</flux:link>@endif
             </div>
-            <flux:button variant="primary" type="submit" class="auth-submit w-full" data-test="login-button">Masuk <x-app.icon name="arrow" class="ml-2 size-4" /></flux:button>
+            <flux:button variant="primary" type="submit" class="auth-submit w-full" data-test="login-button"><span class="inline-flex items-center gap-2">Masuk <x-app.icon name="arrow" class="size-4" /></span></flux:button>
         </form>
         <p class="auth-form-note">Belum memiliki akun? Hubungi administrator untuk mendapatkan akses.</p>
     </div>
