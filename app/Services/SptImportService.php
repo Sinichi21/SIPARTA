@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\LetterRecordType;
 use App\Enums\LetterStatus;
-use App\Models\ActivityType;
 use App\Models\ImportBatch;
 use App\Models\Letter;
 use App\Models\LetterType;
@@ -16,6 +15,9 @@ use Throwable;
 
 class SptImportService
 {
+    public function __construct(
+        private readonly SptActivityTypeMatcher $activityMatcher
+    ) {}
     public function import(
         array $rows,
         array $mapping,
@@ -63,13 +65,8 @@ class SptImportService
                         continue;
                     }
 
-                    $activityTypeId = null;
-
-                    if (filled($activityText)) {
-                        $activityTypeId = ActivityType::query()
-                            ->whereRaw('LOWER(name) = ?', [Str::lower(trim($activityText))])
-                            ->value('id');
-                    }
+                    $activityTypeId = $this->activityMatcher
+                        ->matchId($activityText ?: $subject);
 
                     $personnelNamesRaw = $this->mapped(
                         $row,
