@@ -113,6 +113,139 @@ class Index extends Component
             });
     }
 
+    public function exportCsv()
+    {
+        Gate::authorize('reports.view');
+
+        $letters = $this->filteredQuery()
+            ->with([
+                'activityType',
+                'personnels.unit',
+            ])
+            ->orderByDesc('letter_date')
+            ->orderByDesc('id')
+            ->get();
+
+        $yearLabel = $this->year !== ''
+            ? $this->year
+            : 'semua-tahun';
+
+        $filename = sprintf(
+            'rekap-spt-%s-%s.csv',
+            $yearLabel,
+            now()->format('Ymd-His')
+        );
+
+        $csvSafe = static function ($value): string {
+            $value = (string) ($value ?? '');
+
+            if (
+                $value !== ''
+                && preg_match('/^[=+\-@\t\r]/u', $value)
+            ) {
+                return "'".$value;
+            }
+
+            return $value;
+        };
+
+        return response()->streamDownload(
+            function () use ($letters, $csvSafe) {
+                $handle = fopen('php://output', 'w');
+
+                fwrite($handle, "\xEF\xBB\xBF");
+
+                fputcsv($handle, [
+                    'Nomor SPT',
+                    'Tanggal SPT',
+                    'Tanggal Mulai',
+                    'Tanggal Selesai',
+                    'Kegiatan',
+                    'Jenis Kegiatan',
+                    'Lokasi',
+                    'Cakupan Personil',
+                    'Personil',
+                    'Unit/Tim',
+                    'Jenis Record',
+                    'Status',
+                    'Sumber',
+                ]);
+
+                foreach ($letters as $letter) {
+                    $allPersonnel = $letter->assignsAllPersonnel();
+
+                    $personnelNames = $allPersonnel
+                        ? 'Seluruh Pegawai'
+                        : $letter->personnels
+                            ->pluck('name')
+                            ->filter()
+                            ->implode('; ');
+
+                    $unitNames = $allPersonnel
+                        ? ''
+                        : $letter->personnels
+                            ->pluck('unit.name')
+                            ->filter()
+                            ->unique()
+                            ->values()
+                            ->implode('; ');
+
+                    fputcsv($handle, [
+                        $csvSafe($letter->number ?? ''),
+                        $csvSafe(
+                            $letter->letter_date
+                                ?->format('Y-m-d') ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->start_date
+                                ?->format('Y-m-d') ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->end_date
+                                ?->format('Y-m-d') ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->subject
+                                ?: $letter->activityType?->name
+                                ?: ''
+                        ),
+                        $csvSafe(
+                            $letter->activityType?->name ?? ''
+                        ),
+                        $csvSafe($letter->location ?? ''),
+                        $csvSafe(
+                            $allPersonnel
+                                ? 'Seluruh Pegawai'
+                                : 'Personil Tertentu'
+                        ),
+                        $csvSafe($personnelNames),
+                        $csvSafe($unitNames),
+                        $csvSafe(
+                            $letter->record_type?->label()
+                                ?? 'SPT Normal'
+                        ),
+                        $csvSafe(
+                            $letter->status?->label()
+                                ?? ''
+                        ),
+                        $csvSafe(
+                            $letter->source === 'import'
+                                ? 'Import Arsip'
+                                : 'Dibuat dari Sistem'
+                        ),
+                    ]);
+                }
+
+                fclose($handle);
+            },
+            $filename,
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
     public function render()
     {
         $query = $this->filteredQuery();

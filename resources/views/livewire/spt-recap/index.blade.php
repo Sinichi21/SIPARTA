@@ -5,6 +5,25 @@
             <p class="mt-1 text-sm text-slate-500">Ringkasan seluruh Surat Perintah Tugas dan personil yang terlibat.</p>
         </div>
         <div class="flex flex-wrap gap-2">
+            @can('reports.view')
+                <button
+                    type="button"
+                    wire:click="exportCsv"
+                    wire:loading.attr="disabled"
+                    wire:target="exportCsv"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
+                    title="Export seluruh Rekap SPT sesuai filter aktif"
+                >
+                    <x-app.icon name="download" class="size-4" />
+                    <span wire:loading.remove wire:target="exportCsv">
+                        Export CSV
+                    </span>
+                    <span wire:loading wire:target="exportCsv">
+                        Menyiapkan...
+                    </span>
+                </button>
+            @endcan
+
             @can('letters.import')
                 <a href="{{ route('spt-import.index') }}" wire:navigate class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">Import SPT Lama</a>
             @endcan
