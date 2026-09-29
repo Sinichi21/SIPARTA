@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\LetterRecordType;
 use App\Enums\LetterStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -57,6 +58,14 @@ class Letter extends Model
             'status' => LetterStatus::class,
             'record_type' => LetterRecordType::class,
         ];
+    }
+
+    public function scopeSpt(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'letterType',
+            fn (Builder $letterTypeQuery) => $letterTypeQuery->where('code', 'SPT')
+        );
     }
 
     public function letterType(): BelongsTo
