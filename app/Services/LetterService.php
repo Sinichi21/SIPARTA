@@ -15,6 +15,7 @@ class LetterService
     public function __construct(
         private readonly AuditService $audit,
         private readonly LetterNumberService $numberService,
+        private readonly LetterDocumentService $documents,
     ) {}
 
     public function createSpt(array $data, int $userId): Letter
@@ -281,6 +282,11 @@ class LetterService
                 $letter,
                 $oldValues
             );
+            $this->documents
+                ->snapshotPublished(
+                    $letter,
+                    $userId
+                );
 
             return $letter->fresh();
         });

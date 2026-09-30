@@ -7,6 +7,11 @@
         <div class="min-w-0"><p class="spt-eyebrow">Surat Perintah Tugas</p><h1>Detail SPT</h1><p class="mt-1 text-sm text-slate-500">Informasi surat, penugasan personil, dan dokumen pendukung.</p></div>
         <div class="spt-page-actions">
             <a href="{{ route('letters.index') }}" wire:navigate class="spt-action spt-action-back">Kembali</a>
+                        @can('letters.view')
+                <a href="{{ route('letters.document.preview', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Preview Surat</a>
+                <a href="{{ route('letters.document.print', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Cetak</a>
+                <a href="{{ route('letters.document.pdf', $letter) }}" class="spt-action spt-action-view">PDF</a>
+            @endcan
             <x-letters.edit-action :letter="$letter" show-disabled />
             @if($letter->status === \App\Enums\LetterStatus::Draft)
                 @can('letters.publish')<button type="button" wire:click="publish" wire:loading.attr="disabled" wire:confirm="Terbitkan SPT ini? Setelah diterbitkan data tidak dapat diedit langsung." class="spt-action spt-action-primary"><x-app.icon name="shield" /> Terbitkan SPT</button>@endcan

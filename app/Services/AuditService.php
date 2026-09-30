@@ -111,6 +111,18 @@ class AuditService
         );
     }
 
+    public function documentGenerated(Model $subject): AuditLog
+    {
+        return $this->write(
+            'GENERATE',
+            $subject,
+            null,
+            $this->safeAttributes(
+                $subject->getAttributes()
+            )
+        );
+    }
+
     private function changed(
         string $action,
         Model $subject,

@@ -27,6 +27,7 @@ use App\Livewire\SptImport\Index as SptImportIndex;
 use App\Livewire\Units\Create as UnitCreate;
 use App\Livewire\Units\Edit as UnitEdit;
 use App\Livewire\Units\Index as UnitIndex;
+use App\Http\Controllers\LetterDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -123,6 +124,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/spt/{letter}/edit', LetterEdit::class)
         ->name('letters.edit');
+    Route::get(
+        '/spt/{letter}/document',
+        [LetterDocumentController::class, 'preview']
+    )->name('letters.document.preview');
+
+    Route::get(
+        '/spt/{letter}/document/print',
+        [LetterDocumentController::class, 'print']
+    )->name('letters.document.print');
+
+    Route::get(
+        '/spt/{letter}/document/pdf',
+        [LetterDocumentController::class, 'pdf']
+    )->name('letters.document.pdf');
 
     Route::get('/spt-recap', SptRecapIndex::class)
         ->name('spt-recap.index');
