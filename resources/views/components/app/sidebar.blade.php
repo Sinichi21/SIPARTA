@@ -77,6 +77,46 @@
                 </x-app.nav-link>
             </div>
         @endcan
+
+        @can('users.security.manage')
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Keamanan</p>
+
+                <x-app.nav-link
+                    :href="route('security.account-recovery')"
+                    :active="request()->routeIs('security.account-recovery')"
+                    icon="shield"
+                >
+                    Pemulihan Akun
+                </x-app.nav-link>
+            </div>
+        @endcan
+
+        @canany(['users.view', 'roles.view'])
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Akses & Pengguna</p>
+
+                @can('users.view')
+                    <x-app.nav-link
+                        :href="route('users.index')"
+                        :active="request()->routeIs('users.*')"
+                        icon="users"
+                    >
+                        Pengguna
+                    </x-app.nav-link>
+                @endcan
+
+                @can('roles.view')
+                    <x-app.nav-link
+                        :href="route('roles.index')"
+                        :active="request()->routeIs('roles.*')"
+                        icon="shield"
+                    >
+                        Role & Permission
+                    </x-app.nav-link>
+                @endcan
+            </div>
+        @endcanany
 </nav>
     <div class="sidebar-footer">
         <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">

@@ -123,6 +123,21 @@ class AuditService
         );
     }
 
+    public function securityEvent(
+        Model $subject,
+        string $action,
+        array $metadata = []
+    ): AuditLog {
+        return $this->write(
+            strtoupper($action),
+            $subject,
+            null,
+            [
+                '_security' => $metadata,
+            ]
+        );
+    }
+
     private function changed(
         string $action,
         Model $subject,

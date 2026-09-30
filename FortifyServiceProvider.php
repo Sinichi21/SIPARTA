@@ -52,7 +52,6 @@ class FortifyServiceProvider extends ServiceProvider
             if (
                 ! $user
                 || $user->account_disabled_at
-                || $user->must_set_password
                 || ! Hash::check(
                     (string) $request->input('password'),
                     $user->password

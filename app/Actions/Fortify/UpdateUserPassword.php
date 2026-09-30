@@ -6,9 +6,9 @@ use App\Concerns\PasswordValidationRules;
 use App\Models\User;
 use App\Services\SessionRevocationService;
 use Illuminate\Support\Facades\Validator;
-use Laravel\Fortify\Contracts\ResetsUserPasswords;
+use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 
-class ResetUserPassword implements ResetsUserPasswords
+class UpdateUserPassword implements UpdatesUserPasswords
 {
     use PasswordValidationRules;
 
@@ -17,29 +17,41 @@ class ResetUserPassword implements ResetsUserPasswords
     ) {}
 
     /**
-     * Validate and reset the user's forgotten password.
+     * Validate and update the user's password.
      *
      * @param array<string, string> $input
      */
-    public function reset(
+    public function update(
         User $user,
         array $input
     ): void {
         Validator::make(
             $input,
             [
+                'current_password' => [
+                    'required',
+                    'string',
+                    'current_password:web',
+                ],
                 'password' =>
                     $this->passwordRules(),
+            ],
+            [
+                'current_password.current_password' =>
+                    __('The provided password does not match your current password.'),
             ]
-        )->validate();
+        )->validateWithBag(
+            'updatePassword'
+        );
 
         $user->forceFill([
             'password' => $input['password'],
             'password_changed_at' => now(),
-            'must_set_password' => false,
-            'email_verified_at' => $user->email_verified_at ?: now(),
         ])->save();
 
-        $this->sessions->revokeFor($user);
+        $this->sessions->revokeFor(
+            $user,
+            session()->getId()
+        );
     }
 }

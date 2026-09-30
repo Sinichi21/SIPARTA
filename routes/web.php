@@ -29,6 +29,12 @@ use App\Livewire\Units\Edit as UnitEdit;
 use App\Livewire\Units\Index as UnitIndex;
 use App\Http\Controllers\LetterDocumentController;
 use App\Http\Controllers\ReadinessController;
+use App\Livewire\Security\AccountRecoveryIndex;
+use App\Livewire\Users\Index as UserIndex;
+use App\Livewire\Users\Create as UserCreate;
+use App\Livewire\Users\Edit as UserEdit;
+use App\Livewire\Roles\Index as RoleIndex;
+use App\Livewire\Roles\Edit as RoleEdit;
 use Illuminate\Support\Facades\Route;
 
 Route::get(
@@ -201,6 +207,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/audit-logs', AuditLogIndex::class)
         ->name('audit-logs.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security & Account Recovery
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/security/account-recovery',
+        AccountRecoveryIndex::class
+    )->middleware('password.confirm')
+        ->name('security.account-recovery');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Users
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/users', UserIndex::class)
+        ->name('users.index');
+
+    Route::get('/users/create', UserCreate::class)
+        ->name('users.create');
+
+    Route::get('/users/{user}/edit', UserEdit::class)
+        ->name('users.edit');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Roles
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/roles', RoleIndex::class)
+        ->name('roles.index');
+
+    Route::get('/roles/{role}/edit', RoleEdit::class)
+        ->name('roles.edit');
 });
 
 require __DIR__.'/settings.php';
