@@ -2,7 +2,8 @@
 
 use App\Livewire\AdministrationProfiles\Create as AdministrationProfileCreate;
 use App\Livewire\AdministrationProfiles\Edit as AdministrationProfileEdit;
-use App\Livewire\AdministrationProfiles\Index as AdministrationProfileIndex;use App\Livewire\ActivityTypes\Create as ActivityTypeCreate;
+use App\Livewire\AdministrationProfiles\Index as AdministrationProfileIndex;
+use App\Livewire\ActivityTypes\Create as ActivityTypeCreate;
 use App\Livewire\ActivityTypes\Edit as ActivityTypeEdit;
 use App\Livewire\ActivityTypes\Index as ActivityTypeIndex;
 use App\Livewire\AuditLogs\Index as AuditLogIndex;
@@ -38,6 +39,16 @@ use App\Livewire\Roles\Edit as RoleEdit;
 use App\Livewire\MySpt\Index as MySptIndex;
 use App\Livewire\MySpt\Show as MySptShow;
 use App\Livewire\MyRecap\Index as MyRecapIndex;
+use App\Livewire\IncomingLetters\Index as IncomingLetterIndex;
+use App\Livewire\IncomingLetters\Create as IncomingLetterCreate;
+use App\Livewire\IncomingLetters\Edit as IncomingLetterEdit;
+use App\Livewire\IncomingLetters\Show as IncomingLetterShow;
+use App\Livewire\OutgoingLetters\Index as OutgoingLetterIndex;
+use App\Livewire\OutgoingLetters\Create as OutgoingLetterCreate;
+use App\Livewire\OutgoingLetters\Edit as OutgoingLetterEdit;
+use App\Livewire\OutgoingLetters\Show as OutgoingLetterShow;
+use App\Livewire\IssuedLetters\Index as IssuedLetterIndex;
+use App\Livewire\IssuedLetters\Show as IssuedLetterShow;
 use Illuminate\Support\Facades\Route;
 
 Route::get(
@@ -122,6 +133,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
         '/letter-types/{letterType}/edit',
         LetterTypeEdit::class
     )->name('letter-types.edit');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Persuratan
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/surat-masuk', IncomingLetterIndex::class)
+        ->name('incoming-letters.index');
+
+    Route::get('/surat-masuk/create', IncomingLetterCreate::class)
+        ->name('incoming-letters.create');
+
+    Route::get('/surat-masuk/{letter}', IncomingLetterShow::class)
+        ->name('incoming-letters.show');
+
+    Route::get('/surat-masuk/{letter}/edit', IncomingLetterEdit::class)
+        ->name('incoming-letters.edit');
+
+    Route::get('/surat-keluar', OutgoingLetterIndex::class)
+        ->name('outgoing-letters.index');
+
+    Route::get('/surat-keluar/create', OutgoingLetterCreate::class)
+        ->name('outgoing-letters.create');
+
+    Route::get('/surat-keluar/{letter}', OutgoingLetterShow::class)
+        ->name('outgoing-letters.show');
+
+    Route::get('/surat-keluar/{letter}/edit', OutgoingLetterEdit::class)
+        ->name('outgoing-letters.edit');
+
+    Route::get('/surat-terbit', IssuedLetterIndex::class)
+        ->name('issued-letters.index');
+
+    Route::get('/surat-terbit/{letter}', IssuedLetterShow::class)
+        ->name('issued-letters.show');
 
     /*
     |--------------------------------------------------------------------------
