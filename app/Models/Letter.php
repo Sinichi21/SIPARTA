@@ -127,6 +127,13 @@ class Letter extends Model
         return $this->hasMany(LetterAttachment::class);
     }
 
+    public function outgoingLetter(): HasOne
+    {
+        return $this->hasOne(
+            OutgoingLetter::class,
+            'source_spt_id'
+        );
+    }
     public function documentSnapshot(): HasOne
     {
         return $this->hasOne(

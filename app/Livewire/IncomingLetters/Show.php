@@ -23,6 +23,11 @@ class Show extends Component
         Gate::authorize('incoming-letters.process');
         $service->dispose($this->letter, auth()->user());
         $this->letter->refresh();
+
+        session()->flash(
+            'success',
+            'Surat berhasil ditandai sebagai didisposisikan.'
+        );
     }
 
     public function process(IncomingLetterService $service): void
@@ -30,6 +35,11 @@ class Show extends Component
         Gate::authorize('incoming-letters.process');
         $service->process($this->letter, auth()->user());
         $this->letter->refresh();
+
+        session()->flash(
+            'success',
+            'Tindak lanjut surat berhasil dimulai.'
+        );
     }
 
     public function complete(IncomingLetterService $service): void
@@ -37,6 +47,11 @@ class Show extends Component
         Gate::authorize('incoming-letters.process');
         $service->complete($this->letter, auth()->user());
         $this->letter->refresh();
+
+        session()->flash(
+            'success',
+            'Tindak lanjut surat berhasil diselesaikan.'
+        );
     }
 
     public function archive(IncomingLetterService $service): void
@@ -44,6 +59,11 @@ class Show extends Component
         Gate::authorize('incoming-letters.archive');
         $service->archive($this->letter, auth()->user());
         $this->letter->refresh();
+
+        session()->flash(
+            'success',
+            'Surat berhasil diarsipkan.'
+        );
     }
 
     public function downloadOriginal()

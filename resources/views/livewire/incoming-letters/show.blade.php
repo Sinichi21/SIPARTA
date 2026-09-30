@@ -6,6 +6,15 @@
         </x-slot:actions>
     </x-app.page-heading>
 
+    @if(session('success'))
+        <div
+            role="status"
+            class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+        >
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div class="grid gap-6 xl:grid-cols-[1fr_340px]">
         <section class="portal-card">
             <div class="mb-5 flex flex-wrap gap-3"><span class="status-badge status-info">{{ $letter->status->label() }}</span><span class="status-badge status-neutral">{{ ucfirst($letter->nature) }}</span></div>
@@ -24,10 +33,10 @@
             <section class="portal-card">
                 <h2 class="mb-4 font-semibold">Alur Tindak Lanjut</h2>
                 <div class="grid gap-3">
-                    @if($letter->status === \App\Enums\IncomingLetterStatus::Recorded) @can('incoming-letters.process')<button wire:click="dispose" class="spt-action spt-action-primary">Tandai Didisposisikan</button>@endcan
-                    @elseif($letter->status === \App\Enums\IncomingLetterStatus::Disposed) @can('incoming-letters.process')<button wire:click="process" class="spt-action spt-action-primary">Mulai Proses</button>@endcan
-                    @elseif($letter->status === \App\Enums\IncomingLetterStatus::Processing) @can('incoming-letters.process')<button wire:click="complete" class="spt-action spt-action-primary">Tandai Selesai</button>@endcan
-                    @elseif($letter->status === \App\Enums\IncomingLetterStatus::Completed) @can('incoming-letters.archive')<button wire:click="archive" class="spt-action spt-action-primary">Arsipkan</button>@endcan
+                    @if($letter->status === \App\Enums\IncomingLetterStatus::Recorded) @can('incoming-letters.process')<button type="button" wire:click="dispose" wire:loading.attr="disabled" wire:target="dispose" wire:confirm="Tandai surat ini sebagai sudah didisposisikan?" class="spt-action spt-action-primary"><span wire:loading.remove wire:target="dispose">Tandai Didisposisikan</span><span wire:loading wire:target="dispose">Memproses...</span></button>@endcan
+                    @elseif($letter->status === \App\Enums\IncomingLetterStatus::Disposed) @can('incoming-letters.process')<button type="button" wire:click="process" wire:loading.attr="disabled" wire:target="process" class="spt-action spt-action-primary"><span wire:loading.remove wire:target="process">Mulai Proses</span><span wire:loading wire:target="process">Memproses...</span></button>@endcan
+                    @elseif($letter->status === \App\Enums\IncomingLetterStatus::Processing) @can('incoming-letters.process')<button type="button" wire:click="complete" wire:loading.attr="disabled" wire:target="complete" wire:confirm="Tandai tindak lanjut surat ini sebagai selesai?" class="spt-action spt-action-primary"><span wire:loading.remove wire:target="complete">Tandai Selesai</span><span wire:loading wire:target="complete">Memproses...</span></button>@endcan
+                    @elseif($letter->status === \App\Enums\IncomingLetterStatus::Completed) @can('incoming-letters.archive')<button type="button" wire:click="archive" wire:loading.attr="disabled" wire:target="archive" wire:confirm="Arsipkan surat ini?" class="spt-action spt-action-primary"><span wire:loading.remove wire:target="archive">Arsipkan</span><span wire:loading wire:target="archive">Mengarsipkan...</span></button>@endcan
                     @else <p class="text-sm text-slate-500">Surat telah diarsipkan.</p> @endif
                 </div>
             </section>

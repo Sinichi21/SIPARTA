@@ -110,6 +110,22 @@
                     <dt class="text-xs text-slate-500">Perihal</dt>
                     <dd class="mt-1 font-semibold">{{ $letter->subject }}</dd>
                 </div>
+
+                @if($letter->sourceSpt)
+                    <div class="md:col-span-2">
+                        <dt class="text-xs text-slate-500">SPT Sumber</dt>
+                        <dd class="mt-1">
+                            <a
+                                href="{{ route('letters.show', $letter->sourceSpt) }}"
+                                wire:navigate
+                                class="font-medium text-blue-700 hover:underline"
+                            >
+                                {{ $letter->sourceSpt->number ?: 'SPT #'.$letter->sourceSpt->id }}
+                                Â· {{ $letter->sourceSpt->subject }}
+                            </a>
+                        </dd>
+                    </div>
+                @endif
             </dl>
 
             @if(! $letter->number)
@@ -125,33 +141,77 @@
             <div class="grid gap-3">
                 @if($letter->status === \App\Enums\OutgoingLetterStatus::Draft)
                     @can('outgoing-letters.verify')
-                        <button wire:click="verify" class="spt-action spt-action-primary">Verifikasi</button>
+                        <button
+                            type="button"
+                            wire:click="verify"
+                            wire:loading.attr="disabled"
+                            wire:target="verify"
+                            wire:confirm="Verifikasi surat ini?"
+                            class="spt-action spt-action-primary"
+                        >
+                            <span wire:loading.remove wire:target="verify">Verifikasi</span>
+                            <span wire:loading wire:target="verify">Memproses...</span>
+                        </button>
                     @endcan
 
                 @elseif($letter->status === \App\Enums\OutgoingLetterStatus::Verified)
                     @can('outgoing-letters.approve')
-                        <button wire:click="approve" class="spt-action spt-action-primary">Setujui</button>
+                        <button
+                            type="button"
+                            wire:click="approve"
+                            wire:loading.attr="disabled"
+                            wire:target="approve"
+                            wire:confirm="Setujui surat ini untuk proses penerbitan?"
+                            class="spt-action spt-action-primary"
+                        >
+                            <span wire:loading.remove wire:target="approve">Setujui</span>
+                            <span wire:loading wire:target="approve">Memproses...</span>
+                        </button>
                     @endcan
 
                 @elseif(in_array($letter->status, [\App\Enums\OutgoingLetterStatus::Approved, \App\Enums\OutgoingLetterStatus::Numbered], true))
                     @can('outgoing-letters.publish')
                         <button
+                            type="button"
                             wire:click="publish"
+                            wire:loading.attr="disabled"
+                            wire:target="publish"
                             wire:confirm="Terbitkan surat ini? Nomor resmi akan dialokasikan dan surat masuk Register Surat Terbit."
                             class="spt-action spt-action-primary"
                         >
-                            Terbitkan Surat
+                            <span wire:loading.remove wire:target="publish">Terbitkan Surat</span>
+                            <span wire:loading wire:target="publish">Menerbitkan...</span>
                         </button>
                     @endcan
 
                 @elseif($letter->status === \App\Enums\OutgoingLetterStatus::Published)
                     @can('outgoing-letters.send')
-                        <button wire:click="send" class="spt-action spt-action-primary">Tandai Dikirim</button>
+                        <button
+                            type="button"
+                            wire:click="send"
+                            wire:loading.attr="disabled"
+                            wire:target="send"
+                            wire:confirm="Tandai surat ini sebagai sudah dikirim?"
+                            class="spt-action spt-action-primary"
+                        >
+                            <span wire:loading.remove wire:target="send">Tandai Dikirim</span>
+                            <span wire:loading wire:target="send">Memproses...</span>
+                        </button>
                     @endcan
 
                 @elseif($letter->status === \App\Enums\OutgoingLetterStatus::Sent)
                     @can('outgoing-letters.archive')
-                        <button wire:click="archive" class="spt-action spt-action-primary">Arsipkan</button>
+                        <button
+                            type="button"
+                            wire:click="archive"
+                            wire:loading.attr="disabled"
+                            wire:target="archive"
+                            wire:confirm="Arsipkan surat ini?"
+                            class="spt-action spt-action-primary"
+                        >
+                            <span wire:loading.remove wire:target="archive">Arsipkan</span>
+                            <span wire:loading wire:target="archive">Mengarsipkan...</span>
+                        </button>
                     @endcan
 
                 @else
@@ -172,6 +232,14 @@
         'letter' => $letter,
         'renderedBody' => $previewBody,
         'missingPlaceholders' => $missingPlaceholders,
-        'previewMode' => $letter->status !== \App\Enums\OutgoingLetterStatus::Published,
+        'previewMode' => ! in_array(
+            $letter->status,
+            [
+                \App\Enums\OutgoingLetterStatus::Published,
+                \App\Enums\OutgoingLetterStatus::Sent,
+                \App\Enums\OutgoingLetterStatus::Archived,
+            ],
+            true
+        ),
     ])
 </div>
