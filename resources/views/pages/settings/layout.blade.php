@@ -1,20 +1,11 @@
-<div class="flex items-start max-md:flex-col">
-    <div class="me-10 w-full pb-4 md:w-[220px]">
-        <flux:navlist aria-label="{{ __('Settings') }}">
-            <flux:navlist.item :href="route('profile.edit')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('security.edit')" wire:navigate>{{ __('Security') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
-        </flux:navlist>
-    </div>
-
-    <flux:separator class="md:hidden" />
-
-    <div class="flex-1 self-stretch max-md:pt-6">
-        <flux:heading>{{ $heading ?? '' }}</flux:heading>
-        <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
-
-        <div class="mt-5 w-full max-w-lg">
-            {{ $slot }}
-        </div>
+<div class="settings-layout">
+    <nav class="settings-nav portal-card" aria-label="Pengaturan akun">
+        @foreach([['profile.edit', 'users', 'Profil Saya', 'Identitas dan kepegawaian'], ['security.edit', 'shield', 'Keamanan', 'Password dan autentikasi'], ['appearance.edit', 'sun', 'Tampilan', 'Preferensi tema aplikasi']] as [$route, $icon, $label, $description])
+        <a href="{{ route($route) }}" wire:navigate @class(['settings-nav-link', 'is-active' => request()->routeIs($route)]) @if(request()->routeIs($route)) aria-current="page" @endif><x-app.icon :name="$icon" /><span><strong>{{ $label }}</strong><small>{{ $description }}</small></span><x-app.icon name="arrow" /></a>
+        @endforeach
+    </nav>
+    <div class="settings-content portal-card">
+        <header class="settings-content-heading"><h2>{{ $heading ?? '' }}</h2><p>{{ $subheading ?? '' }}</p></header>
+        {{ $slot }}
     </div>
 </div>

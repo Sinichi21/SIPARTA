@@ -102,7 +102,7 @@
     </nav>
     <div class="sidebar-footer">
         <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">
-            <span class="sidebar-avatar">{{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'U', 0, 1)) }}</span>
+            <x-app.avatar class="sidebar-avatar" />
             <span class="min-w-0"><strong>{{ auth()->user()?->name }}</strong><span>{{ auth()->user()?->getRoleNames()->first() ?: 'Pengguna' }}</span></span>
         </a>
         <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="sidebar-logout" aria-label="Keluar dari aplikasi" title="Keluar"><x-app.icon name="logout" /></button></form>

@@ -1,160 +1,32 @@
-<div class="dashboard-page">
-    <div class="dashboard-welcome">
-        <div>
-            <h1 class="font-bold">
-                Selamat Datang, {{ auth()->user()->name }}
-            </h1>
-
-            <p class="mt-2 text-sm text-slate-500">
-                Lihat penugasan dan rekap pribadi tanpa menu operasional yang tidak diperlukan.
-            </p>
-        </div>
-
-        <div class="dashboard-date">
-            <p>
-                {{ now()->locale('id')->translatedFormat('l, d F Y') }}
-                <x-app.icon name="sun" class="text-amber-500" />
-            </p>
-            <span>Portal pribadi SIPARTA</span>
-        </div>
-    </div>
-
-    @if(! auth()->user()->personnel_id)
-        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-            Akun Anda belum ditautkan ke data personil. Hubungi administrator agar riwayat SPT dapat ditampilkan.
-        </div>
-    @endif
-
+<div class="dashboard-page portal-dashboard">
+    <div class="dashboard-welcome"><div><h1 class="font-bold">Selamat Datang, {{ auth()->user()->name }}</h1><p class="mt-2 text-sm text-slate-500">Pantau surat tugas dan riwayat penugasan Anda dalam satu tempat.</p></div><div class="dashboard-date"><p>{{ now()->locale('id')->translatedFormat('l, d F Y') }} <x-app.icon name="sun" class="text-amber-500" /></p><span>Selamat menjalankan tugas hari ini.</span></div></div>
+    <x-app.personnel-notice />
     <div class="dashboard-stats">
-        @foreach ([
-            ['SPT Saya', $personalTotalSpt, 'Penugasan yang terkait langsung dengan Anda', 'document', ''],
-            ['Tahun Ini', $personalYearSpt, (string) now()->year, 'calendar', 'violet'],
-            ['Diterbitkan', $personalPublishedSpt, 'SPT personal yang telah diterbitkan', 'document', 'green'],
-            ['Mendatang', $personalUpcomingSpt, 'Jadwal tugas yang akan datang', 'clock', 'amber'],
-        ] as [$label, $value, $description, $icon, $tone])
-            <section class="dashboard-stat">
-                <div class="stat-icon {{ $tone }}">
-                    <x-app.icon :name="$icon" class="size-8" />
-                </div>
-
-                <div class="min-w-0">
-                    <p class="text-sm font-semibold text-slate-500">
-                        {{ $label }}
-                    </p>
-                    <strong>{{ number_format($value, 0, ',', '.') }}</strong>
-                    <p class="text-xs text-slate-500">
-                        {{ $description }}
-                    </p>
-                </div>
-            </section>
-        @endforeach
+        <x-app.stat-card label="SPT Saya" :value="number_format($personalTotalSpt, 0, ',', '.')" description="Seluruh riwayat penugasan" icon="document" />
+        <x-app.stat-card label="SPT Tahun Ini" :value="number_format($personalYearSpt, 0, ',', '.')" :description="'Periode '.now()->year" icon="calendar" tone="violet" />
+        <x-app.stat-card label="Diterbitkan" :value="number_format($personalPublishedSpt, 0, ',', '.')" description="Surat tugas berstatus diterbitkan" icon="shield" tone="green" />
+        <x-app.stat-card label="Mendatang" :value="number_format($personalUpcomingSpt, 0, ',', '.')" description="Penugasan setelah hari ini" icon="clock" tone="amber" />
     </div>
-
-    <div class="dashboard-main">
-        <section class="dashboard-card dashboard-letters">
-            <header class="dashboard-card-heading">
-                <h2>
-                    <x-app.icon class="text-blue-600" />
-                    SPT Saya Terbaru
-                </h2>
-
-                @can('my-letters.view')
-                    <a href="{{ route('my-spt.index') }}" wire:navigate>
-                        Lihat Semua
-                        <x-app.icon name="arrow" />
-                    </a>
-                @endcan
-            </header>
-
-            <div class="dashboard-table-scroll">
-                <table class="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>No Surat</th>
-                            <th>Kegiatan</th>
-                            <th>Lokasi</th>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @forelse($personalLatestSpt as $letter)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td class="font-medium">
-                                    <a
-                                        href="{{ route('my-spt.show', $letter) }}"
-                                        wire:navigate
-                                        class="text-blue-700"
-                                    >
-                                        {{ $letter->number ?: 'SPT #'.$letter->id }}
-                                    </a>
-                                </td>
-                                <td>{{ $letter->subject ?: $letter->activityType?->name ?: '-' }}</td>
-                                <td>{{ $letter->location ?: '-' }}</td>
-                                <td class="whitespace-nowrap">
-                                    {{ $letter->letter_date?->translatedFormat('d M Y') ?: '-' }}
-                                </td>
-                                <td>
-                                    <x-app.status-badge :status="$letter->status" />
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="dashboard-empty">
-                                    Belum ada SPT yang terkait langsung dengan akun Anda.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <div class="dashboard-side">
-            <section class="dashboard-card">
-                <header class="dashboard-card-heading">
-                    <h2>
-                        <x-app.icon name="document" class="text-blue-600" />
-                        Administrasi Saya
-                    </h2>
-                </header>
-
-                <div class="dashboard-shortcuts">
-                    @can('my-letters.view')
-                        <a href="{{ route('my-spt.index') }}" wire:navigate>
-                            <span class="stat-icon">
-                                <x-app.icon name="document" />
-                            </span>
-                            <strong>SPT Saya</strong>
-                            <span>Lihat surat tugas yang terkait dengan Anda</span>
-                            <x-app.icon name="arrow" class="shortcut-arrow" />
-                        </a>
-                    @endcan
-
-                    @can('my-reports.view')
-                        <a href="{{ route('my-recap.index') }}" wire:navigate>
-                            <span class="stat-icon violet">
-                                <x-app.icon name="calendar" />
-                            </span>
-                            <strong>Rekap Saya</strong>
-                            <span>Ringkasan riwayat penugasan pribadi</span>
-                            <x-app.icon name="arrow" class="shortcut-arrow" />
-                        </a>
-                    @endcan
-
-                    <a href="{{ route('profile.edit') }}" wire:navigate>
-                        <span class="stat-icon green">
-                            <x-app.icon name="shield" />
-                        </span>
-                        <strong>Profil & Keamanan</strong>
-                        <span>Password, Authenticator, dan Passkey</span>
-                        <x-app.icon name="arrow" class="shortcut-arrow" />
-                    </a>
-                </div>
-            </section>
+    <section class="portal-card">
+        <header class="portal-card-heading"><h2><x-app.icon name="arrow" /> Akses Cepat</h2><span class="portal-caption">Administrasi Saya</span></header>
+        <div class="portal-quick-links">
+            @can('my-letters.view')<a href="{{ route('my-spt.index') }}" wire:navigate><span class="stat-icon"><x-app.icon name="document" /></span><span><strong>SPT Saya</strong><small>Telusuri surat tugas Anda</small></span><x-app.icon name="arrow" /></a>@endcan
+            @can('my-reports.view')<a href="{{ route('my-recap.index') }}" wire:navigate><span class="stat-icon violet"><x-app.icon name="chart" /></span><span><strong>Rekap Saya</strong><small>Lihat ringkasan penugasan</small></span><x-app.icon name="arrow" /></a>@endcan
+            <a href="{{ route('profile.edit') }}" wire:navigate><span class="stat-icon green"><x-app.icon name="users" /></span><span><strong>Profil Saya</strong><small>Kelola informasi akun</small></span><x-app.icon name="arrow" /></a>
         </div>
+    </section>
+    <div class="portal-dashboard-main">
+        <section class="portal-card portal-table-card">
+            <header class="portal-card-heading"><h2><x-app.icon name="document" /> SPT Saya Terbaru</h2>@can('my-letters.view')<a href="{{ route('my-spt.index') }}" wire:navigate class="portal-text-link">Lihat Semua <x-app.icon name="arrow" /></a>@endcan</header>
+            <x-letters.personal-table :letters="$personalLatestSpt" />
+            <footer class="portal-table-footer"><span class="portal-caption">Menampilkan hingga 5 surat tugas terbaru.</span></footer>
+        </section>
+        <aside class="portal-card portal-profile-card">
+            <header class="portal-card-heading"><h2><x-app.icon name="users" /> Profil Personil</h2></header>
+            @php($personnel = auth()->user()->personnel)
+            <div class="portal-profile"><x-app.avatar class="sidebar-avatar" /><div><strong>{{ $personnel?->name ?: auth()->user()->name }}</strong><span>{{ $personnel?->position ?: 'Personil' }}</span></div></div>
+            <dl class="spt-audit-fields mt-5"><div><dt>NIP</dt><dd>{{ $personnel?->nip ?: '-' }}</dd></div><div><dt>Unit / Tim</dt><dd>{{ $personnel?->unit?->name ?: '-' }}</dd></div><div><dt>Akun</dt><dd>{{ auth()->user()->email }}</dd></div></dl>
+            <div class="portal-profile-footer"><span class="status-badge {{ $personnel ? 'status-success' : 'status-warning' }}">{{ $personnel ? 'Personil terhubung' : 'Belum terhubung' }}</span><a href="{{ route('profile.edit') }}" wire:navigate class="portal-text-link">Lihat Profil <x-app.icon name="arrow" /></a></div>
+        </aside>
     </div>
 </div>

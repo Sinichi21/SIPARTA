@@ -5,6 +5,7 @@ namespace App\Livewire\MySpt;
 use App\Models\Letter;
 use App\Support\PersonalLetterAccess;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,14 +13,19 @@ class Index extends Component
 {
     use WithPagination;
 
+    #[Url]
     public string $search = '';
+
+    #[Url]
     public string $year = '';
 
     public function mount(): void
     {
         Gate::authorize('my-letters.view');
 
-        $this->year = (string) now()->year;
+        if (! request()->has('year')) {
+            $this->year = (string) now()->year;
+        }
     }
 
     public function updated(
@@ -34,6 +40,13 @@ class Index extends Component
         ) {
             $this->resetPage();
         }
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->year = (string) now()->year;
+        $this->resetPage();
     }
 
     public function render(
@@ -65,19 +78,16 @@ class Index extends Component
                     $query->where(
                         function ($query) use ($search) {
                             $query
-                                ->where(
+                                ->whereLike(
                                     'number',
-                                    'ilike',
                                     "%{$search}%"
                                 )
-                                ->orWhere(
+                                ->orWhereLike(
                                     'subject',
-                                    'ilike',
                                     "%{$search}%"
                                 )
-                                ->orWhere(
+                                ->orWhereLike(
                                     'location',
-                                    'ilike',
                                     "%{$search}%"
                                 );
                         }
@@ -86,11 +96,10 @@ class Index extends Component
             )
             ->when(
                 filled($this->year),
-                fn ($query) =>
-                    $query->whereYear(
-                        'letter_date',
-                        (int) $this->year
-                    )
+                fn ($query) => $query->whereYear(
+                    'letter_date',
+                    (int) $this->year
+                )
             )
             ->orderByDesc('letter_date')
             ->orderByDesc('id')
@@ -118,8 +127,7 @@ class Index extends Component
                     ->get(['letter_date'])
                     ->pluck('letter_date')
                     ->map(
-                        fn ($date) =>
-                            (int) $date->format('Y')
+                        fn ($date) => (int) $date->format('Y')
                     )
                     ->unique()
                     ->values(),
