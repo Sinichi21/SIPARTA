@@ -28,7 +28,14 @@ use App\Livewire\Units\Create as UnitCreate;
 use App\Livewire\Units\Edit as UnitEdit;
 use App\Livewire\Units\Index as UnitIndex;
 use App\Http\Controllers\LetterDocumentController;
+use App\Http\Controllers\ReadinessController;
 use Illuminate\Support\Facades\Route;
+
+Route::get(
+    '/health/ready',
+    ReadinessController::class
+)->middleware('throttle:30,1')
+    ->name('health.ready');
 
 Route::get('/', function () {
     return auth()->check()
