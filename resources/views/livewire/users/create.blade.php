@@ -8,13 +8,13 @@
     </div>
 
     <form wire:submit="save" class="space-y-6">
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section class="portal-card">
             @include('livewire.users._form')
         </section>
 
         <div class="flex justify-end gap-3">
-            <a href="{{ route('users.index') }}" wire:navigate class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold">Batal</a>
-            <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white">
+            <a href="{{ route('users.index') }}" wire:navigate class="spt-action spt-action-back">Batal</a>
+            <button type="submit" class="spt-action spt-action-primary">
                 Buat & Kirim Aktivasi
             </button>
         </div>

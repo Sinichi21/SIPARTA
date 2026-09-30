@@ -5,6 +5,8 @@ namespace App\Livewire\OutgoingLetters;
 use App\Models\LetterTemplate;
 use App\Models\LetterType;
 use App\Models\LetterheadProfile;
+use App\Models\Letter;
+use App\Models\Personnel;
 use App\Models\OutgoingLetter;
 use App\Services\AuditService;
 use App\Services\OutgoingLetterTemplateRenderer;
@@ -23,6 +25,8 @@ class Edit extends Component
     public string $nature = 'biasa';
     public string $content_html = '';
     public string $notes = '';
+    public ?int $source_spt_id = null;
+    public array $personnel_ids = [];
     public array $manualFields = [];
     public array $manualPlaceholderNames = [];
 
@@ -49,6 +53,8 @@ class Edit extends Component
         $this->nature = $letter->nature;
         $this->content_html = (string) ($letter->content_html ?? '');
         $this->notes = (string) ($letter->notes ?? '');
+        $this->source_spt_id = $letter->source_spt_id;
+        $this->personnel_ids = $letter->personnels()->pluck('personnels.id')->map(fn ($id) => (int) $id)->all();
         $this->manualFields = is_array($letter->placeholder_data) ? $letter->placeholder_data : [];
         $this->numbering_mode = $letter->numbering_mode ?: 'auto';
         $this->manual_number = (string) ($letter->manual_number ?? '');
@@ -102,6 +108,7 @@ class Edit extends Component
         abort_unless($this->letter->canBeEdited(), 403);
 
         $data = $this->validate([
+            'source_spt_id' => ['nullable','integer','exists:letters,id',\Illuminate\Validation\Rule::unique('outgoing_letters','source_spt_id')->ignore($this->letter->id)],
             'letter_type_id' => ['nullable','integer','exists:letter_types,id'],
             'letter_template_id' => ['nullable','integer','exists:letter_templates,id'],
             'letterhead_profile_id' => ['nullable','integer','exists:letterhead_profiles,id'],
@@ -113,6 +120,8 @@ class Edit extends Component
             'notes' => ['nullable','string','max:5000'],
             'manualFields' => ['array'],
             'manualFields.*' => ['nullable','string','max:5000'],
+            'personnel_ids' => ['array'],
+            'personnel_ids.*' => ['integer','exists:personnels,id'],
             'numbering_mode' => ['required','in:auto,manual'],
             'manual_number' => ['nullable','string','max:255'],
             'date_mode' => ['required','in:auto,manual'],
@@ -124,12 +133,14 @@ class Edit extends Component
         $old = $this->letter->getOriginal();
 
         $this->letter->update([
-            ...collect($data)->except('manualFields')->all(),
+            ...collect($data)->except(['manualFields','personnel_ids'])->all(),
             'placeholder_data' => $this->cleanManualFields(),
             'number' => null,
             'letter_date' => null,
             'updated_by' => auth()->id(),
         ]);
+
+        $this->letter->personnels()->sync($this->personnel_ids);
 
         $audit->updated($this->letter, $old);
 
@@ -158,6 +169,9 @@ class Edit extends Component
             'letterTypes' => LetterType::query()->where('is_active', true)->orderBy('name')->get(),
             'templates' => LetterTemplate::query()->where('is_active', true)->orderBy('name')->get(),
             'letterheads' => LetterheadProfile::query()->where('is_active', true)->orderByDesc('is_default')->orderBy('name')->get(),
+            'personnels' => Personnel::query()->where('is_active', true)->orderBy('name')->get(),
+            'sourceSpt' => $this->source_spt_id ? Letter::query()->with(['personnels.unit','activityType'])->find($this->source_spt_id) : null,
+            'selectedType' => $this->letter_type_id ? LetterType::query()->find($this->letter_type_id) : null,
             'previewLetter' => $previewLetter,
             'previewBody' => $previewBody,
             'missingPlaceholders' => $renderer->missingPlaceholders($previewLetter),
@@ -181,6 +195,15 @@ class Edit extends Component
             'date_mode' => $this->date_mode,
             'manual_letter_date' => $this->manual_letter_date ?: null,
         ]);
+
+        if ($this->source_spt_id) {
+            $letter->setRelation('sourceSpt', Letter::query()->with('activityType')->find($this->source_spt_id));
+        }
+
+        $letter->setRelation(
+            'personnels',
+            Personnel::query()->whereIn('id', $this->personnel_ids)->orderBy('name')->get()
+        );
 
         if ($this->letterhead_profile_id) {
             $letter->setRelation(

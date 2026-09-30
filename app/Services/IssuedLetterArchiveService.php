@@ -142,6 +142,18 @@ class IssuedLetterArchiveService
             'content_html' => $letter->content_html,
             'placeholder_data' => $letter->placeholder_data,
             'notes' => $letter->notes,
+            'source_spt_id' => $letter->source_spt_id,
+            'personnel' => $letter->personnels()
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($person) => [
+                    'id' => $person->id,
+                    'name' => $person->name,
+                    'nip' => $person->nip,
+                    'position' => $person->position,
+                ])
+                ->values()
+                ->all(),
         ];
     }
 }

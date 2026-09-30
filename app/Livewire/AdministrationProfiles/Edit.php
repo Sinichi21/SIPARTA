@@ -35,6 +35,8 @@ class Edit extends Component
 
     public $logo;
 
+    public $logo_secondary;
+
     public function mount(
         LetterheadProfile $letterheadProfile
     ): void {
@@ -79,8 +81,13 @@ class Edit extends Component
         $oldLogoPath =
             $this->letterheadProfile->logo_path;
 
+        $oldSecondaryLogoPath =
+            $this->letterheadProfile->logo_secondary_path;
+
         $newLogoPath = null;
         $newLogoOriginalName = null;
+        $newSecondaryLogoPath = null;
+        $newSecondaryLogoOriginalName = null;
 
         if ($this->logo) {
             $newLogoOriginalName =
@@ -97,12 +104,29 @@ class Edit extends Component
             );
         }
 
+        if ($this->logo_secondary) {
+            $newSecondaryLogoOriginalName =
+                $this->logo_secondary->getClientOriginalName();
+
+            $extension = strtolower(
+                $this->logo_secondary->getClientOriginalExtension()
+            );
+
+            $newSecondaryLogoPath = $this->logo_secondary->storeAs(
+                'letterheads/logos',
+                Str::uuid().'.'.$extension,
+                'public'
+            );
+        }
+
         try {
             DB::transaction(
                 function () use (
                     $data,
                     $newLogoPath,
                     $newLogoOriginalName,
+                    $newSecondaryLogoPath,
+                    $newSecondaryLogoOriginalName,
                     $audit,
                     $oldValues
                 ) {
@@ -127,6 +151,14 @@ class Edit extends Component
                             $newLogoOriginalName;
                     }
 
+                    if ($newSecondaryLogoPath) {
+                        $payload['logo_secondary_path'] =
+                            $newSecondaryLogoPath;
+
+                        $payload['logo_secondary_original_name'] =
+                            $newSecondaryLogoOriginalName;
+                    }
+
                     $payload['updated_by'] =
                         auth()->id();
 
@@ -145,6 +177,11 @@ class Edit extends Component
                     ->delete($newLogoPath);
             }
 
+            if ($newSecondaryLogoPath) {
+                Storage::disk('public')
+                    ->delete($newSecondaryLogoPath);
+            }
+
             throw $exception;
         }
 
@@ -157,7 +194,17 @@ class Edit extends Component
                 ->delete($oldLogoPath);
         }
 
+        if (
+            $newSecondaryLogoPath
+            && $oldSecondaryLogoPath
+            && $oldSecondaryLogoPath !== $newSecondaryLogoPath
+        ) {
+            Storage::disk('public')
+                ->delete($oldSecondaryLogoPath);
+        }
+
         $this->logo = null;
+        $this->logo_secondary = null;
         $this->letterheadProfile->refresh();
 
         session()->flash(
@@ -264,6 +311,12 @@ class Edit extends Component
                 'mimes:jpg,jpeg,png,webp',
                 'max:2048',
             ],
+            'logo_secondary' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
         ];
@@ -293,7 +346,7 @@ class Edit extends Component
             $data['is_active'] = true;
         }
 
-        unset($data['logo']);
+        unset($data['logo'], $data['logo_secondary']);
 
         return $data;
     }

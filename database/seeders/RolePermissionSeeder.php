@@ -38,6 +38,8 @@ class RolePermissionSeeder extends Seeder
             'outgoing-letters.archive',
 
             'issued-letters.view',
+            'issued-letters.revoke',
+
             'letters.view',
             'letters.create',
             'letters.update',
@@ -111,6 +113,11 @@ class RolePermissionSeeder extends Seeder
         $superAdmin->syncPermissions(
             Permission::where('guard_name', $guard)->get()
         );
+
+        foreach (['admin-persuratan', 'pimpinan'] as $roleName) {
+            Role::findByName($roleName, $guard)
+                ->givePermissionTo('issued-letters.revoke');
+        }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

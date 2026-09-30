@@ -11,6 +11,16 @@
                 <a href="{{ route('letters.document.preview', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Preview Surat</a>
                 <a href="{{ route('letters.document.print', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Cetak</a>
                 <a href="{{ route('letters.document.pdf', $letter) }}" class="spt-action spt-action-view">PDF</a>
+                @can('outgoing-letters.create')
+                    <a
+                        href="{{ route('outgoing-letters.create', ['source_spt' => $letter->id]) }}"
+                        wire:navigate
+                        class="spt-action spt-action-primary"
+                    >
+                        <x-app.icon name="document" />
+                        Terbitkan Surat
+                    </a>
+                @endcan
             @endcan
             <x-letters.edit-action :letter="$letter" show-disabled />
             @if($letter->status === \App\Enums\LetterStatus::Draft)

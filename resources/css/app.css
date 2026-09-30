@@ -257,13 +257,13 @@ select:focus[data-flux-control] {
     --color-accent: #0875f5;
     --color-accent-content: #0865dc;
 }
-.admin-app .app-content { max-width: 1920px; margin-inline: auto; }
+.admin-app .app-content { width: 100%; max-width: 1600px; min-width: 0; margin-inline: auto; }
 .admin-app .app-content > :is(.space-y-6, .space-y-7) > :not(:last-child) { margin-block-end: 1.25rem; }
 .admin-app h1 { font-size: clamp(1.5rem, 2vw, 1.875rem); letter-spacing: -.035em; line-height: 1.25; }
 .admin-app h2 { letter-spacing: -.02em; }
 .admin-app .text-slate-400 { color: #6e819f; }
 .admin-app .text-slate-500 { color: #5d7293; }
-.admin-app .app-content :is(div, section, form).bg-white.border {
+.admin-app .app-content :is(div, section, form, article).bg-white.border {
     border-color: #e1ebf7;
     border-radius: 10px;
     box-shadow: 0 2px 8px #204f8610;
@@ -310,6 +310,24 @@ select:focus[data-flux-control] {
 .page-heading p { margin-top: 7px; font-size: 14px; line-height: 1.6; color: #657c9c; }
 .page-heading-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
 .portal-page { display: grid; gap: 20px; min-width: 0; }
+.portal-page > * { min-width: 0; }
+.app-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); align-items: end; gap: 16px; }
+.app-filter-field { display: grid; gap: 8px; min-width: 0; }
+.app-filter-field > span { color: #3c5576; font-size: 12px; font-weight: 600; }
+.app-filter-field :is(input, select) { width: 100%; min-width: 0; }
+.admin-app .app-filter-grid > button { min-height: 40px; }
+.admin-app .portal-page form label { line-height: 1.5; }
+.admin-app :is(input, textarea, select)[aria-invalid=true] { border-color: #dc5264; }
+.admin-app input:is([type=checkbox], [type=radio]) { accent-color: #0875f5; flex-shrink: 0; }
+.admin-app .spt-action { transition: background-color .15s, border-color .15s; }
+.admin-app .portal-table td { overflow-wrap: anywhere; max-width: 360px; }
+@media (max-width: 639px) {
+    .page-heading-actions { width: 100%; }
+    .page-heading-actions > :is(a, button) { flex: 1; white-space: normal; text-align: center; }
+    .admin-app .portal-card { padding: 16px; }
+    .admin-app .portal-table-card, .admin-app .correspondence-section { padding: 0; }
+    .app-filter-grid { grid-template-columns: minmax(0, 1fr); }
+}
 .portal-card { min-width: 0; padding: 20px; border: 1px solid #e1eaf6; border-radius: 11px; background: #fff; box-shadow: 0 3px 12px #234b7a05; }
 .portal-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .portal-card-heading h2 { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; flex-wrap: wrap; }
@@ -605,7 +623,7 @@ select:focus[data-flux-control] {
 .admin-app .correspondence-field { display:flex; flex-direction:column; gap:8px; min-width:0; }
 .admin-app .correspondence-label { font-size:13px; font-weight:600; color:#2b4362; }
 .admin-app .correspondence-field-wide { grid-column:1 / -1; }
-.admin-app .correspondence-field input,.admin-app .correspondence-field select,.admin-app .correspondence-field textarea { display:block; width:100%; min-width:0; border:1px solid #d6e3f3; border-radius:8px; background:#fff; padding:10px 12px; font-size:13px; line-height:1.6; color:#183353; transition:border-color .15s,box-shadow .15s; }
+.admin-app .correspondence-field input:not([type=radio]):not([type=checkbox]),.admin-app .correspondence-field select,.admin-app .correspondence-field textarea { display:block; width:100%; min-width:0; border:1px solid #d6e3f3; border-radius:8px; background:#fff; padding:10px 12px; font-size:13px; line-height:1.6; color:#183353; transition:border-color .15s,box-shadow .15s; }
 .admin-app .correspondence-field select { padding-right:32px; }
 .admin-app .correspondence-field textarea { resize:vertical; min-height:100px; }
 .admin-app .correspondence-field :is(input,select,textarea):focus { outline:none; border-color:#348cf7; box-shadow:0 0 0 3px #2585f51a; }
@@ -617,3 +635,18 @@ select:focus[data-flux-control] {
 .admin-app .correspondence-actions button:disabled { opacity:.65; cursor:wait; }
 .admin-app .correspondence-errors { padding:15px 18px; border:1px solid #fecaca; background:#fff1f2; color:#b42335; border-radius:10px; font-size:13px; }
 @media(max-width:639px) { .admin-app .correspondence-fields { grid-template-columns:1fr; padding:18px; gap:18px; } .admin-app .correspondence-section-heading { padding:18px; } .admin-app .correspondence-footer { flex-direction:column; align-items:stretch; padding:18px; } .admin-app .correspondence-actions { justify-content:flex-end; } .admin-app .correspondence-step { display:none; } }
+
+/* Numbering and date modes share an accessible radio-card control. */
+.correspondence-mode { min-width: 0; border: 0; padding: 0; margin: 0; }
+.correspondence-mode > legend { margin-bottom: 10px; padding: 0; }
+.correspondence-mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.correspondence-mode-option { display: block; min-width: 0; padding: 16px; border: 1px solid #d6e3f3; border-radius: 10px; background: #fff; cursor: pointer; transition: background-color .15s, border-color .15s; }
+.correspondence-mode-option:hover { background: #f5f9ff; border-color: #93bff5; }
+.correspondence-mode-option:has(input:checked) { border-color: #0875f5; background: #edf5ff; box-shadow: inset 0 0 0 1px #0875f5; }
+.correspondence-mode-option:has(input:focus-visible) { outline: 2px solid #0875f5; outline-offset: 3px; }
+.admin-app .correspondence-mode-option input[type=radio] { appearance: auto; width: 18px; height: 18px; min-height: 0; padding: 0; margin: 2px 0 0; flex: 0 0 18px; accent-color: #0875f5; box-shadow: none; }
+.correspondence-mode-option strong { color: #294466; line-height: 1.5; }
+.correspondence-mode-option:has(input:checked) strong { color: #0865dc; }
+.correspondence-mode-option strong + span { line-height: 1.65; }
+@media (max-width: 639px) { .correspondence-mode-options { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .correspondence-mode-option { transition: none; } }

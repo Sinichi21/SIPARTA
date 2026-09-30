@@ -6,6 +6,7 @@ use App\Enums\OutgoingLetterStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OutgoingLetter extends Model
@@ -13,6 +14,7 @@ class OutgoingLetter extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'source_spt_id',
         'letter_type_id',
         'letter_template_id',
         'letterhead_profile_id',
@@ -59,6 +61,17 @@ class OutgoingLetter extends Model
             'archived_at' => 'datetime',
             'status' => OutgoingLetterStatus::class,
         ];
+    }
+
+
+    public function sourceSpt(): BelongsTo
+    {
+        return $this->belongsTo(Letter::class, 'source_spt_id');
+    }
+
+    public function personnels(): BelongsToMany
+    {
+        return $this->belongsToMany(Personnel::class, 'outgoing_letter_personnel')->withTimestamps();
     }
 
     public function letterType(): BelongsTo

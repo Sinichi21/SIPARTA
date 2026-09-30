@@ -36,7 +36,11 @@
     <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
         <section class="portal-card">
             <div class="mb-5 flex flex-wrap items-center gap-3">
-                <span class="status-badge status-success">Terbit</span>
+                @if($letter->isRevoked())
+                    <span class="status-badge status-danger">Dicabut</span>
+                @else
+                    <span class="status-badge status-success">Terbit</span>
+                @endif
 
                 @if($letter->hasArchivedPdf())
                     <span class="status-badge status-info">PDF Diarsipkan</span>
@@ -233,4 +237,76 @@
             </div>
         </section>
     @endif
+
+    @if($letter->isRevoked())
+        <section class="portal-card border-red-200 bg-red-50">
+            <div class="flex items-start gap-3">
+                <span class="stat-icon"><x-app.icon name="shield" /></span>
+                <div class="min-w-0 flex-1">
+                    <h2 class="font-semibold text-red-900">Dokumen Resmi Dicabut</h2>
+                    <p class="mt-1 text-sm leading-6 text-red-800">
+                        Dokumen ini tetap disimpan sebagai arsip historis, tetapi tidak lagi berstatus aktif.
+                    </p>
+
+                    <dl class="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                            <dt class="text-xs text-red-700">Waktu Pencabutan</dt>
+                            <dd class="mt-1 text-sm font-semibold text-red-950">
+                                {{ $letter->revoked_at?->translatedFormat('d F Y, H:i') }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-xs text-red-700">Dicabut oleh</dt>
+                            <dd class="mt-1 text-sm font-semibold text-red-950">
+                                {{ $letter->revoker?->name ?: '-' }}
+                            </dd>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <dt class="text-xs text-red-700">Alasan</dt>
+                            <dd class="mt-1 text-sm leading-6 text-red-950">
+                                {{ $letter->revocation_reason }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+    @else
+        @can('issued-letters.revoke')
+            <section class="portal-card">
+                <h2 class="font-semibold">Pencabutan Dokumen</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    Gunakan hanya jika surat resmi perlu dinyatakan tidak berlaku.
+                    Arsip PDF, checksum, dan riwayat penerbitan tidak akan dihapus.
+                </p>
+
+                <label class="mt-4 block">
+                    <span class="text-xs font-medium text-slate-600">Alasan Pencabutan</span>
+                    <textarea
+                        wire:model="revocationReason"
+                        rows="4"
+                        maxlength="2000"
+                        class="mt-2 w-full"
+                        placeholder="Jelaskan alasan pencabutan secara jelas..."
+                    ></textarea>
+
+                    @error('revocationReason')
+                        <span class="mt-1 block text-xs text-red-600">{{ $message }}</span>
+                    @enderror
+                </label>
+
+                <button
+                    type="button"
+                    wire:click="revoke"
+                    wire:confirm="Cabut dokumen resmi ini? Status publik akan berubah menjadi Dicabut dan tindakan ini dicatat ke audit log."
+                    class="spt-action spt-action-danger mt-4"
+                >
+                    Cabut Dokumen Resmi
+                </button>
+            </section>
+        @endcan
+    @endif
+
 </div>

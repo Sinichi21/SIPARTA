@@ -51,6 +51,7 @@ use App\Livewire\OutgoingLetters\Edit as OutgoingLetterEdit;
 use App\Livewire\OutgoingLetters\Show as OutgoingLetterShow;
 use App\Livewire\IssuedLetters\Index as IssuedLetterIndex;
 use App\Livewire\IssuedLetters\Show as IssuedLetterShow;
+use App\Livewire\CorrespondenceRegister\Index as CorrespondenceRegisterIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get(
@@ -183,6 +184,10 @@ Route::get('/surat-keluar', OutgoingLetterIndex::class)
 
     Route::get('/surat-terbit/{letter}', IssuedLetterShow::class)
         ->name('issued-letters.show');
+    Route::get(
+        '/register-persuratan',
+        CorrespondenceRegisterIndex::class
+    )->name('correspondence-register.index');
 
     /*
     |--------------------------------------------------------------------------

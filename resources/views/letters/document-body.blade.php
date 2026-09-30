@@ -4,37 +4,7 @@
 @endphp
 
 @if($kop)
-    <header class="letterhead">
-        <div class="letterhead-grid">
-            <div class="letterhead-logo">
-                @if($kop['logo_data_uri'] ?? null)
-                    <img src="{{ $kop['logo_data_uri'] }}" alt="">
-                @endif
-            </div>
-
-            <div class="letterhead-center">
-                @if($kop['parent_organization'] ?? null)
-                    <div class="parent-org">{{ $kop['parent_organization'] }}</div>
-                @endif
-
-                <div class="organization">{{ $kop['organization_name'] ?? '' }}</div>
-
-                @if($kop['address'] ?? null)
-                    <div class="contact">{{ $kop['address'] }}</div>
-                @endif
-
-                @if(($kop['phone'] ?? null) || ($kop['email'] ?? null) || ($kop['website'] ?? null))
-                    <div class="contact">
-                        @if($kop['phone'] ?? null) Telp. {{ $kop['phone'] }} @endif
-                        @if($kop['email'] ?? null) · {{ $kop['email'] }} @endif
-                        @if($kop['website'] ?? null) · {{ $kop['website'] }} @endif
-                    </div>
-                @endif
-            </div>
-
-            <div></div>
-        </div>
-    </header>
+    <x-official-letterhead :snapshot="$kop" />
 @endif
 
 <main class="document-content">

@@ -11,7 +11,7 @@
     @endif
 
     @if($letterheadProfile->logo_path)
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section class="portal-card">
             <div class="mb-4 flex items-center justify-between gap-4">
                 <div>
                     <h2 class="font-bold">Preview Kop Saat Ini</h2>
@@ -38,8 +38,8 @@
         @include('livewire.administration-profiles._form')
 
         <div class="flex justify-end gap-3">
-            <a href="{{ route('administration-profiles.index') }}" wire:navigate class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold">Kembali</a>
-            <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white">Simpan Perubahan</button>
+            <a href="{{ route('administration-profiles.index') }}" wire:navigate class="spt-action spt-action-back">Kembali</a>
+            <button type="submit" class="spt-action spt-action-primary">Simpan Perubahan</button>
         </div>
     </form>
 </div>

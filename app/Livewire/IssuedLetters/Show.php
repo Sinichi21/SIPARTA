@@ -3,6 +3,7 @@
 namespace App\Livewire\IssuedLetters;
 
 use App\Models\IssuedLetter;
+use App\Services\IssuedLetterRevocationService;
 use App\Services\IssuedLetterVerificationService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -11,6 +12,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class Show extends Component
 {
     public IssuedLetter $letter;
+
+    public string $revocationReason = '';
 
     public function mount(
         IssuedLetter $letter,
@@ -23,8 +26,37 @@ class Show extends Component
             ->load([
                 'letterType',
                 'issuer',
+                'revoker',
                 'outgoingLetter.letterheadProfile',
             ]);
+    }
+
+    public function revoke(
+        IssuedLetterRevocationService $service
+    ): void {
+        Gate::authorize('issued-letters.revoke');
+
+        $this->validate([
+            'revocationReason' => [
+                'required',
+                'string',
+                'min:10',
+                'max:2000',
+            ],
+        ]);
+
+        $this->letter = $service->revoke(
+            $this->letter,
+            auth()->user(),
+            $this->revocationReason
+        );
+
+        $this->revocationReason = '';
+
+        session()->flash(
+            'success',
+            'Dokumen resmi berhasil dicabut. Arsip PDF tetap dipertahankan untuk riwayat.'
+        );
     }
 
     public function downloadArchivedPdf(

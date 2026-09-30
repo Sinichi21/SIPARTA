@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="portal-page">
     <x-app.page-heading
         title="Surat Keluar"
         description="Penyusunan, verifikasi, persetujuan, penomoran, penerbitan, dan pengiriman surat."
@@ -20,9 +20,9 @@
     </div>
 
     <section class="portal-card">
-        <div class="grid gap-3 md:grid-cols-[1fr_200px_180px]">
-            <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari nomor, tujuan, atau perihal...">
-            <select wire:model.live="status">
+        <div class="app-filter-grid">
+            <label class="app-filter-field"><span>Pencarian</span><input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari nomor, tujuan, atau perihal..."></label>
+            <label class="app-filter-field"><span>Status</span><select wire:model.live="status">
                 <option value="">Semua status</option>
                 <option value="draft">Draft</option>
                 <option value="verified">Diverifikasi</option>
@@ -31,13 +31,13 @@
                 <option value="published">Diterbitkan</option>
                 <option value="sent">Dikirim</option>
                 <option value="archived">Diarsipkan</option>
-            </select>
-            <select wire:model.live="year">
+            </select></label>
+            <label class="app-filter-field"><span>Tahun</span><select wire:model.live="year">
                 <option value="">Semua tahun</option>
                 @foreach(range(now()->year, now()->year - 5) as $item)
                     <option value="{{ $item }}">{{ $item }}</option>
                 @endforeach
-            </select>
+            </select></label>
         </div>
     </section>
 

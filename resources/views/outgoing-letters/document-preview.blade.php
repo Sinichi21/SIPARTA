@@ -48,13 +48,7 @@
 
     <article class="page">
         @if($letter->letterheadProfile)
-            <header class="letterhead">
-                @if($letter->letterheadProfile->parent_organization)
-                    <p><strong>{{ $letter->letterheadProfile->parent_organization }}</strong></p>
-                @endif
-                <h1>{{ $letter->letterheadProfile->organization_name }}</h1>
-                <p>{{ $letter->letterheadProfile->address }}</p>
-            </header>
+            <x-official-letterhead :profile="$letter->letterheadProfile" />
         @endif
 
         <div class="content">{!! $rendered !!}</div>

@@ -58,21 +58,7 @@
                     : 'width:210mm;min-height:297mm;padding:16mm;zoom:1;'"
             >
                 @if($letter->letterheadProfile)
-                    <header style="border-bottom:1.6px solid #000;margin-bottom:5mm;padding-bottom:3mm;text-align:center;">
-                        @if($letter->letterheadProfile->parent_organization)
-                            <div style="font-family:'Times New Roman',Times,serif;font-size:12pt;font-weight:700;text-transform:uppercase;">
-                                {{ $letter->letterheadProfile->parent_organization }}
-                            </div>
-                        @endif
-
-                        <div style="font-family:'Times New Roman',Times,serif;font-size:15pt;font-weight:700;text-transform:uppercase;">
-                            {{ $letter->letterheadProfile->organization_name }}
-                        </div>
-
-                        <div style="margin-top:1mm;font-family:'Times New Roman',Times,serif;font-size:9.5pt;">
-                            {{ $letter->letterheadProfile->address }}
-                        </div>
-                    </header>
+                    <x-official-letterhead :profile="$letter->letterheadProfile" />
                 @endif
 
                 <div

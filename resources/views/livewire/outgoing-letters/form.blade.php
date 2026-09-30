@@ -41,6 +41,21 @@
             </div>
         </div>
 
+
+        @if($sourceSpt)
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                <strong>Surat ini dibuat dari data SPT.</strong>
+                <p class="mt-1 text-xs leading-5 text-blue-800">
+                    Kegiatan, periode, lokasi, dasar, dan personil diambil dari SPT sumber.
+                    Nomor surat resmi tetap mengikuti penomoran Surat Keluar saat dokumen diterbitkan.
+                </p>
+                <div class="mt-2 text-xs">
+                    Referensi SPT: <strong>{{ $sourceSpt->number ?: 'Draft SPT #'.$sourceSpt->id }}</strong>
+                    · {{ $sourceSpt->subject }}
+                </div>
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="correspondence-errors" role="alert">
                 <strong>Data belum dapat disimpan.</strong>
@@ -116,13 +131,13 @@
             </header>
 
             <div class="correspondence-fields">
-                <div class="correspondence-field correspondence-field-wide">
-                    <span class="correspondence-label">Mode Nomor Surat</span>
+                <fieldset class="correspondence-field correspondence-field-wide correspondence-mode">
+                    <legend class="correspondence-label">Mode Nomor Surat</legend>
 
-                    <div class="grid gap-3 md:grid-cols-2">
-                        <label class="rounded-xl border border-slate-200 p-4">
+                    <div class="correspondence-mode-options">
+                        <label class="correspondence-mode-option">
                             <span class="flex items-start gap-3">
-                                <input type="radio" value="auto" wire:model.live="numbering_mode">
+                                <input name="numbering_mode" type="radio" value="auto" wire:model.live="numbering_mode">
                                 <span>
                                     <strong class="block text-sm">Otomatis saat Terbit</strong>
                                     <span class="mt-1 block text-xs text-slate-500">
@@ -132,9 +147,9 @@
                             </span>
                         </label>
 
-                        <label class="rounded-xl border border-slate-200 p-4">
+                        <label class="correspondence-mode-option">
                             <span class="flex items-start gap-3">
-                                <input type="radio" value="manual" wire:model.live="numbering_mode">
+                                <input name="numbering_mode" type="radio" value="manual" wire:model.live="numbering_mode">
                                 <span>
                                     <strong class="block text-sm">Nomor Manual</strong>
                                     <span class="mt-1 block text-xs text-slate-500">
@@ -144,7 +159,7 @@
                             </span>
                         </label>
                     </div>
-                </div>
+                </fieldset>
 
                 @if($numbering_mode === 'manual')
                     <label class="correspondence-field correspondence-field-wide">
@@ -164,13 +179,13 @@
                     </label>
                 @endif
 
-                <div class="correspondence-field correspondence-field-wide">
-                    <span class="correspondence-label">Tanggal Surat</span>
+                <fieldset class="correspondence-field correspondence-field-wide correspondence-mode">
+                    <legend class="correspondence-label">Mode Tanggal Surat</legend>
 
-                    <div class="grid gap-3 md:grid-cols-2">
-                        <label class="rounded-xl border border-slate-200 p-4">
+                    <div class="correspondence-mode-options">
+                        <label class="correspondence-mode-option">
                             <span class="flex items-start gap-3">
-                                <input type="radio" value="auto" wire:model.live="date_mode">
+                                <input name="date_mode" type="radio" value="auto" wire:model.live="date_mode">
                                 <span>
                                     <strong class="block text-sm">Tanggal saat Terbit</strong>
                                     <span class="mt-1 block text-xs text-slate-500">
@@ -180,9 +195,9 @@
                             </span>
                         </label>
 
-                        <label class="rounded-xl border border-slate-200 p-4">
+                        <label class="correspondence-mode-option">
                             <span class="flex items-start gap-3">
-                                <input type="radio" value="manual" wire:model.live="date_mode">
+                                <input name="date_mode" type="radio" value="manual" wire:model.live="date_mode">
                                 <span>
                                     <strong class="block text-sm">Tanggal Manual</strong>
                                     <span class="mt-1 block text-xs text-slate-500">
@@ -192,7 +207,7 @@
                             </span>
                         </label>
                     </div>
-                </div>
+                </fieldset>
 
                 @if($date_mode === 'manual')
                     <label class="correspondence-field">
@@ -263,6 +278,68 @@
                         </label>
                     @endforeach
                 </div>
+            </section>
+        @endif
+
+
+        @if($sourceSpt || $selectedType?->requires_personnel)
+            <section class="portal-card correspondence-section">
+                <header class="correspondence-section-heading">
+                    <span class="correspondence-section-icon"><x-app.icon name="users" /></span>
+                    <div>
+                        <h2>Personil Penugasan</h2>
+                        <p>
+                            {{ $sourceSpt
+                                ? 'Personil otomatis diambil dari SPT sumber.'
+                                : 'Pilih personil dari master data untuk surat penugasan.' }}
+                        </p>
+                    </div>
+                </header>
+
+                @if($sourceSpt)
+                    <div class="overflow-x-auto">
+                        <table class="portal-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>NIP</th>
+                                    <th>Jabatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($personnels->whereIn('id', $personnel_ids) as $person)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td class="font-semibold">{{ $person->name }}</td>
+                                        <td>{{ $person->nip ?: '-' }}</td>
+                                        <td>{{ $person->position ?: '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-slate-500">
+                                            Belum ada personil pada SPT sumber.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <label class="correspondence-field correspondence-field-wide">
+                        <span class="correspondence-label">Pilih Personil</span>
+                        <select wire:model.live="personnel_ids" multiple size="8">
+                            @foreach($personnels as $person)
+                                <option value="{{ $person->id }}">
+                                    {{ $person->name }} — {{ $person->nip ?: 'Tanpa NIP' }} — {{ $person->position ?: 'Tanpa Jabatan' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="correspondence-help">
+                            Gunakan Ctrl/Command untuk memilih lebih dari satu personil.
+                        </span>
+                    </label>
+                @endif
             </section>
         @endif
 

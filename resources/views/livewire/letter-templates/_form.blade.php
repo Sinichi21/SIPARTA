@@ -1,4 +1,4 @@
-<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+<section class="portal-card">
     <div class="grid gap-5 md:grid-cols-2">
         <label class="grid gap-1.5 text-sm font-medium">
             <span>Nama Template *</span>
@@ -50,7 +50,7 @@
     </div>
 </section>
 
-<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+<section class="portal-card">
     <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
             <h2 class="font-bold text-slate-900">Isi Template</h2>

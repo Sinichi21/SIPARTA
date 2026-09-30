@@ -1,14 +1,9 @@
-<div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900">Role & Permission</h1>
-        <p class="mt-1 text-sm text-slate-500">
-            Atur hak akses per role tanpa hardcode di halaman aplikasi.
-        </p>
-    </div>
+<div class="portal-page">
+    <x-app.page-heading title="Role &amp; Permission" description="Kelola hak akses pengguna untuk setiap peran dalam aplikasi." />
 
     <div class="grid gap-4 lg:grid-cols-2">
         @foreach($roles as $role)
-            <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article class="portal-card">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <h2 class="font-bold text-slate-900">{{ $role->name }}</h2>

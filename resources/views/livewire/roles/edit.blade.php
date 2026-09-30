@@ -12,7 +12,7 @@
 
     <form wire:submit="save" class="space-y-5">
         @foreach($permissionGroups as $group => $items)
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section class="portal-card">
                 <h2 class="font-semibold capitalize text-slate-900">{{ $group }}</h2>
 
                 <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -32,7 +32,7 @@
         @endforeach
 
         <div class="flex justify-end">
-            <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white">
+            <button type="submit" class="spt-action spt-action-primary">
                 Simpan Permission
             </button>
         </div>

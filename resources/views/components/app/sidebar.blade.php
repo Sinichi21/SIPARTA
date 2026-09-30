@@ -23,6 +23,7 @@
                 ['label' => 'Import SPT Lama', 'route' => 'spt-import.index', 'match' => 'spt-import.*', 'permission' => 'letters.import'],
             ]],
             ['id' => 'reports', 'label' => 'Rekap & Laporan', 'icon' => 'chart', 'section' => 'work', 'items' => [
+                ['label' => 'Register Persuratan', 'route' => 'correspondence-register.index', 'match' => 'correspondence-register.*', 'permission' => 'reports.view'],
                 ['label' => 'Rekap SPT', 'route' => 'spt-recap.index', 'match' => 'spt-recap.*', 'permission' => 'reports.view'],
                 ['label' => 'Rekap Personil', 'route' => 'personnel-recap.index', 'match' => 'personnel-recap.*', 'permission' => 'reports.view'],
             ]],

@@ -112,23 +112,7 @@
 </head>
 <body>
     @if($letter->letterheadProfile)
-        <header class="letterhead">
-            @if($letter->letterheadProfile->parent_organization)
-                <div class="letterhead-parent">
-                    {{ $letter->letterheadProfile->parent_organization }}
-                </div>
-            @endif
-
-            <div class="letterhead-name">
-                {{ $letter->letterheadProfile->organization_name }}
-            </div>
-
-            @if($letter->letterheadProfile->address)
-                <div class="letterhead-address">
-                    {{ $letter->letterheadProfile->address }}
-                </div>
-            @endif
-        </header>
+        <x-official-letterhead :profile="$letter->letterheadProfile" />
     @endif
 
     <div class="content">{!! $rendered !!}</div>

@@ -34,6 +34,12 @@
             background: #ecfdf3;
             border-bottom: 1px solid #ccebd8;
         }
+        .status.revoked {
+            background: #fff1f2;
+            border-bottom-color: #fecdd3;
+        }
+        .status.revoked strong { color: #991b1b; }
+        .status.revoked span { color: #9f1239; }
         .status strong {
             display: block;
             color: #17643a;
@@ -93,11 +99,18 @@
         <div class="brand">SIPARTA · Verifikasi Dokumen</div>
 
         <section class="card">
-            <header class="status">
-                <strong>Dokumen terdaftar sebagai surat resmi</strong>
-                <span>
-                    Data di bawah berasal dari register Surat Terbit SIPARTA.
-                </span>
+            <header class="status {{ $issued->isRevoked() ? 'revoked' : '' }}">
+                @if($issued->isRevoked())
+                    <strong>Dokumen resmi telah dicabut</strong>
+                    <span>
+                        Arsip tetap tersimpan untuk riwayat, namun dokumen ini tidak lagi berstatus aktif.
+                    </span>
+                @else
+                    <strong>Dokumen terdaftar sebagai surat resmi</strong>
+                    <span>
+                        Data di bawah berasal dari register Surat Terbit SIPARTA.
+                    </span>
+                @endif
             </header>
 
             <div class="content">
@@ -119,7 +132,7 @@
 
                     <div>
                         <dt>Status</dt>
-                        <dd>{{ ucfirst($issued->status) }}</dd>
+                        <dd>{{ $issued->isRevoked() ? 'Dicabut' : ucfirst($issued->status) }}</dd>
                     </div>
 
                     <div class="wide">
@@ -146,6 +159,18 @@
                         <dt>Waktu Terbit</dt>
                         <dd>{{ $issued->issued_at?->translatedFormat('d F Y, H:i') }}</dd>
                     </div>
+
+                    @if($issued->isRevoked())
+                        <div>
+                            <dt>Tanggal Pencabutan</dt>
+                            <dd>{{ $issued->revoked_at?->translatedFormat('d F Y, H:i') }}</dd>
+                        </div>
+
+                        <div class="wide">
+                            <dt>Alasan Pencabutan</dt>
+                            <dd>{{ $issued->revocation_reason }}</dd>
+                        </div>
+                    @endif
 
                     <div class="wide">
                         <dt>Checksum Snapshot SHA-256</dt>
