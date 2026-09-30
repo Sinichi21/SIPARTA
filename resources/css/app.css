@@ -588,3 +588,32 @@ select:focus[data-flux-control] {
 .dark .admin-app .settings-nav-link { color:#a8c2e2; }
 .dark .admin-app .settings-nav-link:hover,.dark .admin-app .settings-nav-link.is-active { background:#203e61; color:#8fc5ff; }
 .dark .admin-app .settings-danger { background:#30232d; }
+
+/* Incoming and outgoing correspondence forms. */
+.admin-app .correspondence-page { display:grid; gap:20px; max-width:1280px; margin-inline:auto; }
+.admin-app .correspondence-form { display:grid; gap:20px; }
+.admin-app .correspondence-intro { display:flex; align-items:center; gap:14px; padding:4px 0; }
+.admin-app .correspondence-intro .stat-icon { width:46px; height:46px; border-radius:12px; }
+.admin-app .correspondence-intro strong { font-size:14px; color:#183353; }
+.admin-app .correspondence-intro p,.admin-app .correspondence-section-heading p,.admin-app .correspondence-footer p { font-size:12px; color:#6b809c; margin-top:4px; line-height:1.6; }
+.admin-app .correspondence-section { padding:0; overflow:hidden; }
+.admin-app .correspondence-section-heading { display:flex; align-items:center; gap:12px; padding:20px 24px; border-bottom:1px solid #e5edf7; background:linear-gradient(110deg,#f8fbff,#fff); }
+.admin-app .correspondence-section-heading h2 { font-size:15px; font-weight:700; color:#173252; }
+.admin-app .correspondence-section-icon { display:grid; place-items:center; width:36px; height:36px; border-radius:9px; background:#eaf3ff; color:#0875f5; flex-shrink:0; }
+.admin-app .correspondence-step { margin-left:auto; color:#a6bad4; font-size:19px; font-weight:700; }
+.admin-app .correspondence-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 24px; padding:24px; }
+.admin-app .correspondence-field { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.admin-app .correspondence-label { font-size:13px; font-weight:600; color:#2b4362; }
+.admin-app .correspondence-field-wide { grid-column:1 / -1; }
+.admin-app .correspondence-field input,.admin-app .correspondence-field select,.admin-app .correspondence-field textarea { display:block; width:100%; min-width:0; border:1px solid #d6e3f3; border-radius:8px; background:#fff; padding:10px 12px; font-size:13px; line-height:1.6; color:#183353; transition:border-color .15s,box-shadow .15s; }
+.admin-app .correspondence-field select { padding-right:32px; }
+.admin-app .correspondence-field textarea { resize:vertical; min-height:100px; }
+.admin-app .correspondence-field :is(input,select,textarea):focus { outline:none; border-color:#348cf7; box-shadow:0 0 0 3px #2585f51a; }
+.admin-app .correspondence-field :is(input,textarea)::placeholder { color:#92a3b9; }
+.admin-app .correspondence-help { font-size:12px; color:#6b809c; }
+.admin-app .correspondence-footer { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:20px 24px; }
+.admin-app .correspondence-footer strong { font-size:13px; color:#294260; }
+.admin-app .correspondence-actions { display:flex; gap:10px; flex-shrink:0; }
+.admin-app .correspondence-actions button:disabled { opacity:.65; cursor:wait; }
+.admin-app .correspondence-errors { padding:15px 18px; border:1px solid #fecaca; background:#fff1f2; color:#b42335; border-radius:10px; font-size:13px; }
+@media(max-width:639px) { .admin-app .correspondence-fields { grid-template-columns:1fr; padding:18px; gap:18px; } .admin-app .correspondence-section-heading { padding:18px; } .admin-app .correspondence-footer { flex-direction:column; align-items:stretch; padding:18px; } .admin-app .correspondence-actions { justify-content:flex-end; } .admin-app .correspondence-step { display:none; } }

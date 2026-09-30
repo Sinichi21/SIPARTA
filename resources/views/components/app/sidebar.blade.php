@@ -14,7 +14,11 @@
     </div>
     @php
         $groups = collect([
-            ['id' => 'spt', 'label' => 'Surat Perintah Tugas', 'icon' => 'document', 'section' => 'work', 'items' => [
+            ['id' => 'correspondence', 'label' => 'Persuratan', 'icon' => 'document', 'section' => 'work', 'items' => [
+                ['label' => 'Surat Masuk', 'route' => 'incoming-letters.index', 'match' => 'incoming-letters.*', 'permission' => 'incoming-letters.view'],
+                ['label' => 'Surat Keluar', 'route' => 'outgoing-letters.index', 'match' => 'outgoing-letters.*', 'permission' => 'outgoing-letters.view'],
+                ['label' => 'Surat Terbit', 'route' => 'issued-letters.index', 'match' => 'issued-letters.*', 'permission' => 'issued-letters.view'],
+            ]],            ['id' => 'spt', 'label' => 'Surat Perintah Tugas', 'icon' => 'document', 'section' => 'work', 'items' => [
                 ['label' => 'Data SPT', 'route' => 'letters.index', 'match' => 'letters.*', 'permission' => 'letters.view'],
                 ['label' => 'Import SPT Lama', 'route' => 'spt-import.index', 'match' => 'spt-import.*', 'permission' => 'letters.import'],
             ]],

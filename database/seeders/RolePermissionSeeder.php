@@ -21,6 +21,23 @@ class RolePermissionSeeder extends Seeder
             'my-letters.view',
             'my-reports.view',
 
+            'incoming-letters.view',
+            'incoming-letters.create',
+            'incoming-letters.update',
+            'incoming-letters.process',
+            'incoming-letters.archive',
+
+            'outgoing-letters.view',
+            'outgoing-letters.create',
+            'outgoing-letters.update',
+            'outgoing-letters.verify',
+            'outgoing-letters.approve',
+            'outgoing-letters.number',
+            'outgoing-letters.publish',
+            'outgoing-letters.send',
+            'outgoing-letters.archive',
+
+            'issued-letters.view',
             'letters.view',
             'letters.create',
             'letters.update',
