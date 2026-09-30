@@ -23,6 +23,7 @@
         'resources/js/app.js',
     ])
 
+    @fluxAppearance
     @livewireStyles
 </head>
 
@@ -47,6 +48,7 @@
         </div>
     </div>
 
+    @fluxScripts
     @livewireScripts
 </body>
 

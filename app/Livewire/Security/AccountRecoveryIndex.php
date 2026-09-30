@@ -184,6 +184,16 @@ class AccountRecoveryIndex extends Component
             [
                 'users' => User::query()
                     ->when(
+                        ! auth()->user()->hasRole('super-admin'),
+                        fn ($query) => $query->whereDoesntHave(
+                            'roles',
+                            fn ($roleQuery) => $roleQuery->where(
+                                'name',
+                                'super-admin'
+                            )
+                        )
+                    )
+                    ->when(
                         filled($this->search),
                         function ($query) {
                             $search =

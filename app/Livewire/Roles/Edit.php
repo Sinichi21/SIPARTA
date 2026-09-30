@@ -17,6 +17,11 @@ class Edit extends Component
     public function mount(Role $role): void
     {
         Gate::authorize('roles.manage');
+        abort_if(
+            $role->name === 'super-admin'
+            && ! auth()->user()->hasRole('super-admin'),
+            404
+        );
 
         abort_if(
             $role->guard_name !== 'web',

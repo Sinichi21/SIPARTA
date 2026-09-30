@@ -31,35 +31,83 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.users.index', [
-            'users' => User::query()
-                ->with(['roles', 'personnel'])
-                ->when(
-                    filled($this->search),
-                    function ($query) {
-                        $search = trim($this->search);
+        $isSuperAdmin =
+            auth()->user()->hasRole(
+                'super-admin'
+            );
 
-                        $query->where(
-                            fn ($query) => $query
-                                ->where('name', 'ilike', "%{$search}%")
-                                ->orWhere('email', 'ilike', "%{$search}%")
-                        );
-                    }
-                )
-                ->when(
-                    $this->status === 'active',
-                    fn ($query) => $query->whereNull('account_disabled_at')
-                )
-                ->when(
-                    $this->status === 'disabled',
-                    fn ($query) => $query->whereNotNull('account_disabled_at')
-                )
-                ->when(
-                    $this->status === 'pending',
-                    fn ($query) => $query->where('must_set_password', true)
-                )
-                ->orderBy('name')
-                ->paginate(15),
-        ]);
+        return view(
+            'livewire.users.index',
+            [
+                'users' => User::query()
+                    ->with([
+                        'roles',
+                        'personnel',
+                    ])
+                    ->when(
+                        ! $isSuperAdmin,
+                        fn ($query) =>
+                            $query->whereDoesntHave(
+                                'roles',
+                                fn ($roleQuery) =>
+                                    $roleQuery->where(
+                                        'name',
+                                        'super-admin'
+                                    )
+                            )
+                    )
+                    ->when(
+                        filled($this->search),
+                        function ($query) {
+                            $search =
+                                trim(
+                                    $this->search
+                                );
+
+                            $query->where(
+                                fn ($query) =>
+                                    $query
+                                        ->where(
+                                            'name',
+                                            'ilike',
+                                            "%{$search}%"
+                                        )
+                                        ->orWhere(
+                                            'email',
+                                            'ilike',
+                                            "%{$search}%"
+                                        )
+                            );
+                        }
+                    )
+                    ->when(
+                        $this->status
+                        === 'active',
+                        fn ($query) =>
+                            $query->whereNull(
+                                'account_disabled_at'
+                            )
+                    )
+                    ->when(
+                        $this->status
+                        === 'disabled',
+                        fn ($query) =>
+                            $query->whereNotNull(
+                                'account_disabled_at'
+                            )
+                    )
+                    ->when(
+                        $this->status
+                        === 'pending',
+                        fn ($query) =>
+                            $query->where(
+                                'must_set_password',
+                                true
+                            )
+                    )
+                    ->orderBy('name')
+                    ->paginate(15),
+            ]
+        );
     }
 }

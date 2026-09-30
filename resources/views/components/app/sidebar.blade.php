@@ -52,9 +52,39 @@
         x-data="{ openGroup: @js($activeGroup) }"
         wire:key="sidebar-navigation-{{ request()->route()?->getName() ?? 'default' }}"
     >
-        @can('dashboard.view')
+        @canany(['dashboard.view', 'my-dashboard.view'])
             <x-app.nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="home">Dashboard</x-app.nav-link>
-        @endcan
+        @endcanany
+
+        @if(
+            (auth()->user()->can('my-letters.view') || auth()->user()->can('my-reports.view'))
+            && ! auth()->user()->can('letters.view')
+            && ! auth()->user()->can('reports.view')
+        )
+            <div class="sidebar-section">
+                <p class="sidebar-section-label">Administrasi Saya</p>
+
+                @can('my-letters.view')
+                    <x-app.nav-link
+                        :href="route('my-spt.index')"
+                        :active="request()->routeIs('my-spt.*')"
+                        icon="document"
+                    >
+                        SPT Saya
+                    </x-app.nav-link>
+                @endcan
+
+                @can('my-reports.view')
+                    <x-app.nav-link
+                        :href="route('my-recap.index')"
+                        :active="request()->routeIs('my-recap.*')"
+                        icon="chart"
+                    >
+                        Rekap Saya
+                    </x-app.nav-link>
+                @endcan
+            </div>
+        @endif
         @foreach(['work' => 'Ruang Kerja', 'manage' => 'Pengelolaan'] as $section => $heading)
             @if($groups->contains('section', $section))
                 <div class="sidebar-section">
@@ -72,7 +102,7 @@
     </nav>
     <div class="sidebar-footer">
         <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">
-            <span class="sidebar-avatar">{{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'U', 0, 1)) }}</span>
+            <x-app.avatar class="sidebar-avatar" />
             <span class="min-w-0"><strong>{{ auth()->user()?->name }}</strong><span>{{ auth()->user()?->getRoleNames()->first() ?: 'Pengguna' }}</span></span>
         </a>
         <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="sidebar-logout" aria-label="Keluar dari aplikasi" title="Keluar"><x-app.icon name="logout" /></button></form>
