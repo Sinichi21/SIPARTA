@@ -63,7 +63,8 @@ Route::get(
 Route::get(
     '/verify/surat/{code}',
     IssuedLetterVerificationController::class
-)->name('issued-letters.verify');
+)->middleware('throttle:60,1')
+    ->name('issued-letters.verify');
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
