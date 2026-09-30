@@ -1,22 +1,17 @@
-<div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold">Template Surat</h1>
-            <p class="mt-1 text-sm text-slate-500">
-                Kelola isi dokumen, placeholder, versi, dan template default.
-            </p>
-        </div>
-
-        @can('settings.manage')
-            <a
-                href="{{ route('letter-templates.create') }}"
-                wire:navigate
-                class="inline-flex items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-                + Template Baru
-            </a>
-        @endcan
-    </div>
+<div class="portal-page">
+    <x-app.page-heading title="Template Surat" description="Kelola isi dokumen, placeholder, versi, dan template default.">
+        <x-slot:actions>
+            @can('settings.manage')
+                <a
+                    href="{{ route('letter-templates.create') }}"
+                    wire:navigate
+                    class="spt-action spt-action-primary"
+                >
+                    + Template Baru
+                </a>
+            @endcan
+        </x-slot:actions>
+    </x-app.page-heading>
 
     @if(session('success'))
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
@@ -24,7 +19,7 @@
         </div>
     @endif
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="portal-card">
         <input
             wire:model.live.debounce.300ms="search"
             type="search"
@@ -33,9 +28,9 @@
         >
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="portal-card portal-table-card">
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[850px] text-sm">
+            <table class="portal-table">
                 <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Nama</th>

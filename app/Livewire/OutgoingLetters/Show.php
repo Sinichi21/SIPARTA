@@ -5,6 +5,7 @@ namespace App\Livewire\OutgoingLetters;
 use App\Enums\OutgoingLetterStatus;
 use App\Models\OutgoingLetter;
 use App\Services\OutgoingLetterService;
+use App\Services\OutgoingLetterTemplateRenderer;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -12,27 +13,11 @@ class Show extends Component
 {
     public OutgoingLetter $letter;
 
-    public string $number = '';
-    public string $letter_date = '';
-
     public function mount(OutgoingLetter $letter): void
     {
         Gate::authorize('outgoing-letters.view');
-
-        $this->letter = $letter->load([
-            'letterType',
-            'template',
-            'letterheadProfile',
-            'creator',
-            'verifier',
-            'approver',
-            'issuer',
-            'issuedLetter',
-        ]);
-
-        $this->number = (string) ($letter->number ?? '');
-        $this->letter_date = $letter->letter_date?->toDateString()
-            ?? now()->toDateString();
+        $this->letter = $letter;
+        $this->refreshLetter();
     }
 
     public function verify(OutgoingLetterService $service): void
@@ -49,18 +34,6 @@ class Show extends Component
         $this->refreshLetter();
     }
 
-    public function assignNumber(OutgoingLetterService $service): void
-    {
-        Gate::authorize('outgoing-letters.number');
-        $service->number(
-            $this->letter,
-            auth()->user(),
-            $this->number,
-            $this->letter_date
-        );
-        $this->refreshLetter();
-    }
-
     public function publish(OutgoingLetterService $service): void
     {
         Gate::authorize('outgoing-letters.publish');
@@ -69,7 +42,7 @@ class Show extends Component
 
         session()->flash(
             'success',
-            'Surat berhasil diterbitkan dan masuk Register Surat Terbit.'
+            'Surat berhasil diterbitkan. Nomor resmi dialokasikan saat penerbitan.'
         );
     }
 
@@ -87,22 +60,33 @@ class Show extends Component
         $this->refreshLetter();
     }
 
-    private function refreshLetter(): void
+    public function render(OutgoingLetterTemplateRenderer $renderer)
     {
-        $this->letter->refresh()->load([
-            'letterType',
-            'template',
-            'letterheadProfile',
-            'creator',
-            'verifier',
-            'approver',
-            'issuer',
-            'issuedLetter',
+        return view('livewire.outgoing-letters.show', [
+            'previewBody' => $renderer->render(
+                $this->letter,
+                $this->letter->status !== OutgoingLetterStatus::Published,
+                true
+            ),
+            'missingPlaceholders' => $renderer->missingPlaceholders(
+                $this->letter
+            ),
         ]);
     }
 
-    public function render()
+    private function refreshLetter(): void
     {
-        return view('livewire.outgoing-letters.show');
+        $this->letter
+            ->refresh()
+            ->load([
+                'letterType',
+                'template',
+                'letterheadProfile',
+                'creator',
+                'verifier',
+                'approver',
+                'issuer',
+                'issuedLetter',
+            ]);
     }
 }

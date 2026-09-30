@@ -8,8 +8,8 @@
         @include('livewire.administration-profiles._form')
 
         <div class="flex justify-end gap-3">
-            <a href="{{ route('administration-profiles.index') }}" wire:navigate class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold">Batal</a>
-            <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white">Simpan Profil</button>
+            <a href="{{ route('administration-profiles.index') }}" wire:navigate class="spt-action spt-action-back">Batal</a>
+            <button type="submit" class="spt-action spt-action-primary">Simpan Profil</button>
         </div>
     </form>
 </div>

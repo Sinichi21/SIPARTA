@@ -179,11 +179,21 @@ class LetterDocumentService
         }
 
         $logoDataUri = null;
+        $logoSecondaryDataUri = null;
 
         if ($profile->logo_path && Storage::disk('public')->exists($profile->logo_path)) {
             $contents = Storage::disk('public')->get($profile->logo_path);
             $mime = Storage::disk('public')->mimeType($profile->logo_path) ?: 'image/png';
             $logoDataUri = 'data:'.$mime.';base64,'.base64_encode($contents);
+        }
+
+        if (
+            $profile->logo_secondary_path
+            && Storage::disk('public')->exists($profile->logo_secondary_path)
+        ) {
+            $contents = Storage::disk('public')->get($profile->logo_secondary_path);
+            $mime = Storage::disk('public')->mimeType($profile->logo_secondary_path) ?: 'image/png';
+            $logoSecondaryDataUri = 'data:'.$mime.';base64,'.base64_encode($contents);
         }
 
         return [
@@ -200,6 +210,7 @@ class LetterDocumentService
             'signatory_nip' => $profile->signatory_nip,
             'signatory_position' => $profile->signatory_position,
             'logo_data_uri' => $logoDataUri,
+            'logo_secondary_data_uri' => $logoSecondaryDataUri,
         ];
     }
 }

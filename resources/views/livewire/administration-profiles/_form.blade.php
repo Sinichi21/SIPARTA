@@ -1,4 +1,4 @@
-<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+<section class="portal-card">
     <div class="mb-5">
         <h2 class="font-bold text-slate-900">Identitas Kop Surat</h2>
         <p class="mt-1 text-xs text-slate-500">
@@ -50,16 +50,25 @@
             <input wire:model="city" class="rounded-xl border-slate-200" placeholder="Contoh: Denpasar">
         </label>
 
-        <label class="grid gap-1.5 text-sm font-medium md:col-span-2">
-            <span>Logo</span>
+        <label class="grid gap-1.5 text-sm font-medium">
+            <span>Gambar / Logo 1</span>
             <input wire:model="logo" type="file" accept=".jpg,.jpeg,.png,.webp" class="rounded-xl border border-slate-200 p-3 text-sm">
             <span class="text-xs font-normal text-slate-500">JPG, PNG, atau WebP maksimal 2 MB.</span>
             @error('logo')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
         </label>
+
+        <label class="grid gap-1.5 text-sm font-medium">
+            <span>Gambar / Logo 2</span>
+            <input wire:model="logo_secondary" type="file" accept=".jpg,.jpeg,.png,.webp" class="rounded-xl border border-slate-200 p-3 text-sm">
+            <span class="text-xs font-normal text-slate-500">
+                Opsional. Jika diisi, dua gambar ditampilkan bersama dan diberi pembatas di sisi kanan kelompok gambar.
+            </span>
+            @error('logo_secondary')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+        </label>
     </div>
 </section>
 
-<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+<section class="portal-card">
     <div class="mb-5">
         <h2 class="font-bold text-slate-900">Penandatangan Default</h2>
         <p class="mt-1 text-xs text-slate-500">
@@ -85,7 +94,7 @@
     </div>
 </section>
 
-<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+<section class="portal-card">
     <div class="flex flex-wrap gap-6">
         <label class="inline-flex items-center gap-2 text-sm">
             <input type="checkbox" wire:model="is_default" class="rounded border-slate-300">

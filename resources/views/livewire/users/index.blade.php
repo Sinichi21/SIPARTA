@@ -1,22 +1,17 @@
-<div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900">Pengguna</h1>
-            <p class="mt-1 text-sm text-slate-500">
-                Kelola akun, role, status aktivasi, dan keterkaitan personil.
-            </p>
-        </div>
-
-        @can('users.create')
-            <a
-                href="{{ route('users.create') }}"
-                wire:navigate
-                class="inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white"
-            >
-                + Tambah Pengguna
-            </a>
-        @endcan
-    </div>
+<div class="portal-page">
+    <x-app.page-heading title="Pengguna" description="Kelola akun, role, status aktivasi, dan keterkaitan personil.">
+        <x-slot:actions>
+            @can('users.create')
+                <a
+                    href="{{ route('users.create') }}"
+                    wire:navigate
+                    class="spt-action spt-action-primary"
+                >
+                    + Tambah Pengguna
+                </a>
+            @endcan
+        </x-slot:actions>
+    </x-app.page-heading>
 
     @foreach(['success' => 'emerald', 'warning' => 'amber'] as $key => $tone)
         @if(session($key))
@@ -26,7 +21,7 @@
         @endif
     @endforeach
 
-    <div class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-[1fr_200px]">
+    <div class="grid gap-3 portal-card md:grid-cols-[1fr_200px]">
         <input
             wire:model.live.debounce.300ms="search"
             type="search"
@@ -42,9 +37,9 @@
         </select>
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="portal-card portal-table-card">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+            <table class="portal-table">
                 <thead class="border-b bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
                         <th class="px-5 py-3">Pengguna</th>
@@ -56,7 +51,7 @@
                 </thead>
 
                 <tbody class="divide-y divide-slate-100">
-                    @foreach($users as $user)
+                    @forelse($users as $user)
                         <tr>
                             <td class="px-5 py-4">
                                 <strong class="block text-slate-900">{{ $user->name }}</strong>
@@ -107,7 +102,9 @@
                                 @endcan
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr><td colspan="5"><x-app.empty-state title="Tidak ada pengguna" description="Coba ubah pencarian atau filter status pengguna." /></td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

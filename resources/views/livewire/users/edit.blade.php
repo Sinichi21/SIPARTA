@@ -10,7 +10,7 @@
         </div>
     @endif
 
-    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section class="portal-card">
         <div class="mb-5 flex flex-wrap gap-2">
             @if($user->must_set_password)
                 <span class="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
@@ -27,7 +27,7 @@
             @include('livewire.users._form')
 
             <div class="flex justify-end">
-                <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white">
+                <button type="submit" class="spt-action spt-action-primary">
                     Simpan
                 </button>
             </div>

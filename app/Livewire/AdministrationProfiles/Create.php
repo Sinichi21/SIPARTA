@@ -32,6 +32,8 @@ class Create extends Component
 
     public $logo;
 
+    public $logo_secondary;
+
     public function mount(): void
     {
         Gate::authorize('settings.manage');
@@ -45,6 +47,8 @@ class Create extends Component
 
         $logoPath = null;
         $logoOriginalName = null;
+        $logoSecondaryPath = null;
+        $logoSecondaryOriginalName = null;
 
         if ($this->logo) {
             $logoOriginalName = $this->logo
@@ -61,12 +65,29 @@ class Create extends Component
             );
         }
 
+        if ($this->logo_secondary) {
+            $logoSecondaryOriginalName = $this->logo_secondary
+                ->getClientOriginalName();
+
+            $extension = strtolower(
+                $this->logo_secondary->getClientOriginalExtension()
+            );
+
+            $logoSecondaryPath = $this->logo_secondary->storeAs(
+                'letterheads/logos',
+                Str::uuid().'.'.$extension,
+                'public'
+            );
+        }
+
         try {
             $profile = DB::transaction(
                 function () use (
                     $data,
                     $logoPath,
                     $logoOriginalName,
+                    $logoSecondaryPath,
+                    $logoSecondaryOriginalName,
                     $audit
                 ) {
                     if ($data['is_default']) {
@@ -82,6 +103,10 @@ class Create extends Component
                             'logo_path' => $logoPath,
                             'logo_original_name' =>
                                 $logoOriginalName,
+                            'logo_secondary_path' =>
+                                $logoSecondaryPath,
+                            'logo_secondary_original_name' =>
+                                $logoSecondaryOriginalName,
                             'created_by' => auth()->id(),
                             'updated_by' => auth()->id(),
                         ]);
@@ -95,6 +120,11 @@ class Create extends Component
             if ($logoPath) {
                 \Storage::disk('public')
                     ->delete($logoPath);
+            }
+
+            if ($logoSecondaryPath) {
+                \Storage::disk('public')
+                    ->delete($logoSecondaryPath);
             }
 
             throw $exception;
@@ -176,6 +206,12 @@ class Create extends Component
                 'mimes:jpg,jpeg,png,webp',
                 'max:2048',
             ],
+            'logo_secondary' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048',
+            ],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
         ];
@@ -205,7 +241,7 @@ class Create extends Component
             $data['is_active'] = true;
         }
 
-        unset($data['logo']);
+        unset($data['logo'], $data['logo_secondary']);
 
         return $data;
     }

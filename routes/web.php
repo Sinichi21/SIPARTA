@@ -28,6 +28,8 @@ use App\Livewire\SptImport\Index as SptImportIndex;
 use App\Livewire\Units\Create as UnitCreate;
 use App\Livewire\Units\Edit as UnitEdit;
 use App\Livewire\Units\Index as UnitIndex;
+use App\Http\Controllers\OutgoingLetterDocumentController;
+use App\Http\Controllers\IssuedLetterVerificationController;
 use App\Http\Controllers\LetterDocumentController;
 use App\Http\Controllers\ReadinessController;
 use App\Livewire\Security\AccountRecoveryIndex;
@@ -49,6 +51,7 @@ use App\Livewire\OutgoingLetters\Edit as OutgoingLetterEdit;
 use App\Livewire\OutgoingLetters\Show as OutgoingLetterShow;
 use App\Livewire\IssuedLetters\Index as IssuedLetterIndex;
 use App\Livewire\IssuedLetters\Show as IssuedLetterShow;
+use App\Livewire\CorrespondenceRegister\Index as CorrespondenceRegisterIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get(
@@ -57,6 +60,10 @@ Route::get(
 )->middleware('throttle:30,1')
     ->name('health.ready');
 
+Route::get(
+    '/verify/surat/{code}',
+    IssuedLetterVerificationController::class
+)->name('issued-letters.verify');
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
@@ -151,8 +158,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/surat-masuk/{letter}/edit', IncomingLetterEdit::class)
         ->name('incoming-letters.edit');
-
-    Route::get('/surat-keluar', OutgoingLetterIndex::class)
+Route::get('/surat-keluar', OutgoingLetterIndex::class)
         ->name('outgoing-letters.index');
 
     Route::get('/surat-keluar/create', OutgoingLetterCreate::class)
@@ -163,12 +169,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/surat-keluar/{letter}/edit', OutgoingLetterEdit::class)
         ->name('outgoing-letters.edit');
+    Route::get(
+        '/surat-keluar/{letter}/document',
+        [OutgoingLetterDocumentController::class, 'preview']
+    )->name('outgoing-letters.document.preview');
+
+    Route::get(
+        '/surat-keluar/{letter}/document/print',
+        [OutgoingLetterDocumentController::class, 'print']
+    )->name('outgoing-letters.document.print');
 
     Route::get('/surat-terbit', IssuedLetterIndex::class)
         ->name('issued-letters.index');
 
     Route::get('/surat-terbit/{letter}', IssuedLetterShow::class)
         ->name('issued-letters.show');
+    Route::get(
+        '/register-persuratan',
+        CorrespondenceRegisterIndex::class
+    )->name('correspondence-register.index');
 
     /*
     |--------------------------------------------------------------------------

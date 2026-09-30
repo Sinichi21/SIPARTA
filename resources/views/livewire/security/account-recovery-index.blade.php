@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="portal-page">
     <div>
         <h1 class="text-2xl font-bold text-slate-900">
             Keamanan & Pemulihan Akun
@@ -45,7 +45,7 @@
         </div>
     </section>
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="portal-card">
         <input
             wire:model.live.debounce.300ms="search"
             type="search"
@@ -54,9 +54,9 @@
         >
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="portal-card portal-table-card">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+            <table class="portal-table">
                 <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
                         <th class="px-5 py-3">Pengguna</th>
