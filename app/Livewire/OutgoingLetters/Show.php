@@ -25,6 +25,11 @@ class Show extends Component
         Gate::authorize('outgoing-letters.verify');
         $service->verify($this->letter, auth()->user());
         $this->refreshLetter();
+
+        session()->flash(
+            'success',
+            'Surat berhasil diverifikasi.'
+        );
     }
 
     public function approve(OutgoingLetterService $service): void
@@ -32,6 +37,11 @@ class Show extends Component
         Gate::authorize('outgoing-letters.approve');
         $service->approve($this->letter, auth()->user());
         $this->refreshLetter();
+
+        session()->flash(
+            'success',
+            'Surat berhasil disetujui.'
+        );
     }
 
     public function publish(OutgoingLetterService $service): void
@@ -51,6 +61,11 @@ class Show extends Component
         Gate::authorize('outgoing-letters.send');
         $service->send($this->letter, auth()->user());
         $this->refreshLetter();
+
+        session()->flash(
+            'success',
+            'Surat berhasil ditandai sebagai dikirim.'
+        );
     }
 
     public function archive(OutgoingLetterService $service): void
@@ -58,6 +73,11 @@ class Show extends Component
         Gate::authorize('outgoing-letters.archive');
         $service->archive($this->letter, auth()->user());
         $this->refreshLetter();
+
+        session()->flash(
+            'success',
+            'Surat berhasil diarsipkan.'
+        );
     }
 
     public function render(OutgoingLetterTemplateRenderer $renderer)
@@ -65,7 +85,15 @@ class Show extends Component
         return view('livewire.outgoing-letters.show', [
             'previewBody' => $renderer->render(
                 $this->letter,
-                $this->letter->status !== OutgoingLetterStatus::Published,
+                ! in_array(
+                    $this->letter->status,
+                    [
+                        OutgoingLetterStatus::Published,
+                        OutgoingLetterStatus::Sent,
+                        OutgoingLetterStatus::Archived,
+                    ],
+                    true
+                ),
                 true
             ),
             'missingPlaceholders' => $renderer->missingPlaceholders(
@@ -87,6 +115,8 @@ class Show extends Component
                 'approver',
                 'issuer',
                 'issuedLetter',
+                'sourceSpt.activityType',
+                'personnels',
             ]);
     }
 }

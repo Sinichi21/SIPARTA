@@ -25,26 +25,34 @@
             .toolbar,.missing { display:none !important; }
             .page { width:auto; min-height:auto; margin:0; padding:0; box-shadow:none; }
         }
+        @if($forPdf ?? false)
+            body { background: #fff; }
+            .page { width: auto; min-height: auto; margin: 0; padding: 0; box-shadow: none; }
+        @endif
     </style>
 </head>
 <body>
+    @unless($forPdf ?? false)
     <div class="toolbar">
         <div>
             <strong>{{ $letter->number ?: 'Draft #'.$letter->id }}</strong>
             <span>Preview Surat Keluar</span>
         </div>
         <div>
-            <a href="{{ route('outgoing-letters.show', $letter) }}">Kembali</a>
+            <a href="{{ $backUrl ?? route('outgoing-letters.show', $letter) }}">Kembali</a>
             <button type="button" onclick="window.print()">Cetak</button>
+            @isset($downloadUrl)<a href="{{ $downloadUrl }}">Unduh PDF</a>@endisset
         </div>
     </div>
 
     @if(count($missingPlaceholders))
         <div class="missing">
             <strong>Placeholder belum terisi:</strong>
-            {{ collect($missingPlaceholders)->map(fn ($item) => '{{'.$item.'}}')->implode(', ') }}
+            {{ collect($missingPlaceholders)->map(fn ($item) => str_repeat('{', 2).$item.str_repeat('}', 2))->implode(', ') }}
         </div>
     @endif
+
+    @endunless
 
     <article class="page">
         @if($letter->letterheadProfile)

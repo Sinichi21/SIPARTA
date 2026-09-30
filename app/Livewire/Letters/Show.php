@@ -39,6 +39,7 @@ class Show extends Component
             'updater',
             'canceller',
             'attachments',
+            'outgoingLetter.issuedLetter',
         ]);
     }
 
@@ -56,6 +57,7 @@ class Show extends Component
                 'updater',
                 'canceller',
                 'attachments',
+            'outgoingLetter.issuedLetter',
             ]);
 
         session()->flash(
@@ -91,6 +93,7 @@ class Show extends Component
                 'updater',
                 'canceller',
                 'attachments',
+            'outgoingLetter.issuedLetter',
             ]);
 
         $this->cancellationReason = '';

@@ -50,6 +50,20 @@ class Create extends Component
         $sourceId = request()->integer('source_spt');
 
         if ($sourceId) {
+            $existingOutgoing = OutgoingLetter::query()
+                ->where('source_spt_id', $sourceId)
+                ->first();
+
+            if ($existingOutgoing) {
+                $this->redirectRoute(
+                    'outgoing-letters.show',
+                    $existingOutgoing,
+                    navigate: true
+                );
+
+                return;
+            }
+
             $source = Letter::query()
                 ->spt()
                 ->with(['personnels','activityType'])

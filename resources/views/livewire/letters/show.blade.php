@@ -7,20 +7,23 @@
         <div class="min-w-0"><p class="spt-eyebrow">Surat Perintah Tugas</p><h1>Detail SPT</h1><p class="mt-1 text-sm text-slate-500">Informasi surat, penugasan personil, dan dokumen pendukung.</p></div>
         <div class="spt-page-actions">
             <a href="{{ route('letters.index') }}" wire:navigate class="spt-action spt-action-back">Kembali</a>
-                        @can('letters.view')
+            @can('letters.view')
                 <a href="{{ route('letters.document.preview', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Preview Surat</a>
                 <a href="{{ route('letters.document.print', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Cetak</a>
                 <a href="{{ route('letters.document.pdf', $letter) }}" class="spt-action spt-action-view">PDF</a>
-                @can('outgoing-letters.create')
-                    <a
-                        href="{{ route('outgoing-letters.create', ['source_spt' => $letter->id]) }}"
-                        wire:navigate
-                        class="spt-action spt-action-primary"
-                    >
-                        <x-app.icon name="document" />
-                        Terbitkan Surat
-                    </a>
-                @endcan
+                @if($letter->outgoingLetter)
+                    @can('outgoing-letters.view')
+                        <a href="{{ route('outgoing-letters.show', $letter->outgoingLetter) }}" wire:navigate class="spt-action spt-action-view">
+                            <x-app.icon name="document" /> Lihat Surat Keluar
+                        </a>
+                    @endcan
+                @elseif($letter->status === \App\Enums\LetterStatus::Published)
+                    @can('outgoing-letters.create')
+                        <a href="{{ route('outgoing-letters.create', ['source_spt' => $letter->id]) }}" wire:navigate class="spt-action spt-action-primary">
+                            <x-app.icon name="document" /> Terbitkan Surat
+                        </a>
+                    @endcan
+                @endif
             @endcan
             <x-letters.edit-action :letter="$letter" show-disabled />
             @if($letter->status === \App\Enums\LetterStatus::Draft)
@@ -100,7 +103,23 @@
         </div>
         <div class="spt-detail-side">
             <section class="spt-section-card">
-                <h2 class="spt-section-heading"><x-app.icon name="document" /> Dokumen Pendukung <span class="count-badge">{{ $letter->attachments->count() }}</span></h2>
+                <h2 class="spt-section-heading"><x-app.icon name="document" /> Dokumen Pendukung <span class="count-badge">{{ $letter->attachments->count() + ($letter->outgoingLetter ? 1 : 0) }}</span></h2>
+
+                @if($letter->outgoingLetter)
+                    <div class="mb-4 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
+                        <p class="text-sm font-semibold">Surat SPT terkait</p>
+                        <p class="mt-1 break-words text-xs text-slate-600">{{ $letter->outgoingLetter->number ?: 'Draft surat keluar #'.$letter->outgoingLetter->id }}</p>
+                        <p class="mt-2 text-xs text-slate-500">{{ $letter->outgoingLetter->issuedLetter ? 'Arsip PDF resmi dari Surat Terbit. Dokumen ini tidak perlu diunggah ulang.' : 'Dokumen dari Surat Keluar, belum menjadi arsip resmi.' }}</p>
+                        @if($letter->outgoingLetter->issuedLetter?->isRevoked())
+                            <p role="alert" class="mt-2 text-xs font-semibold text-red-700">Surat telah dicabut. Dokumen disimpan untuk riwayat.</p>
+                        @endif
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <a href="{{ route('letters.document.preview', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Preview</a>
+                            <a href="{{ route('letters.document.print', $letter) }}" target="_blank" rel="noopener" class="spt-action spt-action-view">Cetak</a>
+                            <a href="{{ route('letters.document.pdf', $letter) }}" class="spt-action spt-action-view">Unduh PDF</a>
+                        </div>
+                    </div>
+                @endif
 
                 @can('letters.update')
                     @if($letter->canBeEdited())
@@ -181,7 +200,7 @@
                 @empty
                     <div class="spt-document-empty">
                         <x-app.icon name="archive" />
-                        <p>Belum ada dokumen terlampir.</p>
+                        <p>{{ $letter->outgoingLetter ? 'Belum ada lampiran tambahan.' : 'Belum ada dokumen terlampir.' }}</p>
                     </div>
                 @endforelse</div>
 
