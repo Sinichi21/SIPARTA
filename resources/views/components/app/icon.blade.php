@@ -1,6 +1,9 @@
 @props(['name' => 'document'])
 <svg {{ $attributes->class(['size-5']) }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     @switch($name)
+        @case('chart')
+            <path d="M4 3v18h17M8 16v-5m5 5V7m5 9V4"/>
+            @break
         @case('home')
             <path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/>
             @break

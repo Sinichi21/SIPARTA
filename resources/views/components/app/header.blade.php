@@ -1,6 +1,6 @@
 <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
     <div class="flex h-16 items-center gap-4 px-4 sm:px-6">
-        <button type="button" @click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen" class="rounded-lg p-2 text-slate-600 lg:hidden" aria-label="Buka atau tutup menu">
+        <button type="button" @click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen" aria-controls="app-sidebar" class="sidebar-hamburger rounded-lg p-2 text-slate-600 lg:hidden" :aria-label="sidebarOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'">
             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         @can('letters.view')

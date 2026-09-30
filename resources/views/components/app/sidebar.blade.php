@@ -2,7 +2,9 @@
     id="app-sidebar"
     :class="{ 'sidebar-expanded': sidebarOpen }"
     @keydown.escape.window="sidebarOpen = false"
-    x-trap.inert.noscroll="sidebarOpen && window.innerWidth < 1024"
+    x-trap.inert.noscroll="sidebarOpen && !desktop"
+    :inert="!desktop && !sidebarOpen"
+    :aria-hidden="!desktop && !sidebarOpen"
     class="app-sidebar fixed inset-y-0 left-0 z-50 flex flex-col text-white"
 >
     <div class="sidebar-brand">
@@ -10,114 +12,64 @@
         <div class="min-w-0 flex-1"><p>Persuratan Komdigi</p><span>Administrasi &amp; Penugasan</span></div>
         <button type="button" @click="sidebarOpen = false" class="sidebar-mobile-close lg:hidden" aria-label="Tutup menu"><x-app.icon name="close" /></button>
     </div>
-    <nav aria-label="Navigasi utama" class="sidebar-scroll sidebar-navigation">
+    @php
+        $groups = collect([
+            ['id' => 'spt', 'label' => 'Surat Perintah Tugas', 'icon' => 'document', 'section' => 'work', 'items' => [
+                ['label' => 'Data SPT', 'route' => 'letters.index', 'match' => 'letters.*', 'permission' => 'letters.view'],
+                ['label' => 'Import SPT Lama', 'route' => 'spt-import.index', 'match' => 'spt-import.*', 'permission' => 'letters.import'],
+            ]],
+            ['id' => 'reports', 'label' => 'Rekap & Laporan', 'icon' => 'chart', 'section' => 'work', 'items' => [
+                ['label' => 'Rekap SPT', 'route' => 'spt-recap.index', 'match' => 'spt-recap.*', 'permission' => 'reports.view'],
+                ['label' => 'Rekap Personil', 'route' => 'personnel-recap.index', 'match' => 'personnel-recap.*', 'permission' => 'reports.view'],
+            ]],
+            ['id' => 'personnel', 'label' => 'Personil & Unit', 'icon' => 'users', 'section' => 'manage', 'items' => [
+                ['label' => 'Data Personil', 'route' => 'personnels.index', 'match' => 'personnels.*', 'permission' => 'personnels.view'],
+                ['label' => 'Unit / Tim Kerja', 'route' => 'units.index', 'match' => 'units.*', 'permission' => 'units.view'],
+                ['label' => 'Deteksi Duplikat', 'route' => 'personnel-duplicates.index', 'match' => 'personnel-duplicates.*', 'permission' => 'personnels.merge'],
+            ]],
+            ['id' => 'administration', 'label' => 'Administrasi Surat', 'icon' => 'building', 'section' => 'manage', 'items' => [
+                ['label' => 'Jenis Surat', 'route' => 'letter-types.index', 'match' => 'letter-types.*', 'permission' => 'letter-types.view'],
+                ['label' => 'Jenis Kegiatan', 'route' => 'activity-types.index', 'match' => 'activity-types.*', 'permission' => 'activity-types.view'],
+                ['label' => 'Template Surat', 'route' => 'letter-templates.index', 'match' => 'letter-templates.*', 'permission' => 'settings.view'],
+                ['label' => 'Kop & Administrasi', 'route' => 'administration-profiles.index', 'match' => 'administration-profiles.*', 'permission' => 'settings.view'],
+            ]],
+            ['id' => 'access', 'label' => 'Akses & Keamanan', 'icon' => 'shield', 'section' => 'manage', 'items' => [
+                ['label' => 'Pengguna', 'route' => 'users.index', 'match' => 'users.*', 'permission' => 'users.view'],
+                ['label' => 'Role & Permission', 'route' => 'roles.index', 'match' => 'roles.*', 'permission' => 'roles.view'],
+                ['label' => 'Pemulihan Akun', 'route' => 'security.account-recovery', 'match' => 'security.account-recovery', 'permission' => 'users.security.manage'],
+                ['label' => 'Log Aktivitas', 'route' => 'audit-logs.index', 'match' => 'audit-logs.*', 'permission' => 'audit-logs.view'],
+            ]],
+        ])->map(function ($group) {
+            $group['items'] = collect($group['items'])->filter(fn ($item) => auth()->user()->can($item['permission']));
+            $group['active'] = $group['items']->contains(fn ($item) => request()->routeIs($item['match']));
+            return $group;
+        })->filter(fn ($group) => $group['items']->isNotEmpty());
+        $activeGroup = $groups->firstWhere('active', true)['id'] ?? null;
+    @endphp
+    <nav
+        aria-label="Navigasi utama"
+        class="sidebar-scroll sidebar-navigation"
+        x-data="{ openGroup: @js($activeGroup) }"
+        wire:key="sidebar-navigation-{{ request()->route()?->getName() ?? 'default' }}"
+    >
         @can('dashboard.view')
             <x-app.nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="home">Dashboard</x-app.nav-link>
         @endcan
-
-        @canany(['letters.view', 'reports.view', 'letters.import'])
-            <div class="sidebar-section">
-                <p class="sidebar-section-label">Persuratan</p>
-                @php($sptActive = request()->routeIs('letters.*', 'spt-recap.*', 'personnel-recap.*', 'spt-import.*'))
-                <div x-data="{ open: {{ $sptActive ? 'true' : 'false' }} }" wire:key="spt-menu-{{ $sptActive ? 'active' : 'inactive' }}">
-                    <button type="button" @click="open = !open" :aria-expanded="open" aria-controls="spt-submenu" @class(['sidebar-link sidebar-group-toggle', 'is-parent-active' => $sptActive])>
-                        <x-app.icon name="document" /><span>SPT</span><x-app.icon name="chevron" class="sidebar-chevron" x-bind:class="{ 'rotate-180': open }" />
-                    </button>
-                    <div id="spt-submenu" x-cloak x-show="open" class="sidebar-submenu">
-                        @can('letters.view')<x-app.nav-link :href="route('letters.index')" :active="request()->routeIs('letters.*')" sub>Data SPT</x-app.nav-link>@endcan
-                        @can('reports.view')
-                            <x-app.nav-link :href="route('spt-recap.index')" :active="request()->routeIs('spt-recap.*')" sub>Rekap SPT</x-app.nav-link>
-                            <x-app.nav-link :href="route('personnel-recap.index')" :active="request()->routeIs('personnel-recap.*')" sub>Rekap Personil</x-app.nav-link>
-                        @endcan
-                        @can('letters.import')<x-app.nav-link :href="route('spt-import.index')" :active="request()->routeIs('spt-import.*')" sub>Import SPT Lama</x-app.nav-link>@endcan
-                    </div>
+        @foreach(['work' => 'Ruang Kerja', 'manage' => 'Pengelolaan'] as $section => $heading)
+            @if($groups->contains('section', $section))
+                <div class="sidebar-section">
+                    <p class="sidebar-section-label">{{ $heading }}</p>
+                    @foreach($groups->where('section', $section) as $group)
+                        <x-app.sidebar-group :id="$group['id']" :label="$group['label']" :icon="$group['icon']" :active="$group['active']">
+                            @foreach($group['items'] as $item)
+                                <x-app.nav-link :href="route($item['route'])" :active="request()->routeIs($item['match'])" sub>{{ $item['label'] }}</x-app.nav-link>
+                            @endforeach
+                        </x-app.sidebar-group>
+                    @endforeach
                 </div>
-            </div>
-        @endcanany
-
-        @canany(['personnels.view', 'personnels.merge', 'units.view', 'activity-types.view', 'letter-types.view'])
-            <div class="sidebar-section">
-                <p class="sidebar-section-label">Master Data</p>
-                @can('personnels.view')<x-app.nav-link :href="route('personnels.index')" :active="request()->routeIs('personnels.*')" icon="users">Personil</x-app.nav-link>@endcan
-                @can('personnels.merge')<x-app.nav-link :href="route('personnel-duplicates.index')" :active="request()->routeIs('personnel-duplicates.*')" sub>Deteksi Duplikat</x-app.nav-link>@endcan
-                @can('units.view')<x-app.nav-link :href="route('units.index')" :active="request()->routeIs('units.*')" icon="building">Unit / Tim Kerja</x-app.nav-link>@endcan
-                @can('activity-types.view')<x-app.nav-link :href="route('activity-types.index')" :active="request()->routeIs('activity-types.*')" icon="list">Jenis Kegiatan</x-app.nav-link>@endcan
-                @can('letter-types.view')<x-app.nav-link :href="route('letter-types.index')" :active="request()->routeIs('letter-types.*')" icon="document">Jenis Surat</x-app.nav-link>@endcan
-            </div>
-        @endcanany
-
-        @can('audit-logs.view')
-            <div class="sidebar-section"><p class="sidebar-section-label">Pengaturan</p><x-app.nav-link :href="route('audit-logs.index')" :active="request()->routeIs('audit-logs.*')" icon="clock">Log Aktivitas</x-app.nav-link></div>
-        @endcan
-    
-        @can('settings.view')
-            <div class="sidebar-section">
-                <p class="sidebar-section-label">Pengaturan</p>
-
-                <x-app.nav-link
-                    :href="route('letter-templates.index')"
-                    :active="request()->routeIs('letter-templates.*')"
-                    icon="document"
-                >
-                    Template Surat
-                </x-app.nav-link>
-            </div>
-        @endcan
-
-        @can('settings.view')
-            <div class="sidebar-section">
-                <p class="sidebar-section-label">Administrasi Surat</p>
-
-                <x-app.nav-link
-                    :href="route('administration-profiles.index')"
-                    :active="request()->routeIs('administration-profiles.*')"
-                    icon="building"
-                >
-                    Kop & Administrasi
-                </x-app.nav-link>
-            </div>
-        @endcan
-
-        @can('users.security.manage')
-            <div class="sidebar-section">
-                <p class="sidebar-section-label">Keamanan</p>
-
-                <x-app.nav-link
-                    :href="route('security.account-recovery')"
-                    :active="request()->routeIs('security.account-recovery')"
-                    icon="shield"
-                >
-                    Pemulihan Akun
-                </x-app.nav-link>
-            </div>
-        @endcan
-
-        @canany(['users.view', 'roles.view'])
-            <div class="sidebar-section">
-                <p class="sidebar-section-label">Akses & Pengguna</p>
-
-                @can('users.view')
-                    <x-app.nav-link
-                        :href="route('users.index')"
-                        :active="request()->routeIs('users.*')"
-                        icon="users"
-                    >
-                        Pengguna
-                    </x-app.nav-link>
-                @endcan
-
-                @can('roles.view')
-                    <x-app.nav-link
-                        :href="route('roles.index')"
-                        :active="request()->routeIs('roles.*')"
-                        icon="shield"
-                    >
-                        Role & Permission
-                    </x-app.nav-link>
-                @endcan
-            </div>
-        @endcanany
-</nav>
+            @endif
+        @endforeach
+    </nav>
     <div class="sidebar-footer">
         <a href="{{ route('profile.edit') }}" wire:navigate @click="sidebarOpen = false" class="sidebar-account" aria-label="Pengaturan profil">
             <span class="sidebar-avatar">{{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'U', 0, 1)) }}</span>
