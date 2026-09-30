@@ -20,6 +20,16 @@ class IssuedLetter extends Model
         'issued_at',
         'issued_by',
         'status',
+        'snapshot_json',
+        'checksum_sha256',
+        'verification_code',
+        'pdf_path',
+        'pdf_name',
+        'file_sha256',
+        'file_size',
+        'archived_document_at',
+        'verification_count',
+        'last_verified_at',
     ];
 
     protected function casts(): array
@@ -27,6 +37,11 @@ class IssuedLetter extends Model
         return [
             'letter_date' => 'date',
             'issued_at' => 'datetime',
+            'snapshot_json' => 'array',
+            'archived_document_at' => 'datetime',
+            'verification_count' => 'integer',
+            'last_verified_at' => 'datetime',
+            'file_size' => 'integer',
         ];
     }
 
@@ -43,5 +58,10 @@ class IssuedLetter extends Model
     public function issuer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by');
+    }
+
+    public function hasArchivedPdf(): bool
+    {
+        return filled($this->pdf_path);
     }
 }

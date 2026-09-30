@@ -6,6 +6,7 @@ use App\Enums\OutgoingLetterStatus;
 use App\Models\IssuedLetter;
 use App\Models\OutgoingLetter;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -13,12 +14,12 @@ class OutgoingLetterService
 {
     public function __construct(
         private readonly AuditService $audit,
+        private readonly OutgoingLetterNumberService $numbers,
+        private readonly IssuedLetterArchiveService $archive,
     ) {}
 
-    public function verify(
-        OutgoingLetter $letter,
-        User $actor
-    ): void {
+    public function verify(OutgoingLetter $letter, User $actor): void
+    {
         $this->transition(
             $letter,
             OutgoingLetterStatus::Draft,
@@ -30,10 +31,8 @@ class OutgoingLetterService
         );
     }
 
-    public function approve(
-        OutgoingLetter $letter,
-        User $actor
-    ): void {
+    public function approve(OutgoingLetter $letter, User $actor): void
+    {
         $this->transition(
             $letter,
             OutgoingLetterStatus::Verified,
@@ -45,6 +44,13 @@ class OutgoingLetterService
         );
     }
 
+    /**
+     * Backward-compatible entry point for Phase 13 tests / older UI.
+     *
+     * Important: this does NOT allocate a final number yet.
+     * It only stores a manual candidate and moves the legacy workflow
+     * to Numbered. The final number/date are committed by publish().
+     */
     public function number(
         OutgoingLetter $letter,
         User $actor,
@@ -53,7 +59,7 @@ class OutgoingLetterService
     ): void {
         if ($letter->status !== OutgoingLetterStatus::Approved) {
             throw ValidationException::withMessages([
-                'status' => 'Surat harus disetujui sebelum diberi nomor.',
+                'status' => 'Surat harus disetujui sebelum diberi kandidat nomor.',
             ]);
         }
 
@@ -69,7 +75,6 @@ class OutgoingLetterService
                     'required',
                     'string',
                     'max:255',
-                    'unique:outgoing_letters,number,'.$letter->id,
                 ],
                 'letter_date' => [
                     'required',
@@ -78,11 +83,30 @@ class OutgoingLetterService
             ]
         )->validate();
 
+        $used = OutgoingLetter::query()
+            ->where('number', $number)
+            ->whereKeyNot($letter->id)
+            ->exists();
+
+        if ($used) {
+            throw ValidationException::withMessages([
+                'number' => 'Nomor surat sudah digunakan oleh surat lain.',
+            ]);
+        }
+
         $old = $letter->getOriginal();
 
         $letter->forceFill([
-            'number' => $number,
-            'letter_date' => $letterDate,
+            'numbering_mode' => 'manual',
+            'manual_number' => $number,
+            'date_mode' => 'manual',
+            'manual_letter_date' => $letterDate,
+
+            // Final number/date intentionally remain null until publish().
+            'number' => null,
+            'letter_date' => null,
+
+            // Keep legacy state compatibility only.
             'status' => OutgoingLetterStatus::Numbered->value,
             'numbered_by' => $actor->id,
             'numbered_at' => now(),
@@ -92,62 +116,120 @@ class OutgoingLetterService
         $this->audit->updated($letter, $old);
     }
 
-    public function publish(
-        OutgoingLetter $letter,
-        User $actor
-    ): IssuedLetter {
-        if ($letter->status !== OutgoingLetterStatus::Numbered) {
+    public function publish(OutgoingLetter $letter, User $actor): IssuedLetter
+    {
+        if (! in_array(
+            $letter->status,
+            [OutgoingLetterStatus::Approved, OutgoingLetterStatus::Numbered],
+            true
+        )) {
             throw ValidationException::withMessages([
-                'status' => 'Surat harus sudah bernomor sebelum diterbitkan.',
+                'status' => 'Surat harus disetujui sebelum diterbitkan.',
             ]);
         }
 
-        if (! $letter->number || ! $letter->letter_date) {
-            throw ValidationException::withMessages([
-                'status' => 'Nomor dan tanggal surat wajib tersedia sebelum penerbitan.',
-            ]);
-        }
+        $issued = DB::transaction(function () use ($letter, $actor): IssuedLetter {
+            $locked = OutgoingLetter::query()
+                ->whereKey($letter->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return DB::transaction(function () use ($letter, $actor) {
-            $old = $letter->getOriginal();
+            if ($locked->status === OutgoingLetterStatus::Published) {
+                return $locked->issuedLetter()->firstOrFail();
+            }
 
-            $letter->forceFill([
+            $finalDate = $locked->date_mode === 'manual'
+                ? $locked->manual_letter_date
+                : now()->toDateString();
+
+            if (! $finalDate) {
+                throw ValidationException::withMessages([
+                    'manual_letter_date' => 'Tanggal manual wajib diisi.',
+                ]);
+            }
+
+            if ($locked->numbering_mode === 'manual') {
+                $finalNumber = trim((string) $locked->manual_number);
+
+                if ($finalNumber === '') {
+                    throw ValidationException::withMessages([
+                        'manual_number' => 'Nomor surat manual wajib diisi.',
+                    ]);
+                }
+
+                $used = OutgoingLetter::query()
+                    ->where('number', $finalNumber)
+                    ->whereKeyNot($locked->id)
+                    ->exists();
+
+                if ($used) {
+                    throw ValidationException::withMessages([
+                        'manual_number' => 'Nomor surat manual sudah digunakan oleh surat lain.',
+                    ]);
+                }
+            } else {
+                $locked->loadMissing('letterType');
+
+                $finalNumber = $this->numbers->next(
+                    Carbon::parse($finalDate),
+                    $locked->letterType
+                );
+            }
+
+            $old = $locked->getOriginal();
+
+            $locked->forceFill([
+                'number' => $finalNumber,
+                'letter_date' => $finalDate,
                 'status' => OutgoingLetterStatus::Published->value,
+                'numbered_by' => $actor->id,
+                'numbered_at' => now(),
                 'published_by' => $actor->id,
                 'published_at' => now(),
                 'updated_by' => $actor->id,
             ])->save();
 
-            $profile = $letter->letterheadProfile;
+            $locked->loadMissing('letterheadProfile');
+
+            $profile = $locked->letterheadProfile;
 
             $issued = IssuedLetter::updateOrCreate(
-                ['outgoing_letter_id' => $letter->id],
+                ['outgoing_letter_id' => $locked->id],
                 [
-                    'letter_type_id' => $letter->letter_type_id,
-                    'number' => $letter->number,
-                    'letter_date' => $letter->letter_date,
-                    'subject' => $letter->subject,
-                    'recipient' => $letter->recipient,
+                    'letter_type_id' => $locked->letter_type_id,
+                    'number' => $locked->number,
+                    'letter_date' => $locked->letter_date,
+                    'subject' => $locked->subject,
+                    'recipient' => $locked->recipient,
                     'signatory_name' => $profile?->signatory_name,
                     'signatory_nip' => $profile?->signatory_nip,
                     'signatory_position' => $profile?->signatory_position,
-                    'issued_at' => $letter->published_at,
+                    'issued_at' => $locked->published_at,
                     'issued_by' => $actor->id,
                     'status' => 'active',
                 ]
             );
 
-            $this->audit->published($letter, $old);
+            $this->audit->published($locked, $old);
             $this->audit->created($issued);
 
+            $letter->setRawAttributes($locked->getAttributes(), true);
+
             return $issued;
-        });
+        }, 3);
+
+        if (! $issued->hasArchivedPdf()) {
+            $issued = $this->archive->archive(
+                $issued,
+                $letter->fresh()
+            );
+        }
+
+        return $issued;
     }
 
-    public function send(
-        OutgoingLetter $letter,
-        User $actor
-    ): void {
+    public function send(OutgoingLetter $letter, User $actor): void
+    {
         $this->transition(
             $letter,
             OutgoingLetterStatus::Published,
@@ -159,17 +241,13 @@ class OutgoingLetterService
         );
     }
 
-    public function archive(
-        OutgoingLetter $letter,
-        User $actor
-    ): void {
+    public function archive(OutgoingLetter $letter, User $actor): void
+    {
         $this->transition(
             $letter,
             OutgoingLetterStatus::Sent,
             OutgoingLetterStatus::Archived,
-            [
-                'archived_at' => now(),
-            ]
+            ['archived_at' => now()]
         );
     }
 
@@ -181,8 +259,7 @@ class OutgoingLetterService
     ): void {
         if ($letter->status !== $from) {
             throw ValidationException::withMessages([
-                'status' =>
-                    "Status surat harus {$from->label()} sebelum menjadi {$to->label()}.",
+                'status' => "Status surat harus {$from->label()} sebelum menjadi {$to->label()}.",
             ]);
         }
 
