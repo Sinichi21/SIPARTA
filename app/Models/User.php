@@ -75,4 +75,5 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function isAccountDisabled(): bool
     {
         return $this->account_disabled_at !== null;
-    }}
+    }
+}

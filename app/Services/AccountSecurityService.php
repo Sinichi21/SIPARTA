@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -17,6 +16,8 @@ class AccountSecurityService
     public function sendPasswordReset(
         User $user
     ): string {
+        $this->assertManageable($user);
+
         $status = Password::sendResetLink([
             'email' => $user->email,
         ]);
@@ -44,6 +45,8 @@ class AccountSecurityService
     public function resetTwoFactor(
         User $user
     ): void {
+        $this->assertManageable($user);
+
         $user->forceFill([
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
@@ -65,6 +68,8 @@ class AccountSecurityService
     public function revokeSessions(
         User $user
     ): int {
+        $this->assertManageable($user);
+
         $revoked =
             $this->sessions->revokeFor($user);
 
@@ -84,6 +89,8 @@ class AccountSecurityService
         int $actorId,
         string $reason
     ): void {
+        $this->assertManageable($user);
+
         if ($user->getKey() === $actorId) {
             throw ValidationException::withMessages([
                 'security' =>
@@ -125,6 +132,8 @@ class AccountSecurityService
     public function enable(
         User $user
     ): void {
+        $this->assertManageable($user);
+
         $user->forceFill([
             'account_disabled_at' => null,
             'account_disabled_by' => null,
@@ -135,5 +144,16 @@ class AccountSecurityService
             $user,
             'ACCOUNT_ENABLE'
         );
+    }
+
+    private function assertManageable(
+        User $user
+    ): void {
+        if (
+            $user->hasRole('super-admin')
+            && ! auth()->user()?->hasRole('super-admin')
+        ) {
+            abort(404);
+        }
     }
 }

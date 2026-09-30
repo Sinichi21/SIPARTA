@@ -17,6 +17,9 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
             'dashboard.view',
+            'my-dashboard.view',
+            'my-letters.view',
+            'my-reports.view',
 
             'letters.view',
             'letters.create',
@@ -77,6 +80,7 @@ class RolePermissionSeeder extends Seeder
             'verifikator',
             'pimpinan',
             'viewer',
+            'staff',
         ];
 
         foreach ($roles as $roleName) {

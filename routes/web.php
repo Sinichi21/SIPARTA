@@ -35,6 +35,9 @@ use App\Livewire\Users\Create as UserCreate;
 use App\Livewire\Users\Edit as UserEdit;
 use App\Livewire\Roles\Index as RoleIndex;
 use App\Livewire\Roles\Edit as RoleEdit;
+use App\Livewire\MySpt\Index as MySptIndex;
+use App\Livewire\MySpt\Show as MySptShow;
+use App\Livewire\MyRecap\Index as MyRecapIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get(
@@ -246,6 +249,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/roles/{role}/edit', RoleEdit::class)
         ->name('roles.edit');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Personal Staff Portal
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/my/spt', MySptIndex::class)
+        ->name('my-spt.index');
+
+    Route::get('/my/spt/{letter}', MySptShow::class)
+        ->name('my-spt.show');
+
+    Route::get('/my/recap', MyRecapIndex::class)
+        ->name('my-recap.index');
 });
 
 require __DIR__.'/settings.php';

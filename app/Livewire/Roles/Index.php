@@ -15,12 +15,35 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.roles.index', [
-            'roles' => Role::query()
-                ->where('guard_name', 'web')
-                ->withCount(['permissions', 'users'])
-                ->orderBy('name')
-                ->get(),
-        ]);
+        $isSuperAdmin =
+            auth()->user()->hasRole(
+                'super-admin'
+            );
+
+        return view(
+            'livewire.roles.index',
+            [
+                'roles' => Role::query()
+                    ->where(
+                        'guard_name',
+                        'web'
+                    )
+                    ->when(
+                        ! $isSuperAdmin,
+                        fn ($query) =>
+                            $query->where(
+                                'name',
+                                '!=',
+                                'super-admin'
+                            )
+                    )
+                    ->withCount([
+                        'permissions',
+                        'users',
+                    ])
+                    ->orderBy('name')
+                    ->get(),
+            ]
+        );
     }
 }

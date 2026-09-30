@@ -24,6 +24,11 @@ class Edit extends Component
     public function mount(User $user): void
     {
         Gate::authorize('users.update');
+        abort_if(
+            $user->hasRole('super-admin')
+            && ! auth()->user()->hasRole('super-admin'),
+            404
+        );
 
         $this->user = $user->load('roles');
         $this->name = $user->name;
