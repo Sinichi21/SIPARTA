@@ -47,6 +47,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
+            'password_changed_at' => 'datetime',
+            'account_disabled_at' => 'datetime',
+            'must_set_password' => 'boolean',
+            'activation_sent_at' => 'datetime',
         ];
     }
 
@@ -66,4 +71,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
-}
+
+    public function isAccountDisabled(): bool
+    {
+        return $this->account_disabled_at !== null;
+    }}

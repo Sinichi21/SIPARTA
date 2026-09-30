@@ -111,6 +111,33 @@ class AuditService
         );
     }
 
+    public function documentGenerated(Model $subject): AuditLog
+    {
+        return $this->write(
+            'GENERATE',
+            $subject,
+            null,
+            $this->safeAttributes(
+                $subject->getAttributes()
+            )
+        );
+    }
+
+    public function securityEvent(
+        Model $subject,
+        string $action,
+        array $metadata = []
+    ): AuditLog {
+        return $this->write(
+            strtoupper($action),
+            $subject,
+            null,
+            [
+                '_security' => $metadata,
+            ]
+        );
+    }
+
     private function changed(
         string $action,
         Model $subject,

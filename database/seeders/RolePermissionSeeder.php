@@ -52,6 +52,7 @@ class RolePermissionSeeder extends Seeder
             'users.create',
             'users.update',
             'users.deactivate',
+            'users.security.manage',
 
             'roles.view',
             'roles.manage',

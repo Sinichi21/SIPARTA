@@ -31,7 +31,8 @@
            dark:bg-slate-950 dark:text-slate-100"
 >
     <div
-        x-data="{ sidebarOpen: false }"
+        x-data="{ sidebarOpen: false, desktop: window.innerWidth >= 1024 }"
+        @resize.window.debounce.100ms="desktop = window.innerWidth >= 1024; if (desktop) sidebarOpen = false"
         class="min-h-screen"
     >
         <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" aria-hidden="true"></div>
