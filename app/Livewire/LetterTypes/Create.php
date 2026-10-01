@@ -3,6 +3,7 @@
 namespace App\Livewire\LetterTypes;
 
 use App\Models\LetterType;
+use App\Models\NumberingPlaceholder;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
@@ -82,6 +83,8 @@ class Create extends Component
     }
     public function render()
     {
-        return view('livewire.letter-types.create');
+        return view('livewire.letter-types.create', [
+            'customPlaceholders' => NumberingPlaceholder::query()->where('is_active', true)->orderBy('label')->get(),
+        ]);
     }
 }
