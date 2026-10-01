@@ -43,14 +43,6 @@ class Personnel extends Model
         )->withTimestamps();
     }
 
-    public function teams(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            PersonnelTeam::class,
-            'personnel_team_members'
-        )->withTimestamps();
-    }
-
     public function letters(): BelongsToMany
     {
         return $this->belongsToMany(
