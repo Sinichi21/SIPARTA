@@ -24,11 +24,5 @@ class DatabaseSeeder extends Seeder
         if (app()->environment('local')) {
             $this->call(DevelopmentUserSeeder::class);
         }    
-    // // User::factory(10)->create();
-
-    //     User::factory()->create([
-    //         'name' => 'Test User',
-    //         'email' => 'test@example.com',
-    //     ]);
     }
 }
