@@ -43,11 +43,15 @@
 
                 <div class="mt-2 font-mono text-xs">
                     {sequence}
+                    {sequence_padded}
                     {type}
                     {year}
+                    {year_short}
                     {month}
                     {month_roman}
-                    {unit}
+                    @foreach($customPlaceholders as $placeholder)
+                        {<span></span>{{ $placeholder->key }}<span></span>}
+                    @endforeach
                 </div>
 
                 <div class="mt-3">
@@ -56,6 +60,8 @@
                         001/SPT/IX/2026
                     </strong>
                 </div>
+            
+                <div class="mt-3 text-xs text-slate-600">Custom placeholder dikelola di menu <strong>Pengaturan Nomor</strong>. Jika placeholder bertipe select dipakai pada pola ini, field select otomatis muncul di form Surat Keluar.</div>
             </div>
 
             <flux:checkbox

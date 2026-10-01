@@ -36,8 +36,13 @@
             <div class="rounded-lg bg-blue-50 p-4 text-sm text-slate-700">
                 <p class="font-medium">Token tersedia</p>
                 <div class="mt-2 font-mono text-xs">
-                    {sequence} {type} {year} {month} {month_roman} {unit}
+                    {sequence} {sequence_padded} {type} {year} {year_short} {month} {month_roman}
+                    @foreach($customPlaceholders as $placeholder)
+                        {<span></span>{{ $placeholder->key }}<span></span>}
+                    @endforeach
                 </div>
+            
+                <div class="mt-3 text-xs text-slate-600">Custom placeholder dikelola di menu <strong>Pengaturan Nomor</strong>. Jika placeholder bertipe select dipakai pada pola ini, field select otomatis muncul di form Surat Keluar.</div>
             </div>
 
             <flux:checkbox

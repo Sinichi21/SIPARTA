@@ -35,6 +35,14 @@ class Personnel extends Model
         return $this->belongsTo(Unit::class);
     }
 
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            PersonnelTeam::class,
+            'personnel_team_members'
+        )->withTimestamps();
+    }
+
     public function letters(): BelongsToMany
     {
         return $this->belongsToMany(

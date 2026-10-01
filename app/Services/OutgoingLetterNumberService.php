@@ -12,9 +12,10 @@ class OutgoingLetterNumberService
 {
     public function next(
         CarbonInterface $date,
-        ?LetterType $type
+        ?LetterType $type,
+        array $customValues = []
     ): string {
-        return DB::transaction(function () use ($date, $type): string {
+        return DB::transaction(function () use ($date, $type, $customValues): string {
             $year = (int) $date->year;
 
             DB::table('outgoing_letter_number_sequences')
@@ -43,6 +44,7 @@ class OutgoingLetterNumberService
                         'month_roman' => $this->romanMonth((int) $date->month),
                         'year' => (string) $date->year,
                         'year_short' => substr((string) $date->year, -2),
+                        ...collect($customValues)->mapWithKeys(fn ($value, $key) => [(string) $key => trim((string) $value)])->all(),
                     ]
                 );
 

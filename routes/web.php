@@ -22,6 +22,8 @@ use App\Livewire\Personnel\Create as PersonnelCreate;
 use App\Livewire\Personnel\Edit as PersonnelEdit;
 use App\Livewire\Personnel\Index as PersonnelIndex;
 use App\Livewire\PersonnelDuplicates\Index as PersonnelDuplicatesIndex;
+use App\Livewire\PersonnelTeams\Index as PersonnelTeamIndex;
+use App\Livewire\NumberingSettings\Index as NumberingSettingsIndex;
 use App\Livewire\SptRecap\Index as SptRecapIndex;
 use App\Livewire\PersonnelRecap\Index as PersonnelRecapIndex;
 use App\Livewire\SptImport\Index as SptImportIndex;
@@ -93,6 +95,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/personnel-duplicates', PersonnelDuplicatesIndex::class)
         ->name('personnel-duplicates.index');
 
+    Route::get('/personnel-teams', PersonnelTeamIndex::class)
+        ->name('personnel-teams.index');
+
     /*
     |--------------------------------------------------------------------------
     | Units
@@ -141,6 +146,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         '/letter-types/{letterType}/edit',
         LetterTypeEdit::class
     )->name('letter-types.edit');
+
+    Route::get('/numbering-settings', NumberingSettingsIndex::class)
+        ->name('numbering-settings.index');
 
     /*
     |--------------------------------------------------------------------------

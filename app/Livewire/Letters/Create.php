@@ -6,6 +6,7 @@ use App\Enums\LetterRecordType;
 use App\Models\ActivityType;
 use App\Models\Letter;
 use App\Models\Personnel;
+use App\Models\PersonnelTeam;
 use App\Services\LetterService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -25,6 +26,7 @@ class Create extends Component
     public string $record_type = 'normal';
     public string $personnel_scope = Letter::PERSONNEL_SCOPE_SELECTED;
     public array $personnel_ids = [];
+    public ?int $personnel_team_id = null;
     public string $personnelSearch = '';
 
     public function mount(): void
@@ -43,10 +45,40 @@ class Create extends Component
         Gate::authorize('letters.create');
 
         $this->personnel_scope = Letter::PERSONNEL_SCOPE_SELECTED;
+        $this->personnel_team_id = null;
         $this->resetValidation([
             'personnel_scope',
             'personnel_ids',
         ]);
+    }
+
+    public function useTeamPersonnelScope(): void
+    {
+        Gate::authorize('letters.create');
+
+        $this->personnel_scope = Letter::PERSONNEL_SCOPE_TEAM;
+        $this->personnel_ids = [];
+        $this->resetValidation([
+            'personnel_scope',
+            'personnel_team_id',
+            'personnel_ids',
+        ]);
+    }
+
+    public function updatedPersonnelTeamId(): void
+    {
+        if ($this->personnel_scope !== Letter::PERSONNEL_SCOPE_TEAM || ! $this->personnel_team_id) {
+            return;
+        }
+
+        $this->personnel_ids = PersonnelTeam::query()
+            ->whereKey($this->personnel_team_id)
+            ->where('is_active', true)
+            ->first()?->personnels()
+            ->where('is_active', true)
+            ->pluck('personnels.id')
+            ->map(fn ($id) => (int) $id)
+            ->all() ?? [];
     }
 
     public function useAllPersonnelScope(): void
@@ -54,6 +86,7 @@ class Create extends Component
         Gate::authorize('letters.create');
 
         $this->personnel_scope = Letter::PERSONNEL_SCOPE_ALL;
+        $this->personnel_team_id = null;
         $this->personnel_ids = [];
 
         $this->resetValidation([
@@ -126,10 +159,13 @@ class Create extends Component
             'basis' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'record_type' => ['required', 'in:normal,attendance_correction'],
-            'personnel_scope' => ['required', 'in:selected,all'],
+            'personnel_scope' => ['required', 'in:selected,team,all'],
+            'personnel_team_id' => $this->personnel_scope === Letter::PERSONNEL_SCOPE_TEAM
+                ? ['required', 'integer', 'exists:personnel_teams,id']
+                : ['nullable'],
             'personnel_ids' => $this->personnel_scope === Letter::PERSONNEL_SCOPE_SELECTED
                 ? ['required', 'array', 'min:1']
-                : ['array', 'max:0'],
+                : ['array'],
             'personnel_ids.*' => [
                 'integer',
                 'distinct',
@@ -137,10 +173,7 @@ class Create extends Component
             ],
         ]);
 
-        if (
-            $data['personnel_scope']
-            === Letter::PERSONNEL_SCOPE_ALL
-        ) {
+        if ($data['personnel_scope'] !== Letter::PERSONNEL_SCOPE_SELECTED) {
             $data['personnel_ids'] = [];
         }
 
@@ -189,6 +222,12 @@ class Create extends Component
             'totalActivePersonnel' => Personnel::query()
                 ->where('is_active', true)
                 ->count(),
+
+            'personnelTeams' => PersonnelTeam::query()
+                ->where('is_active', true)
+                ->withCount(['personnels' => fn ($query) => $query->where('is_active', true)])
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 }

@@ -10,6 +10,7 @@ use App\Models\Personnel;
 use App\Models\OutgoingLetter;
 use App\Services\AuditService;
 use App\Services\OutgoingLetterTemplateRenderer;
+use App\Services\NumberingPlaceholderService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -134,6 +135,11 @@ class Create extends Component
         $this->syncManualPlaceholders();
     }
 
+    public function updatedLetterTypeId(): void
+    {
+        $this->syncManualPlaceholders();
+    }
+
     public function togglePreview(): void
     {
         $this->showPreview = ! $this->showPreview;
@@ -165,6 +171,13 @@ class Create extends Component
         ]);
 
         $this->validateManualCandidate();
+
+        if ($this->numbering_mode === 'auto') {
+            app(NumberingPlaceholderService::class)->validateForType(
+                $this->letter_type_id ? LetterType::query()->find($this->letter_type_id) : null,
+                $this->manualFields
+            );
+        }
 
         $letter = OutgoingLetter::create([
             ...collect($data)->except(['manualFields','personnel_ids'])->all(),
@@ -211,6 +224,8 @@ class Create extends Component
             'previewLetter' => $previewLetter,
             'previewBody' => $previewBody,
             'missingPlaceholders' => $renderer->missingPlaceholders($previewLetter),
+            'numberingPlaceholders' => app(NumberingPlaceholderService::class)
+                ->forPattern($this->letter_type_id ? LetterType::query()->find($this->letter_type_id)?->numbering_pattern : null),
         ]);
     }
 
@@ -282,7 +297,16 @@ class Create extends Component
         $this->manualPlaceholderNames = $renderer->manualPlaceholders($this->content_html);
 
         $old = $this->manualFields;
-        $this->manualFields = collect($this->manualPlaceholderNames)
+        $numberingKeys = app(NumberingPlaceholderService::class)
+            ->forPattern($this->letter_type_id ? LetterType::query()->find($this->letter_type_id)?->numbering_pattern : null)
+            ->pluck('key');
+
+        $allowed = collect($this->manualPlaceholderNames)
+            ->merge($numberingKeys)
+            ->unique()
+            ->values();
+
+        $this->manualFields = $allowed
             ->mapWithKeys(fn ($name) => [$name => $old[$name] ?? ''])
             ->all();
     }
