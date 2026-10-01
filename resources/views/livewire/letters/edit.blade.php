@@ -87,7 +87,23 @@
                     </h2>
 
                     <p class="mt-1 text-xs text-slate-500">
-                        @if($personnel_scope === 'all')
+                        @if($personnel_scope === 'team')
+                <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <label class="block">
+                        <span class="mb-1 block text-sm font-medium text-blue-900">Pilih Tim *</span>
+                        <select wire:model.live="personnel_team_id" class="w-full rounded-lg border border-blue-200 bg-white px-3 py-2">
+                            <option value="">Pilih tim</option>
+                            @foreach($personnelTeams as $team)
+                                <option value="{{ $team->id }}">{{ $team->name }} — {{ $team->personnels_count }} anggota aktif</option>
+                            @endforeach
+                        </select>
+                        @error('personnel_team_id') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
+                    </label>
+                    <p class="mt-2 text-xs text-blue-800">Anggota tim aktif menjadi snapshot personil SPT pada saat penyimpanan.</p>
+                </div>
+            @endif
+
+            @if($personnel_scope === 'all')
                             SPT berlaku untuk seluruh pegawai. Tidak dibuat relasi personil individual.
                         @else
                             {{ count($personnel_ids) }} dari {{ $totalSelectablePersonnel }} personil tersedia dipilih.
@@ -101,7 +117,7 @@
                         wire:click="selectAllPersonnel"
                         wire:loading.attr="disabled"
                         wire:target="selectAllPersonnel"
-                        @disabled($personnel_scope === 'all')
+                        @disabled($personnel_scope !== 'selected')
                         class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
                     >
                         <span wire:loading.remove wire:target="selectAllPersonnel">
@@ -118,7 +134,7 @@
                             wire:click="selectVisiblePersonnel"
                             wire:loading.attr="disabled"
                             wire:target="selectVisiblePersonnel"
-                            @disabled($personnel_scope === 'all')
+                            @disabled($personnel_scope !== 'selected')
                             class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
                         >
                             Pilih Hasil Pencarian
@@ -129,7 +145,7 @@
                         <button
                             type="button"
                             wire:click="clearAllPersonnel"
-                            @disabled($personnel_scope === 'all')
+                            @disabled($personnel_scope !== 'selected')
                             class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60"
                         >
                             Batalkan Semua
@@ -145,6 +161,14 @@
                     class="rounded-lg border px-3 py-2 text-xs font-semibold transition {{ $personnel_scope === 'selected' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }}"
                 >
                     Personil Tertentu
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="useTeamPersonnelScope"
+                    class="rounded-lg border px-3 py-2 text-xs font-semibold transition {{ $personnel_scope === 'team' ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50' }}"
+                >
+                    Tim
                 </button>
 
                 <button
@@ -177,7 +201,7 @@
             <input
                 type="search"
                 wire:model.live.debounce.300ms="personnelSearch"
-                @disabled($personnel_scope === 'all')
+                @disabled($personnel_scope !== 'selected')
                 placeholder="Cari personil..."
                 class="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2"
             >
@@ -188,7 +212,7 @@
                         <input
                             type="checkbox"
                             wire:model="personnel_ids"
-                            @disabled($personnel_scope === 'all')
+                            @disabled($personnel_scope !== 'selected')
                             value="{{ $personnel->id }}"
                             class="rounded border-slate-300 text-blue-700"
                         >
