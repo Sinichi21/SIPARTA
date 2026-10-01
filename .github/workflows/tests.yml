@@ -54,18 +54,6 @@ jobs:
         continue-on-error: true
         run: composer types:check
 
-      - name: Run tests
-        run: php artisan test --compact --log-junit=test-results.xml
-
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-results-${{ github.run_id }}-${{ github.run_attempt }}
-          path: test-results.xml
-          if-no-files-found: ignore
-          retention-days: 7
-
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -77,6 +65,18 @@ jobs:
 
       - name: Build frontend assets
         run: npm run build
+
+      - name: Run tests
+        run: php artisan test --compact --log-junit=test-results.xml
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results.xml
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Test deployment scripts
         run: bash scripts/test-deploy.sh
