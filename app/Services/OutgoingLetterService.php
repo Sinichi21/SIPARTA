@@ -172,7 +172,8 @@ class OutgoingLetterService
 
                 $finalNumber = $this->numbers->next(
                     Carbon::parse($finalDate),
-                    $locked->letterType
+                    $locked->letterType,
+                    $locked->placeholder_data ?? []
                 );
             }
 
