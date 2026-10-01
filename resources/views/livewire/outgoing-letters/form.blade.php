@@ -161,6 +161,36 @@
                     </div>
                 </fieldset>
 
+                @if($numbering_mode === 'auto' && $numberingPlaceholders->isNotEmpty())
+                    <div class="correspondence-field correspondence-field-wide rounded-xl border border-blue-200 bg-blue-50 p-4">
+                        <div class="mb-4">
+                            <strong class="text-sm text-blue-900">Data Nomor Surat</strong>
+                            <p class="mt-1 text-xs text-blue-800">Field berikut berasal dari custom placeholder pada format nomor jenis surat.</p>
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            @foreach($numberingPlaceholders as $placeholder)
+                                <label class="correspondence-field">
+                                    <span class="correspondence-label">
+                                        {{ $placeholder->label }} @if($placeholder->is_required)<span class="text-red-500">*</span>@endif
+                                    </span>
+                                    @if($placeholder->type === 'select')
+                                        <select wire:model.live="manualFields.{{ $placeholder->key }}">
+                                            <option value="">Pilih {{ $placeholder->label }}</option>
+                                            @foreach($placeholder->normalizedOptions() as $option)
+                                                <option value="{{ $option }}">{{ $option }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input wire:model.live.debounce.300ms="manualFields.{{ $placeholder->key }}" type="text" maxlength="5000">
+                                    @endif
+                                    <span class="correspondence-help">Token: <code>{<span></span>{{ $placeholder->key }}<span></span>}</code></span>
+                                    @error('manualFields.'.$placeholder->key)<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 @if($numbering_mode === 'manual')
                     <label class="correspondence-field correspondence-field-wide">
                         <span class="correspondence-label">Nomor Surat Manual</span>
