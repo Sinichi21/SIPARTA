@@ -1,0 +1,153 @@
+name: SIPARTA Production Release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+concurrency:
+  group: siparta-production
+  cancel-in-progress: false
+
+jobs:
+  validate-release:
+    name: Validate Stable Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+
+    steps:
+      - name: Validate release metadata
+        id: release
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+          IS_DRAFT: ${{ github.event.release.draft }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$IS_DRAFT" == "true" || "$IS_PRERELEASE" == "true" ]]; then
+            echo "::error::Production hanya menerima stable published release."
+            exit 1
+          fi
+
+          if ! [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag production harus SemVer stabil, contoh v1.0.0."
+            exit 1
+          fi
+
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+  ci:
+    name: Validate Release Source
+    needs: validate-release
+    uses: ./.github/workflows/tests.yml
+
+  package:
+    name: Package Production Release
+    needs:
+      - validate-release
+      - ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout exact release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.validate-release.outputs.tag }}
+          persist-credentials: false
+
+      - name: Verify checked out tag
+        env:
+          RELEASE_TAG: ${{ needs.validate-release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git fetch --force --tags
+          test "$(git rev-list -n 1 "$RELEASE_TAG")" = "$(git rev-parse HEAD)"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, intl, pdo_pgsql, xml, curl, zip, gd
+          tools: composer:v2
+          coverage: none
+
+      - name: Install production PHP dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress --no-scripts
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Package immutable release
+        run: bash scripts/package-release.sh "$RUNNER_TEMP/siparta-release.tar.gz"
+
+      - name: Upload production artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: siparta-${{ needs.validate-release.outputs.tag }}
+          path: ${{ runner.temp }}/siparta-release.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  deploy:
+    name: Deploy Production
+    needs:
+      - validate-release
+      - package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+      SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+      SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      APP_DIR: ${{ secrets.PROD_APP_DIR }}
+      RELEASE_ID: ${{ needs.validate-release.outputs.tag }}
+
+    steps:
+      - name: Checkout release deployment scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.validate-release.outputs.tag }}
+          persist-credentials: false
+
+      - name: Download production artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: siparta-${{ needs.validate-release.outputs.tag }}
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+        run: bash scripts/configure-ssh.sh
+
+      - name: Upload immutable release
+        run: |
+          scp -o BatchMode=yes -o ConnectTimeout=15 -P "${SSH_PORT:-22}" \
+            siparta-release.tar.gz \
+            "${SSH_USER}@${SSH_HOST}:/tmp/siparta-${RELEASE_ID}.tar.gz"
+
+      - name: Activate production release
+        run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -p "${SSH_PORT:-22}" \
+            "${SSH_USER}@${SSH_HOST}" \
+            "APP_DIR='$APP_DIR' ARCHIVE='/tmp/siparta-${RELEASE_ID}.tar.gz' RELEASE_ID='$RELEASE_ID' bash -s" \
+            < scripts/deploy-release.sh
+
+      - name: Remove local SSH credentials
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
