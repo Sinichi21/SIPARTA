@@ -109,16 +109,6 @@ class Letter extends Model
         return $this->belongsTo(PersonnelTeam::class);
     }
 
-    public function assignsPersonnelTeam(): bool
-    {
-        return $this->personnel_scope === self::PERSONNEL_SCOPE_TEAM;
-    }
-
-    public function personnelTeam(): BelongsTo
-    {
-        return $this->belongsTo(PersonnelTeam::class);
-    }
-
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
