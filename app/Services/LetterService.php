@@ -7,6 +7,7 @@ use App\Enums\LetterStatus;
 use App\Models\Letter;
 use App\Models\LetterType;
 use App\Models\Personnel;
+use App\Models\PersonnelTeam;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -33,6 +34,7 @@ class LetterService
                 $personnelScope,
                 [
                     Letter::PERSONNEL_SCOPE_SELECTED,
+                    Letter::PERSONNEL_SCOPE_TEAM,
                     Letter::PERSONNEL_SCOPE_ALL,
                 ],
                 true
@@ -44,6 +46,33 @@ class LetterService
 
             $personnelIds = [];
             $validPersonnelIds = [];
+            $personnelTeamId = null;
+
+            if ($personnelScope === Letter::PERSONNEL_SCOPE_TEAM) {
+                $personnelTeamId = (int) ($data['personnel_team_id'] ?? 0);
+
+                $team = PersonnelTeam::query()
+                    ->where('is_active', true)
+                    ->with(['personnels' => fn ($query) => $query->where('is_active', true)])
+                    ->find($personnelTeamId);
+
+                if (! $team) {
+                    throw ValidationException::withMessages([
+                        'personnel_team_id' => 'Tim personil tidak tersedia atau sudah nonaktif.',
+                    ]);
+                }
+
+                $validPersonnelIds = $team->personnels
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                if ($validPersonnelIds === []) {
+                    throw ValidationException::withMessages([
+                        'personnel_team_id' => 'Tim yang dipilih belum memiliki anggota aktif.',
+                    ]);
+                }
+            }
 
             if (
                 $personnelScope
@@ -101,6 +130,7 @@ class LetterService
                 'status' => LetterStatus::Draft,
                 'record_type' => LetterRecordType::from($data['record_type'] ?? LetterRecordType::Normal->value),
                 'personnel_scope' => $personnelScope,
+                'personnel_team_id' => $personnelTeamId,
                 'created_by' => $userId,
             ]);
 
@@ -139,12 +169,53 @@ class LetterService
                 ?? $letter->personnel_scope
                 ?? Letter::PERSONNEL_SCOPE_SELECTED;
 
+            if (! in_array(
+                $personnelScope,
+                [
+                    Letter::PERSONNEL_SCOPE_SELECTED,
+                    Letter::PERSONNEL_SCOPE_TEAM,
+                    Letter::PERSONNEL_SCOPE_ALL,
+                ],
+                true
+            )) {
+                throw ValidationException::withMessages([
+                    'personnel_scope' => 'Cakupan personil tidak valid.',
+                ]);
+            }
+
             $personnelIds = [];
+            $personnelTeamId = null;
             $previousPersonnelIds = $letter->personnels()
                 ->pluck('personnels.id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
             $validPersonnelIds = [];
+
+            if ($personnelScope === Letter::PERSONNEL_SCOPE_TEAM) {
+                $personnelTeamId = (int) ($data['personnel_team_id'] ?? 0);
+
+                $team = PersonnelTeam::query()
+                    ->where('is_active', true)
+                    ->with(['personnels' => fn ($query) => $query->where('is_active', true)])
+                    ->find($personnelTeamId);
+
+                if (! $team) {
+                    throw ValidationException::withMessages([
+                        'personnel_team_id' => 'Tim personil tidak tersedia atau sudah nonaktif.',
+                    ]);
+                }
+
+                $validPersonnelIds = $team->personnels
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                if ($validPersonnelIds === []) {
+                    throw ValidationException::withMessages([
+                        'personnel_team_id' => 'Tim yang dipilih belum memiliki anggota aktif.',
+                    ]);
+                }
+            }
 
             if (
                 $personnelScope
@@ -208,6 +279,7 @@ class LetterService
 
                 'record_type' => LetterRecordType::from($data['record_type'] ?? LetterRecordType::Normal->value),
                 'personnel_scope' => $personnelScope,
+                'personnel_team_id' => $personnelTeamId,
                 'updated_by' => $userId,
             ]);
 
@@ -255,7 +327,7 @@ class LetterService
                 && $letter->personnels()->count() < 1
             ) {
                 throw ValidationException::withMessages([
-                    'personnel_ids' => 'SPT harus mempunyai minimal satu personil atau menggunakan cakupan Seluruh Pegawai.',
+                    'personnel_ids' => 'SPT harus mempunyai minimal satu personil, menggunakan Tim, atau cakupan Seluruh Pegawai.',
                 ]);
             }
 
