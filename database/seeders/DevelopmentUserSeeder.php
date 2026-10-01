@@ -12,11 +12,11 @@ class DevelopmentUserSeeder extends Seeder
     {
         $user = User::updateOrCreate(
             [
-                'email' => 'admin@local.test',
+                'email' => ENV('DEVELOPMENT_USER_EMAIL', 'admin@local.test'),
             ],
             [
                 'name' => 'Development Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(ENV('DEVELOPMENT_USER_PASSWORD', 'password')),
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]
