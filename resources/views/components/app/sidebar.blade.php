@@ -29,11 +29,13 @@
             ]],
             ['id' => 'personnel', 'label' => 'Personil & Unit', 'icon' => 'users', 'section' => 'manage', 'items' => [
                 ['label' => 'Data Personil', 'route' => 'personnels.index', 'match' => 'personnels.*', 'permission' => 'personnels.view'],
-                ['label' => 'Unit / Tim Kerja', 'route' => 'units.index', 'match' => 'units.*', 'permission' => 'units.view'],
+                ['label' => 'Unit Kerja', 'route' => 'units.index', 'match' => 'units.*', 'permission' => 'units.view'],
+                ['label' => 'Tim Personil SPT', 'route' => 'personnel-teams.index', 'match' => 'personnel-teams.*', 'permission' => 'personnels.view'],
                 ['label' => 'Deteksi Duplikat', 'route' => 'personnel-duplicates.index', 'match' => 'personnel-duplicates.*', 'permission' => 'personnels.merge'],
             ]],
             ['id' => 'administration', 'label' => 'Administrasi Surat', 'icon' => 'building', 'section' => 'manage', 'items' => [
                 ['label' => 'Jenis Surat', 'route' => 'letter-types.index', 'match' => 'letter-types.*', 'permission' => 'letter-types.view'],
+                ['label' => 'Pengaturan Nomor', 'route' => 'numbering-settings.index', 'match' => 'numbering-settings.*', 'permission' => 'settings.manage'],
                 ['label' => 'Jenis Kegiatan', 'route' => 'activity-types.index', 'match' => 'activity-types.*', 'permission' => 'activity-types.view'],
                 ['label' => 'Template Surat', 'route' => 'letter-templates.index', 'match' => 'letter-templates.*', 'permission' => 'settings.view'],
                 ['label' => 'Kop & Administrasi', 'route' => 'administration-profiles.index', 'match' => 'administration-profiles.*', 'permission' => 'settings.view'],
