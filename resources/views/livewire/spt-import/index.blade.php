@@ -32,7 +32,6 @@
     </p>
 
     @if($step === 1)
-    @if($step === 1)
     <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
         <h2 class="text-lg font-bold">Sumber Import SPT</h2>
         @if(session('google_error')) <p role="alert" class="text-red-700">{{ session('google_error') }}</p> @endif
