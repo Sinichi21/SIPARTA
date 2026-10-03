@@ -361,7 +361,7 @@
 
 
         {{-- PUBLIC GOOGLE SHEETS --}}
-        @if($sourceType === 'google_public')
+        {{-- @if($sourceType === 'google_public') --}}
             {{-- <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 <div class="mb-5">
