@@ -36,10 +36,9 @@ return [
     ],
 
     'google_sheets' => [
-        'credentials_path' => env(
-            'GOOGLE_SHEETS_CREDENTIALS',
-            storage_path('app/private/google-service-account.json')
-        ),
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
 ];

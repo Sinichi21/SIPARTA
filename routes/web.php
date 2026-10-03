@@ -55,6 +55,7 @@ use App\Livewire\IssuedLetters\Index as IssuedLetterIndex;
 use App\Livewire\IssuedLetters\Show as IssuedLetterShow;
 use App\Livewire\CorrespondenceRegister\Index as CorrespondenceRegisterIndex;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GoogleSheetsOAuthController;
 
 Route::get(
     '/health/ready',
@@ -339,6 +340,29 @@ Route::get('/surat-keluar', OutgoingLetterIndex::class)
 
     Route::get('/my/recap', MyRecapIndex::class)
         ->name('my-recap.index');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google Sheets OAuth
+    |--------------------------------------------------------------------------
+    */
+    Route::get(
+        '/spt-import/google/redirect',
+        [GoogleSheetsOAuthController::class, 'redirect']
+    )->middleware('throttle:10,1')
+        ->name('spt-import.google.redirect');
+
+    Route::get(
+        '/spt-import/google/callback',
+        [GoogleSheetsOAuthController::class, 'callback']
+    )->middleware('throttle:10,1')
+        ->name('spt-import.google.callback');
+
+    Route::post(
+        '/spt-import/google/disconnect',
+        [GoogleSheetsOAuthController::class, 'disconnect']
+    )->middleware('throttle:10,1')
+        ->name('spt-import.google.disconnect');
 });
 
 require __DIR__.'/settings.php';
