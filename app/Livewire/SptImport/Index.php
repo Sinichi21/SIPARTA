@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Throwable;
+use App\Models\GoogleConnection;
 
 class Index extends Component
 {
@@ -138,6 +139,7 @@ class Index extends Component
             $this->loadingSheets = true;
 
             $this->availableSheets = $reader->listSheetsApi(
+                auth()->id(),  
                 $this->sheetUrl
             );
 
@@ -227,6 +229,7 @@ class Index extends Component
 
         try {
             $data = $reader->readApi(
+                auth()->id(),
                 $this->sheetUrl,
                 $this->sheetName,
                 strtoupper($this->sheetRange)
@@ -526,6 +529,10 @@ class Index extends Component
                     ->latest()
                     ->limit(8)
                     ->get(),
+
+                'googleConnected' => GoogleConnection::query()
+                    ->where('user_id', auth()->id())
+                    ->exists(),
             ]
         );
     }
