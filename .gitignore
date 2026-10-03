@@ -37,3 +37,4 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+/storage/app/private/google-*.json

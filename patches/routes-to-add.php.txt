@@ -1,0 +1,10 @@
+// Add this import to routes/web.php:
+use App\Http\Controllers\GoogleSheetsOAuthController;
+
+// Add these three routes INSIDE existing Route::middleware(['auth','verified'])->group(...):
+Route::get('/spt-import/google/redirect', [GoogleSheetsOAuthController::class, 'redirect'])
+    ->middleware('throttle:10,1')->name('spt-import.google.redirect');
+Route::get('/spt-import/google/callback', [GoogleSheetsOAuthController::class, 'callback'])
+    ->middleware('throttle:10,1')->name('spt-import.google.callback');
+Route::post('/spt-import/google/disconnect', [GoogleSheetsOAuthController::class, 'disconnect'])
+    ->middleware('throttle:10,1')->name('spt-import.google.disconnect');
