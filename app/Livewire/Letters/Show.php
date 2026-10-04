@@ -39,8 +39,56 @@ class Show extends Component
             'updater',
             'canceller',
             'attachments',
+            'submissionEvents.actor',
             'outgoingLetter.issuedLetter',
         ]);
+    }
+
+    public function submit(\App\Services\SptSubmissionService $service): void
+    {
+        Gate::authorize('letters.submit');
+        $this->letter = $service->submit($this->letter, Auth::id());
+        $this->letter->load(['letterType','activityType','personnels.unit','creator','updater',
+            'canceller','attachments','outgoingLetter.issuedLetter','submissionEvents.actor']);
+        session()->flash('success', 'Pengajuan SPT berhasil dikirim.');
+    }
+
+    public string $reviewNote = '';
+
+    private function reloadReviewLetter(\App\Models\Letter $letter): void
+    {
+        $this->letter = $letter->load([
+            'letterType', 'activityType', 'personnels.unit', 'creator', 'updater',
+            'canceller', 'attachments', 'outgoingLetter.issuedLetter',
+            'submissionEvents.actor',
+        ]);
+        $this->reviewNote = '';
+    }
+
+    public function verify(\App\Services\SptReviewService $service): void
+    {
+        Gate::authorize('letters.verify');
+        $this->validate(['reviewNote' => ['nullable', 'string', 'max:2000']]);
+        $this->reloadReviewLetter($service->verify($this->letter, Auth::id(), $this->reviewNote));
+        session()->flash('success', 'Pengajuan SPT berhasil diverifikasi.');
+    }
+
+    public function approve(\App\Services\SptReviewService $service): void
+    {
+        Gate::authorize('letters.approve');
+        $this->validate(['reviewNote' => ['nullable', 'string', 'max:2000']]);
+        $this->reloadReviewLetter($service->approve($this->letter, Auth::id(), $this->reviewNote));
+        session()->flash('success', 'Pengajuan SPT berhasil disetujui.');
+    }
+
+    public function returnForRevision(\App\Services\SptReviewService $service): void
+    {
+        $ability = $this->letter->status === \App\Enums\LetterStatus::Verified
+            ? 'letters.approve' : 'letters.verify';
+        Gate::authorize($ability);
+        $this->validate(['reviewNote' => ['required', 'string', 'min:10', 'max:2000']]);
+        $this->reloadReviewLetter($service->returnForRevision($this->letter, Auth::id(), $this->reviewNote));
+        session()->flash('success', 'Pengajuan dikembalikan untuk diperbaiki.');
     }
 
     public function publish(LetterService $service): void
@@ -57,6 +105,7 @@ class Show extends Component
                 'updater',
                 'canceller',
                 'attachments',
+            'submissionEvents.actor',
             'outgoingLetter.issuedLetter',
             ]);
 
@@ -93,6 +142,7 @@ class Show extends Component
                 'updater',
                 'canceller',
                 'attachments',
+            'submissionEvents.actor',
             'outgoingLetter.issuedLetter',
             ]);
 
