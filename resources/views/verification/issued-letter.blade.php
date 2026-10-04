@@ -172,6 +172,20 @@
                         </div>
                     @endif
 
+                    @if($issued->annex_pdf_path)
+                        <div class="wide">
+                            <dt>Dokumen Terdaftar</dt>
+                            <dd>Surat utama dan lampiran personil kolektif menggunakan nomor surat serta QR verifikasi yang sama.</dd>
+                        </div>
+                        <div class="wide">
+                            <dt>SHA-256 PDF Surat Utama</dt>
+                            <dd class="hash">{{ $issued->file_sha256 }}</dd>
+                        </div>
+                        <div class="wide">
+                            <dt>SHA-256 PDF Lampiran Personil</dt>
+                            <dd class="hash">{{ $issued->annex_file_sha256 }}</dd>
+                        </div>
+                    @endif
                     <div class="wide">
                         <dt>Checksum Snapshot SHA-256</dt>
                         <dd class="hash">{{ $issued->checksum_sha256 ?: '-' }}</dd>

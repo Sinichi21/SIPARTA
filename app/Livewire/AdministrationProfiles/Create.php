@@ -17,6 +17,7 @@ class Create extends Component
     public string $name = '';
     public string $organization_name = '';
     public string $parent_organization = '';
+    public string $sub_parent_organization = '';
     public string $address = '';
     public string $phone = '';
     public string $email = '';
@@ -160,6 +161,7 @@ class Create extends Component
                 'string',
                 'max:255',
             ],
+            'sub_parent_organization' => ['nullable', 'string', 'max:255'],
             'address' => [
                 'nullable',
                 'string',
@@ -223,6 +225,7 @@ class Create extends Component
             'name',
             'organization_name',
             'parent_organization',
+            'sub_parent_organization',
             'address',
             'phone',
             'email',

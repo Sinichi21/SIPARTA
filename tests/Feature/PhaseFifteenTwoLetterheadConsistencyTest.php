@@ -13,42 +13,25 @@ class PhaseFifteenTwoLetterheadConsistencyTest extends TestCase
             '<x-official-letterhead :snapshot="$snapshot" />',
             [
                 'snapshot' => [
-                    'parent_organization' => 'Kementerian Komunikasi dan Digital',
-                    'organization_name' => 'Balai Monitor Spektrum Frekuensi Radio',
-                    'address' => 'Jl. Contoh No. 1',
-                    'phone' => '0361-123456',
-                    'email' => 'contoh@example.go.id',
-                    'website' => 'example.go.id',
+                    'parent_organization' => 'Kementerian Komunikasi dan Digital RI | Direktorat Jenderal Infrastruktur Digital',
+                    'organization_name' => 'Balai Monitor Spektrum Frekuensi Radio dan Infrastruktur Digital Kelas I Denpasar',
+                    'address' => 'Jl. Kamboja Banjar Denkayu Delodan, Badung, Bali, 80351',
+                    'phone' => '(0361) 880836',
+                    'email' => 'upt_denpasar@postel.go.id',
+                    'website' => null,
                     'logo_data_uri' => 'data:image/png;base64,AAAA',
                     'logo_secondary_data_uri' => null,
                 ],
             ]
         );
 
-        $this->assertStringContainsString(
-            'border-bottom: 3px double #0f172a',
-            $html
-        );
-
-        $this->assertStringContainsString(
-            'data:image/png;base64,AAAA',
-            $html
-        );
-
-        $this->assertStringContainsString(
-            'Kementerian Komunikasi dan Digital',
-            $html
-        );
-
-        $this->assertStringContainsString(
-            'Balai Monitor Spektrum Frekuensi Radio',
-            $html
-        );
-
-        $this->assertStringContainsString(
-            '0361-123456',
-            $html
-        );
+        $this->assertStringContainsString('border-top: 1px solid #555555', $html);
+        $this->assertStringContainsString('data:image/png;base64,AAAA', $html);
+        $this->assertStringContainsString('Kementerian Komunikasi dan Digital RI', $html);
+        $this->assertStringContainsString('Direktorat Jenderal Infrastruktur Digital', $html);
+        $this->assertStringContainsString('Balai Monitor Spektrum Frekuensi Radio dan Infrastruktur Digital Kelas I Denpasar', $html);
+        $this->assertStringContainsString('(0361) 880836', $html);
+        $this->assertStringContainsString('upt_denpasar@postel.go.id', $html);
     }
 
     public function test_all_letter_outputs_reference_the_same_letterhead_component(): void

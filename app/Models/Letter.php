@@ -24,12 +24,20 @@ class Letter extends Model
         'letter_type_id',
         'activity_type_id',
         'number',
+        'submission_reference',
+        'submitted_at',
+        'submitted_by',
         'subject',
         'letter_date',
         'start_date',
         'end_date',
         'location',
         'basis',
+        'assignment_purpose',
+        'departure_place',
+        'destination_place',
+        'transport_mode',
+        'budget_account',
         'description',
         'status',
         'source',
@@ -51,6 +59,7 @@ class Letter extends Model
     {
         return [
             'letter_date' => 'date',
+            'submitted_at' => 'datetime',
             'start_date' => 'date',
             'end_date' => 'date',
 
@@ -146,6 +155,11 @@ class Letter extends Model
             'source_spt_id'
         );
     }
+    public function submissionEvents(): HasMany
+    {
+        return $this->hasMany(SptSubmissionEvent::class)->orderByDesc('id');
+    }
+
     public function documentSnapshot(): HasOne
     {
         return $this->hasOne(

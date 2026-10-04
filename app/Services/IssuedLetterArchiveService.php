@@ -29,6 +29,14 @@ class IssuedLetterArchiveService
 
         $issued = $this->verification->ensureCode($issued);
 
+        $collective = app(SptCollectiveDocumentService::class);
+        // Render the annex BEFORE writing either archive file. Both documents
+        // reuse the same issued-letter number and public verification QR.
+        $annexBinary = $collective->renderAnnex(
+            $letter, $issued,
+            $this->verification->publicUrl($issued),
+            $this->verification->qrDataUri($issued)
+        );
         $snapshot = $this->snapshot($issued, $letter);
 
         $snapshotJson = json_encode(
@@ -72,13 +80,26 @@ class IssuedLetterArchiveService
             .$filename;
 
         try {
-            Storage::put($path, $binary);
+            if (! Storage::put($path, $binary)) {
+                throw new \RuntimeException('Unable to store official SPT PDF.');
+            }
+            $annexPath = null;
+            if ($annexBinary !== null) {
+                $annexPath = 'issued-letters/'.$issued->letter_date->format('Y').'/'.$issued->id.'/lampiran-spt-kolektif.pdf';
+                if (! Storage::put($annexPath, $annexBinary)) {
+                    throw new \RuntimeException('Unable to store official SPT annex PDF.');
+                }
+            }
 
             $issued->forceFill([
                 'snapshot_json' => $snapshot,
                 'checksum_sha256' => $checksum,
                 'pdf_path' => $path,
                 'pdf_name' => $filename,
+                'annex_pdf_path' => $annexPath,
+                'annex_pdf_name' => $annexPath ? 'lampiran-spt-kolektif.pdf' : null,
+                'annex_file_sha256' => $annexBinary !== null ? hash('sha256', $annexBinary) : null,
+                'annex_file_size' => $annexBinary !== null ? strlen($annexBinary) : null,
                 'file_sha256' => hash('sha256', $binary),
                 'file_size' => strlen($binary),
                 'archived_document_at' => now(),
@@ -90,6 +111,10 @@ class IssuedLetterArchiveService
                 'issuer',
             ]);
         } catch (Throwable $exception) {
+            $possibleAnnex = 'issued-letters/'.$issued->letter_date->format('Y').'/'.$issued->id.'/lampiran-spt-kolektif.pdf';
+            if ($annexBinary !== null && Storage::exists($possibleAnnex)) {
+                Storage::delete($possibleAnnex);
+            }
             if (Storage::exists($path)) {
                 Storage::delete($path);
             }
@@ -131,6 +156,7 @@ class IssuedLetterArchiveService
                 'name' => $letter->letterheadProfile?->name,
                 'organization_name' => $letter->letterheadProfile?->organization_name,
                 'parent_organization' => $letter->letterheadProfile?->parent_organization,
+                'sub_parent_organization' => $letter->letterheadProfile?->sub_parent_organization,
                 'address' => $letter->letterheadProfile?->address,
                 'city' => $letter->letterheadProfile?->city,
             ],
@@ -139,10 +165,22 @@ class IssuedLetterArchiveService
                 'nip' => $issued->signatory_nip,
                 'position' => $issued->signatory_position,
             ],
+            // Phase 1D: immutable editable-export input, frozen during issuance.
+            // Do not derive a historical DOCX from mutable current templates/personnel.
+            'docx_rendered_html' => (string) $this->renderer->render($letter, false, false),
+            'docx_letterhead' => [
+                'parent_organization' => $letter->letterheadProfile?->parent_organization,
+                'directorate_name' => $letter->letterheadProfile?->directorate_name,
+                'organization_name' => $letter->letterheadProfile?->organization_name,
+                'address' => $letter->letterheadProfile?->address,
+                'phone' => $letter->letterheadProfile?->phone,
+                'email' => $letter->letterheadProfile?->email,
+            ],
             'content_html' => $letter->content_html,
             'placeholder_data' => $letter->placeholder_data,
             'notes' => $letter->notes,
             'source_spt_id' => $letter->source_spt_id,
+            'collective_annex' => app(SptCollectiveDocumentService::class)->isCollective($letter),
             'personnel' => $letter->personnels()
                 ->orderBy('name')
                 ->get()
@@ -151,6 +189,8 @@ class IssuedLetterArchiveService
                     'name' => $person->name,
                     'nip' => $person->nip,
                     'position' => $person->position,
+                    'rank' => $person->rank,
+                    'grade' => $person->grade,
                 ])
                 ->values()
                 ->all(),

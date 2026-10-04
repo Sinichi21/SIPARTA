@@ -123,6 +123,12 @@ class LetterService
                     ? trim($data['basis'])
                     : null,
 
+                'assignment_purpose' => filled($data['assignment_purpose'] ?? null) ? trim($data['assignment_purpose']) : null,
+                'departure_place' => filled($data['departure_place'] ?? null) ? trim($data['departure_place']) : null,
+                'destination_place' => filled($data['destination_place'] ?? null) ? trim($data['destination_place']) : null,
+                'transport_mode' => filled($data['transport_mode'] ?? null) ? trim($data['transport_mode']) : null,
+                'budget_account' => filled($data['budget_account'] ?? null) ? trim($data['budget_account']) : null,
+
                 'description' => filled($data['description'] ?? null)
                     ? trim($data['description'])
                     : null,
@@ -272,6 +278,12 @@ class LetterService
                 'basis' => filled($data['basis'] ?? null)
                     ? trim($data['basis'])
                     : null,
+
+                'assignment_purpose' => filled($data['assignment_purpose'] ?? null) ? trim($data['assignment_purpose']) : null,
+                'departure_place' => filled($data['departure_place'] ?? null) ? trim($data['departure_place']) : null,
+                'destination_place' => filled($data['destination_place'] ?? null) ? trim($data['destination_place']) : null,
+                'transport_mode' => filled($data['transport_mode'] ?? null) ? trim($data['transport_mode']) : null,
+                'budget_account' => filled($data['budget_account'] ?? null) ? trim($data['budget_account']) : null,
 
                 'description' => filled($data['description'] ?? null)
                     ? trim($data['description'])

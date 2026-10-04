@@ -31,6 +31,11 @@ class Edit extends Component
     public string $location = '';
 
     public string $basis = '';
+    public string $assignment_purpose = '';
+    public string $departure_place = '';
+    public string $destination_place = '';
+    public string $transport_mode = '';
+    public string $budget_account = '';
 
     public string $description = '';
 
@@ -68,6 +73,11 @@ class Edit extends Component
         $this->end_date = $letter->end_date?->format('Y-m-d') ?? '';
         $this->location = $letter->location ?? '';
         $this->basis = $letter->basis ?? '';
+        $this->assignment_purpose = $letter->assignment_purpose ?? '';
+        $this->departure_place = $letter->departure_place ?? '';
+        $this->destination_place = $letter->destination_place ?? '';
+        $this->transport_mode = $letter->transport_mode ?? '';
+        $this->budget_account = $letter->budget_account ?? '';
         $this->description = $letter->description ?? '';
         $this->record_type = $letter->record_type?->value ?? LetterRecordType::Normal->value;
         $this->personnel_scope = $letter->personnel_scope
@@ -198,6 +208,11 @@ class Edit extends Component
             ],
             'location' => ['required', 'string', 'max:500'],
             'basis' => ['nullable', 'string'],
+            'assignment_purpose' => ['nullable', 'string', 'max:3000'],
+            'departure_place' => ['nullable', 'string', 'max:500'],
+            'destination_place' => ['nullable', 'string', 'max:500'],
+            'transport_mode' => ['nullable', 'string', 'max:180'],
+            'budget_account' => ['nullable', 'string', 'max:180'],
             'description' => ['nullable', 'string'],
             'record_type' => ['required', 'in:normal,attendance_correction'],
             'personnel_scope' => ['required', 'in:selected,team,all'],

@@ -25,6 +25,16 @@
                     @endcan
                 @endif
             @endcan
+            @if($letter->status === \App\Enums\LetterStatus::Draft && $letter->source !== 'import')
+                @can('letters.submit')
+                    <button type="button" wire:click="submit" wire:confirm="Kirim pengajuan SPT untuk diproses?" wire:loading.attr="disabled" class="spt-action spt-action-primary">Ajukan SPT</button>
+                @endcan
+            @endif
+            @if($letter->submission_reference && in_array($letter->status, [\App\Enums\LetterStatus::Submitted, \App\Enums\LetterStatus::Verified], true))
+                @if(($letter->status === \App\Enums\LetterStatus::Submitted && auth()->user()->can('letters.verify')) || ($letter->status === \App\Enums\LetterStatus::Verified && auth()->user()->can('letters.approve')))
+                    <span class="text-xs text-slate-500">Pemeriksaan tersedia di panel di bawah.</span>
+                @endif
+            @endif
             <x-letters.edit-action :letter="$letter" show-disabled />
             @if($letter->status === \App\Enums\LetterStatus::Draft)
                 @can('letters.publish')<button type="button" wire:click="publish" wire:loading.attr="disabled" wire:confirm="Terbitkan SPT ini? Setelah diterbitkan data tidak dapat diedit langsung." class="spt-action spt-action-primary"><x-app.icon name="shield" /> Terbitkan SPT</button>@endcan
@@ -44,6 +54,36 @@
         </div>
     </section>
 
+    @if($letter->submission_reference)
+        <section class="spt-section-card mb-6">
+            <h2 class="spt-section-heading">Riwayat Pengajuan</h2>
+            <p class="text-sm">Nomor Pengajuan: <strong>{{ $letter->submission_reference }}</strong></p>
+            <p class="text-xs text-slate-500">Nomor ini bukan nomor surat resmi.</p>
+            @foreach($letter->submissionEvents as $event)
+                <p class="mt-2 text-sm">{{ $event->created_at?->translatedFormat('d M Y H:i') }} — {{ $event->actor?->name ?: 'Pengguna' }}: {{ $event->event === 'submitted' ? 'Diajukan' : $event->event }}</p>
+            @endforeach
+        </section>
+    @endif
+    @if($letter->submission_reference && in_array($letter->status, [\App\Enums\LetterStatus::Submitted, \App\Enums\LetterStatus::Verified], true))
+        @if(($letter->status === \App\Enums\LetterStatus::Submitted && auth()->user()->can('letters.verify')) || ($letter->status === \App\Enums\LetterStatus::Verified && auth()->user()->can('letters.approve')))
+            <section class="spt-section-card mb-6">
+                <h2 class="spt-section-heading">Pemeriksaan Pengajuan SPT</h2>
+                <p class="mb-3 text-sm text-slate-600">Periksa data kegiatan dan personil sebelum mengubah status. Pengembalian memerlukan alasan minimal 10 karakter.</p>
+                <label class="block text-sm font-medium" for="spt-review-note">Catatan pemeriksaan / alasan revisi</label>
+                <textarea id="spt-review-note" wire:model="reviewNote" rows="3" maxlength="2000" class="mt-2 w-full rounded-lg border border-slate-300 p-3"></textarea>
+                @error('reviewNote') <p role="alert" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                @error('status') <p role="alert" class="mt-2 text-sm text-red-700">{{ $message }}</p> @enderror
+                <div class="mt-3 flex flex-wrap gap-2">
+                    @if($letter->status === \App\Enums\LetterStatus::Submitted)
+                        <button type="button" wire:click="verify" wire:loading.attr="disabled" wire:confirm="Verifikasi pengajuan ini?" class="spt-action spt-action-primary">Verifikasi</button>
+                    @else
+                        <button type="button" wire:click="approve" wire:loading.attr="disabled" wire:confirm="Setujui pengajuan ini?" class="spt-action spt-action-primary">Setujui</button>
+                    @endif
+                    <button type="button" wire:click="returnForRevision" wire:loading.attr="disabled" wire:confirm="Kembalikan pengajuan untuk revisi?" class="spt-action spt-action-view">Kembalikan untuk Revisi</button>
+                </div>
+            </section>
+        @endif
+    @endif
     <div class="spt-detail-grid">
         <div class="spt-detail-main">
             <section class="spt-section-card">
@@ -81,6 +121,18 @@
                         </dd>
                     </div>
                 </dl>
+                @if($letter->assignment_purpose || $letter->departure_place || $letter->destination_place || $letter->transport_mode || $letter->budget_account)
+                    <div class="spt-text-section">
+                        <h3>Informasi Perjalanan / Pengajuan</h3>
+                        <dl class="spt-information-grid">
+                            @if($letter->assignment_purpose)<div class="md:col-span-2"><dt>Tujuan Penugasan</dt><dd>{{ $letter->assignment_purpose }}</dd></div>@endif
+                            @if($letter->departure_place)<div><dt>Keberangkatan</dt><dd>{{ $letter->departure_place }}</dd></div>@endif
+                            @if($letter->destination_place)<div><dt>Tujuan</dt><dd>{{ $letter->destination_place }}</dd></div>@endif
+                            @if($letter->transport_mode)<div><dt>Transportasi</dt><dd>{{ $letter->transport_mode }}</dd></div>@endif
+                            @if($letter->budget_account)<div><dt>Kode / Akun Anggaran</dt><dd>{{ $letter->budget_account }}</dd></div>@endif
+                        </dl>
+                    </div>
+                @endif
                 <div class="spt-text-section"><h3>Dasar Penugasan</h3><p>{{ $letter->basis ?: 'Belum ada dasar penugasan yang dicatat.' }}</p></div>
                 <div class="spt-text-section"><h3>Keterangan</h3><p>{{ $letter->description ?: 'Tidak ada keterangan tambahan.' }}</p></div>
             </section>

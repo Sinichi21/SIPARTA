@@ -23,6 +23,10 @@ class IssuedLetter extends Model
         'snapshot_json',
         'checksum_sha256',
         'verification_code',
+        'annex_pdf_path',
+        'annex_pdf_name',
+        'annex_file_sha256',
+        'annex_file_size',
         'pdf_path',
         'pdf_name',
         'file_sha256',
@@ -46,6 +50,7 @@ class IssuedLetter extends Model
             'last_verified_at' => 'datetime',
             'revoked_at' => 'datetime',
             'file_size' => 'integer',
+            'annex_file_size' => 'integer',
         ];
     }
 

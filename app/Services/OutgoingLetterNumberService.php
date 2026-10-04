@@ -54,6 +54,12 @@ class OutgoingLetterNumberService
                 OutgoingLetter::query()
                     ->where('number', $candidate)
                     ->exists()
+                || \App\Models\Letter::query()
+                    ->where('number', $candidate)
+                    ->exists()
+                || \App\Models\IssuedLetter::query()
+                    ->where('number', $candidate)
+                    ->exists()
             );
 
             return $candidate;

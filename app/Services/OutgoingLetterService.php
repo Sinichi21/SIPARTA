@@ -8,6 +8,7 @@ use App\Models\OutgoingLetter;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class OutgoingLetterService
@@ -128,7 +129,24 @@ class OutgoingLetterService
             ]);
         }
 
-        $issued = DB::transaction(function () use ($letter, $actor): IssuedLetter {
+        $collective = app(SptCollectiveDocumentService::class);
+        $letter->loadMissing('template');
+        if ($letter->template?->code === 'SPT_SYSTEM_COLLECTIVE_V1') {
+            throw ValidationException::withMessages(['letter_template_id' => 'Template kolektif konsep Phase 1A tidak boleh diterbitkan. Pilih template kolektif Phase 1B.']);
+        }
+        if ($collective->isCollective($letter) && ! $letter->personnels()->exists()) {
+            throw ValidationException::withMessages([
+                'personnel_ids' => 'SPT kolektif wajib memiliki personil sebelum penerbitan.',
+            ]);
+        }
+
+        // Phase 1C: archive inside publish transaction. PDF generation/storage
+        // failures roll back numbering, issued record, and published status.
+        // Storage is not transactional: if DB commit fails after writing PDFs,
+        // the catch below deletes only the new files from this attempt.
+        $newArchivePaths = [];
+        try {
+            $issued = DB::transaction(function () use ($letter, $actor, &$newArchivePaths): IssuedLetter {
             $locked = OutgoingLetter::query()
                 ->whereKey($letter->id)
                 ->lockForUpdate()
@@ -148,6 +166,55 @@ class OutgoingLetterService
                 ]);
             }
 
+            // Linked SPT must reuse the source's official identity, not allocate
+            // a second number from the outgoing-letter sequence.
+            if ($locked->source_spt_id) {
+                $locked->loadMissing('sourceSpt');
+                $source = \App\Models\Letter::query()
+                    ->whereKey($locked->source_spt_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($source->status !== \App\Enums\LetterStatus::Published
+                    || blank($source->number)
+                    || ! $source->letter_date) {
+                    throw ValidationException::withMessages([
+                        'source_spt_id' => 'Terbitkan SPT sumber dan pastikan nomor serta tanggal resminya tersedia terlebih dahulu.',
+                    ]);
+                }
+
+                if ($locked->numbering_mode === 'manual'
+                    && trim((string) $locked->manual_number) !== trim((string) $source->number)) {
+                    throw ValidationException::withMessages([
+                        'manual_number' => 'Nomor surat harus sama dengan nomor resmi SPT sumber.',
+                    ]);
+                }
+
+                if ($locked->date_mode === 'manual'
+                    && $locked->manual_letter_date?->toDateString() !== $source->letter_date->toDateString()) {
+                    throw ValidationException::withMessages([
+                        'manual_letter_date' => 'Tanggal surat harus sama dengan tanggal resmi SPT sumber.',
+                    ]);
+                }
+
+                $finalDate = $source->letter_date->toDateString();
+                $finalNumber = trim((string) $source->number);
+
+                $used = OutgoingLetter::query()
+                    ->where('number', $finalNumber)
+                    ->whereKeyNot($locked->id)
+                    ->exists();
+                $issuedNumberUsed = IssuedLetter::query()
+                    ->where('number', $finalNumber)
+                    ->where('outgoing_letter_id', '<>', $locked->id)
+                    ->exists();
+                if ($used || $issuedNumberUsed) {
+                    throw ValidationException::withMessages([
+                        'number' => 'Nomor SPT sumber sudah digunakan oleh surat resmi lain. Periksa register sebelum menerbitkan.',
+                    ]);
+                }
+            } else {
+                // Normal outgoing letters retain their existing numbering logic.
             if ($locked->numbering_mode === 'manual') {
                 $finalNumber = trim((string) $locked->manual_number);
 
@@ -176,6 +243,8 @@ class OutgoingLetterService
                     $locked->placeholder_data ?? []
                 );
             }
+
+            } // End normal (non-linked) numbering.
 
             $old = $locked->getOriginal();
 
@@ -216,14 +285,26 @@ class OutgoingLetterService
 
             $letter->setRawAttributes($locked->getAttributes(), true);
 
-            return $issued;
-        }, 3);
+            if (! $issued->hasArchivedPdf()) {
+                // The issued letter ID/number/QR are already available inside
+                // this transaction; do not publish without BOTH official PDFs.
+                $issued = $this->archive->archive($issued, $locked->fresh());
+                $newArchivePaths = array_values(array_filter([
+                    $issued->pdf_path,
+                    $issued->annex_pdf_path,
+                ]));
+            }
 
-        if (! $issued->hasArchivedPdf()) {
-            $issued = $this->archive->archive(
-                $issued,
-                $letter->fresh()
-            );
+            return $issued;
+            }, 3);
+        } catch (\Throwable $exception) {
+            foreach ($newArchivePaths as $path) {
+                // Do not delete previously issued archives on failed retries.
+                if (Storage::exists($path)) {
+                    Storage::delete($path);
+                }
+            }
+            throw $exception;
         }
 
         return $issued;

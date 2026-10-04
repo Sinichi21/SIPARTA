@@ -8,6 +8,34 @@
 
     <form wire:submit="save" class="space-y-6">
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-3 text-lg font-semibold text-blue-900">Informasi Perjalanan / Pengajuan (Opsional)</h2>
+            <p class="mb-5 text-sm text-slate-500">Data tambahan untuk pengajuan. Tidak otomatis mengubah isi surat resmi yang telah diterbitkan.</p>
+            <div class="grid gap-5 md:grid-cols-2">
+                <label class="md:col-span-2 block text-sm font-medium">Tujuan Penugasan
+                    <textarea wire:model="assignment_purpose" rows="3" maxlength="3000" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"></textarea>
+                    @error('assignment_purpose') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                </label>
+                <label class="block text-sm font-medium">Tempat Keberangkatan
+                    <input wire:model="departure_place" maxlength="500" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('departure_place') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                </label>
+                <label class="block text-sm font-medium">Tempat Tujuan
+                    <input wire:model="destination_place" maxlength="500" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('destination_place') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                </label>
+                <label class="block text-sm font-medium">Moda Transportasi
+                    <input wire:model="transport_mode" maxlength="180" placeholder="Misal: kendaraan dinas" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('transport_mode') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                </label>
+                <label class="block text-sm font-medium">Kode / Akun Anggaran
+                    <input wire:model="budget_account" maxlength="180" placeholder="Isi jika sudah diketahui" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                    @error('budget_account') <span class="text-xs text-red-600">{{ $message }}</span> @enderror
+                </label>
+            </div>
+        </section>
+
+
+        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 class="mb-5 text-lg font-semibold text-blue-900">
                 Informasi SPT
             </h2>

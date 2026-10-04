@@ -111,6 +111,7 @@ class OutgoingLetterTemplateRenderer
         }
 
         $personnelTable=$this->personnelTable($letter);
+        $directPersonnel=app(SptPersonnelBlockRenderer::class)->render($letter->personnels);
 
         return [
             'nomor_surat'=>$number,'letter_number'=>$number,
@@ -120,6 +121,7 @@ class OutgoingLetterTemplateRenderer
             'perihal'=>$letter->subject,'subject'=>$letter->subject,'klasifikasi'=>$letter->classification,
             'sifat'=>$letter->nature ? ucfirst($letter->nature) : null,
             'instansi'=>$head?->organization_name,'instansi_induk'=>$head?->parent_organization,
+            'sub_instansi_induk'=>$head?->sub_parent_organization,'dirjen'=>$head?->sub_parent_organization,
             'alamat_instansi'=>$head?->address,'telepon_instansi'=>$head?->phone,'email_instansi'=>$head?->email,
             'website_instansi'=>$head?->website,'kota_surat'=>$head?->city,
             'nama_penandatangan'=>$head?->signatory_name,'nip_penandatangan'=>$head?->signatory_nip,
@@ -136,6 +138,7 @@ class OutgoingLetterTemplateRenderer
             'keterangan'=>$source?->description,
             'jumlah_personil'=>(string)$letter->personnels->count(),
             'personil'=>$personnelTable,
+            'personil_langsung'=>$directPersonnel,
             'personil_tabel'=>$personnelTable,
         ];
     }
