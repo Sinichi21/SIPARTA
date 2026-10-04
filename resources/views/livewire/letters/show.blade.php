@@ -81,6 +81,18 @@
                         </dd>
                     </div>
                 </dl>
+                @if($letter->assignment_purpose || $letter->departure_place || $letter->destination_place || $letter->transport_mode || $letter->budget_account)
+                    <div class="spt-text-section">
+                        <h3>Informasi Perjalanan / Pengajuan</h3>
+                        <dl class="spt-information-grid">
+                            @if($letter->assignment_purpose)<div class="md:col-span-2"><dt>Tujuan Penugasan</dt><dd>{{ $letter->assignment_purpose }}</dd></div>@endif
+                            @if($letter->departure_place)<div><dt>Keberangkatan</dt><dd>{{ $letter->departure_place }}</dd></div>@endif
+                            @if($letter->destination_place)<div><dt>Tujuan</dt><dd>{{ $letter->destination_place }}</dd></div>@endif
+                            @if($letter->transport_mode)<div><dt>Transportasi</dt><dd>{{ $letter->transport_mode }}</dd></div>@endif
+                            @if($letter->budget_account)<div><dt>Kode / Akun Anggaran</dt><dd>{{ $letter->budget_account }}</dd></div>@endif
+                        </dl>
+                    </div>
+                @endif
                 <div class="spt-text-section"><h3>Dasar Penugasan</h3><p>{{ $letter->basis ?: 'Belum ada dasar penugasan yang dicatat.' }}</p></div>
                 <div class="spt-text-section"><h3>Keterangan</h3><p>{{ $letter->description ?: 'Tidak ada keterangan tambahan.' }}</p></div>
             </section>

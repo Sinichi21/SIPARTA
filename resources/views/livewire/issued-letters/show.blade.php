@@ -4,6 +4,16 @@
         :description="$letter->number"
     >
         <x-slot:actions>
+            @if($letter->annex_pdf_path)
+                <a href="{{ route('issued-letters.annex.pdf', $letter) }}" class="spt-action spt-action-view">
+                    Unduh Lampiran Kolektif
+                </a>
+            @endif
+            @if(data_get($letter->snapshot_json, 'docx_rendered_html'))
+                <a href="{{ route('issued-letters.spt.docx', $letter) }}" class="spt-action spt-action-view">
+                    Unduh DOCX (Salinan Editable)
+                </a>
+            @endif
             @if($letter->hasArchivedPdf())
                 <button
                     type="button"

@@ -111,6 +111,7 @@ class OutgoingLetterTemplateRenderer
         }
 
         $personnelTable=$this->personnelTable($letter);
+        $directPersonnel=app(SptPersonnelBlockRenderer::class)->render($letter->personnels);
 
         return [
             'nomor_surat'=>$number,'letter_number'=>$number,
@@ -137,6 +138,7 @@ class OutgoingLetterTemplateRenderer
             'keterangan'=>$source?->description,
             'jumlah_personil'=>(string)$letter->personnels->count(),
             'personil'=>$personnelTable,
+            'personil_langsung'=>$directPersonnel,
             'personil_tabel'=>$personnelTable,
         ];
     }

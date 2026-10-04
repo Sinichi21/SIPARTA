@@ -32,6 +32,8 @@ use App\Livewire\Units\Edit as UnitEdit;
 use App\Livewire\Units\Index as UnitIndex;
 use App\Http\Controllers\OutgoingLetterDocumentController;
 use App\Http\Controllers\IssuedLetterVerificationController;
+use App\Http\Controllers\IssuedSptDocxController;
+use App\Http\Controllers\IssuedSptAnnexController;
 use App\Http\Controllers\LetterDocumentController;
 use App\Http\Controllers\ReadinessController;
 use App\Livewire\Security\AccountRecoveryIndex;
@@ -191,6 +193,12 @@ Route::get('/surat-keluar', OutgoingLetterIndex::class)
 
     Route::get('/surat-terbit', IssuedLetterIndex::class)
         ->name('issued-letters.index');
+
+    Route::get('/surat-terbit/{letter}/lampiran/pdf', IssuedSptAnnexController::class)
+        ->name('issued-letters.annex.pdf');
+
+    Route::get('/surat-terbit/{letter}/spt/docx', IssuedSptDocxController::class)
+        ->name('issued-letters.spt.docx');
 
     Route::get('/surat-terbit/{letter}', IssuedLetterShow::class)
         ->name('issued-letters.show');
