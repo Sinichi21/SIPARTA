@@ -69,7 +69,11 @@ class GoogleSheetReader
     private function spreadsheetId(string $value): string
     {
         $value = trim($value);
-        if (preg_match('#^https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+)(?:[/?#]|$)#', $value, $match)) {
+        if (preg_match(
+            '~^https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]+)(?:[/?#]|$)~',
+            $value,
+            $match
+        )) {
             return $match[1];
         }
         // Permit only long ID-like strings, never arbitrary remote URLs.
