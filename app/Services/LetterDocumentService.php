@@ -201,6 +201,7 @@ class LetterDocumentService
             'profile_name' => $profile->name,
             'organization_name' => $profile->organization_name,
             'parent_organization' => $profile->parent_organization,
+            'sub_parent_organization' => $profile->sub_parent_organization,
             'address' => $profile->address,
             'phone' => $profile->phone,
             'email' => $profile->email,

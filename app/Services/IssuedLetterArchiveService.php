@@ -131,6 +131,7 @@ class IssuedLetterArchiveService
                 'name' => $letter->letterheadProfile?->name,
                 'organization_name' => $letter->letterheadProfile?->organization_name,
                 'parent_organization' => $letter->letterheadProfile?->parent_organization,
+                'sub_parent_organization' => $letter->letterheadProfile?->sub_parent_organization,
                 'address' => $letter->letterheadProfile?->address,
                 'city' => $letter->letterheadProfile?->city,
             ],

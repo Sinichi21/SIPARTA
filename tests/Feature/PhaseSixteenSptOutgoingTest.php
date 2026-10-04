@@ -44,7 +44,7 @@ class PhaseSixteenSptOutgoingTest extends TestCase
         $this->assertStringContainsString('199901012026011001', $html);
     }
 
-    public function test_two_images_add_separator_but_one_image_does_not(): void
+    public function test_letterhead_layout_uses_correct_alignment(): void
     {
         $one = Blade::render(
             '<x-official-letterhead :snapshot="$s" />',
@@ -64,14 +64,41 @@ class PhaseSixteenSptOutgoingTest extends TestCase
             ]]
         );
 
+        // Tidak menggunakan garis pemisah vertikal.
         $this->assertStringNotContainsString(
             'border-right: 1px solid #64748b',
             $one
         );
 
-        $this->assertStringContainsString(
+        $this->assertStringNotContainsString(
             'border-right: 1px solid #64748b',
             $two
         );
+
+        // Satu logo: teks rata kiri.
+        $this->assertStringContainsString(
+            'text-align: left',
+            $one
+        );
+
+        // Dua logo: teks rata tengah.
+        $this->assertStringContainsString(
+            'text-align: center',
+            $two
+        );
+
+        // Kedua mode memiliki garis atas tipis
+        // dan garis bawah tebal.
+        foreach ([$one, $two] as $html) {
+            $this->assertStringContainsString(
+                'border-top: 1px solid #555555',
+                $html
+            );
+
+            $this->assertStringContainsString(
+                'border-top: 3px solid #555555',
+                $html
+            );
+        }
     }
 }

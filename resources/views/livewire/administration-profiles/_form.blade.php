@@ -22,6 +22,15 @@
         <label class="grid gap-1.5 text-sm font-medium md:col-span-2">
             <span>Instansi Induk</span>
             <input wire:model="parent_organization" class="rounded-xl border-slate-200">
+            <span class="text-xs font-normal text-slate-500">
+                Untuk kop bertingkat, pisahkan setiap baris dengan tanda |. Contoh: Kementerian Komunikasi dan Digital RI | Direktorat Jenderal Infrastruktur Digital
+            </span>
+        </label>
+
+        <label class="grid gap-1.5 text-sm font-medium md:col-span-2">
+            <span>Sub Instansi Induk / Direktorat Jenderal</span>
+            <input wire:model="sub_parent_organization" class="rounded-xl border-slate-200" placeholder="Contoh: Direktorat Jenderal Infrastruktur Digital">
+            @error('sub_parent_organization')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
         </label>
 
         <label class="grid gap-1.5 text-sm font-medium md:col-span-2">
@@ -53,7 +62,9 @@
         <label class="grid gap-1.5 text-sm font-medium">
             <span>Gambar / Logo 1</span>
             <input wire:model="logo" type="file" accept=".jpg,.jpeg,.png,.webp" class="rounded-xl border border-slate-200 p-3 text-sm">
-            <span class="text-xs font-normal text-slate-500">JPG, PNG, atau WebP maksimal 2 MB.</span>
+            <span class="text-xs font-normal text-slate-500">
+                JPG, PNG, atau WebP maksimal 2 MB. Jika hanya Logo 1 yang digunakan, teks kop ditampilkan rata kiri seperti format resmi referensi.
+            </span>
             @error('logo')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
         </label>
 
@@ -61,7 +72,7 @@
             <span>Gambar / Logo 2</span>
             <input wire:model="logo_secondary" type="file" accept=".jpg,.jpeg,.png,.webp" class="rounded-xl border border-slate-200 p-3 text-sm">
             <span class="text-xs font-normal text-slate-500">
-                Opsional. Jika diisi, dua gambar ditampilkan bersama dan diberi pembatas di sisi kanan kelompok gambar.
+                Opsional. Jika Logo 1 dan Logo 2 digunakan, kedua logo ditampilkan bersama di kiri dan teks kop dibuat rata tengah.
             </span>
             @error('logo_secondary')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
         </label>
