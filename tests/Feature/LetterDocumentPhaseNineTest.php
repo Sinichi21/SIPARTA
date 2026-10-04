@@ -84,7 +84,9 @@ class LetterDocumentPhaseNineTest extends TestCase
 
     public function test_publish_creates_immutable_document_snapshot(): void
     {
-        $published = app(LetterService::class)->publish($this->draft(), $this->user->id);
+        $letter = $this->draft();
+        $approved = app(\App\Services\SptReviewService::class)->approve(app(\App\Services\SptReviewService::class)->verify(app(\App\Services\SptSubmissionService::class)->submit($letter, $this->user->id), $this->user->id), $this->user->id);
+        $published = app(LetterService::class)->publish($approved, $this->user->id);
         $snapshot = $published->documentSnapshot()->first();
 
         $this->assertNotNull($snapshot);
