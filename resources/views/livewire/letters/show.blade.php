@@ -36,7 +36,7 @@
                 @endif
             @endif
             <x-letters.edit-action :letter="$letter" show-disabled />
-            @if($letter->status === \App\Enums\LetterStatus::Draft)
+            @if($letter->status === \App\Enums\LetterStatus::Approved && $letter->source !== 'import')
                 @can('letters.publish')<button type="button" wire:click="publish" wire:loading.attr="disabled" wire:confirm="Terbitkan SPT ini? Setelah diterbitkan data tidak dapat diedit langsung." class="spt-action spt-action-primary"><x-app.icon name="shield" /> Terbitkan SPT</button>@endcan
             @endif
         </div>
