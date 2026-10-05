@@ -9,6 +9,8 @@ use Illuminate\Validation\ValidationException;
 
 class SptReviewService
 {
+    public function __construct(private readonly AuditService $audit) {}
+
     public function verify(Letter $letter, int $actorId, ?string $note = null): Letter
     {
         return $this->transition($letter, $actorId, LetterStatus::Submitted, LetterStatus::Verified, 'verified', $note);
@@ -33,7 +35,12 @@ class SptReviewService
                 throw ValidationException::withMessages(['status' => 'Hanya pengajuan yang diajukan atau diverifikasi yang dapat dikembalikan.']);
             }
             $previous = $locked->status;
-            $locked->forceFill(['status' => LetterStatus::Draft, 'updated_by' => $actorId])->save();
+            $locked->forceFill([
+                'status' => LetterStatus::Draft,
+                'approved_by' => null,
+                'approved_at' => null,
+                'updated_by' => $actorId,
+            ])->save();
             $locked->submissionEvents()->create([
                 'actor_id' => $actorId,
                 'event' => 'returned_for_revision',
@@ -41,6 +48,10 @@ class SptReviewService
                 'to_status' => LetterStatus::Draft->value,
                 'note' => $note,
             ]);
+            $this->audit->sptWorkflowEvent(
+                $locked, 'RETURN_FOR_REVISION', $previous->value,
+                LetterStatus::Draft->value, $actorId, $note
+            );
             return $locked->fresh(['submissionEvents.actor']);
         }, 3);
     }
@@ -76,6 +87,10 @@ class SptReviewService
                 'to_status' => $to->value,
                 'note' => $note !== '' ? $note : null,
             ]);
+            $this->audit->sptWorkflowEvent(
+                $locked, strtoupper($event), $from->value,
+                $to->value, $actorId, $note !== '' ? $note : null
+            );
             return $locked->fresh(['submissionEvents.actor']);
         }, 3);
     }

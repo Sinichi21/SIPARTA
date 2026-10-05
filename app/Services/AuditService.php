@@ -52,6 +52,29 @@ class AuditService
         );
     }
 
+    public function sptWorkflowEvent(
+        Model $subject,
+        string $action,
+        string $fromStatus,
+        string $toStatus,
+        int $actorId,
+        ?string $note = null
+    ): AuditLog {
+        return AuditLog::create([
+            'user_id' => $actorId,
+            'action' => strtoupper($action),
+            'subject_type' => $subject::class,
+            'subject_id' => $subject->getKey(),
+            'old_values' => ['status' => $fromStatus],
+            'new_values' => [
+                'status' => $toStatus,
+                'note' => $note,
+            ],
+            'ip_address' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+        ]);
+    }
+
     public function merged(
         Model $subject,
         array $oldValues,

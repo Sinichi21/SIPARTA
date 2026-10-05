@@ -56,6 +56,40 @@ class PhaseThreeAReviewTest extends TestCase
         $this->assertDatabaseCount('spt_submission_events', 3);
     }
 
+    public function test_return_for_revision_clears_stale_approval_metadata(): void
+    {
+        [$submitted, $user] = $this->submittedSpt();
+        $verified = app(SptReviewService::class)->verify($submitted, $user->id);
+
+        // Simulate stale approval metadata left by an earlier workflow revision.
+        $verified->forceFill([
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+        ])->save();
+
+        $returned = app(SptReviewService::class)->returnForRevision(
+            $verified,
+            $user->id,
+            'Perbaiki informasi kegiatan sebelum diajukan kembali.'
+        );
+
+        $this->assertSame(LetterStatus::Draft, $returned->status);
+        $this->assertNull($returned->approved_by);
+        $this->assertNull($returned->approved_at);
+        $this->assertSame($submitted->submission_reference, $returned->submission_reference);
+        $this->assertDatabaseHas('spt_submission_events', [
+            'letter_id' => $returned->id,
+            'event' => 'returned_for_revision',
+            'from_status' => LetterStatus::Verified->value,
+            'to_status' => LetterStatus::Draft->value,
+        ]);
+
+        $resubmitted = app(SptSubmissionService::class)->submit($returned, $user->id);
+        $this->assertSame(LetterStatus::Submitted, $resubmitted->status);
+        $this->assertNull($resubmitted->approved_by);
+        $this->assertNull($resubmitted->approved_at);
+    }
+
     public function test_approval_cannot_bypass_verification(): void
     {
         [$letter, $user] = $this->submittedSpt();
