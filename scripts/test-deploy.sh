@@ -43,12 +43,13 @@ case "${2:-}" in
   up) rm -f storage/framework/down ;;
 esac
 if [[ "${FAIL_COMMAND:-}" == "${2:-}" && "$PWD" == */new ]]; then exit 42; fi
+if [[ "${FAIL_COMMAND:-}" == "preflight" && "${2:-}" == "app:preflight" && "$PWD" == */new ]]; then exit 43; fi
 SH
 
 chmod +x "$TEST_DIR/bin/php" "$TEST_DIR/bin/composer"
 export PATH="$TEST_DIR/bin:$PATH"
 
-for scenario in success migrate missing-env; do
+for scenario in success migrate preflight missing-env; do
   case_dir="$TEST_DIR/$scenario"
   mkdir -p "$case_dir/shared/storage/framework" "$case_dir/releases/old"
   printf 'preserve environment\n' > "$case_dir/shared/.env"
