@@ -76,9 +76,18 @@ class Create extends Component
                 || blank($source->number)
                 || ! $source->letter_date
             ) {
-                throw ValidationException::withMessages([
-                    'source_spt_id' => 'Surat keluar hanya dapat dibuat dari SPT baru yang sudah diterbitkan dan memiliki nomor serta tanggal resmi.',
-                ]);
+                session()->flash(
+                    'error',
+                    'Surat keluar hanya dapat dibuat dari SPT baru yang sudah diterbitkan dan memiliki nomor serta tanggal resmi.'
+                );
+
+                $this->redirectRoute(
+                    'letters.show',
+                    $source,
+                    navigate: true
+                );
+
+                return;
             }
 
             $this->source_spt_id = $source->id;
