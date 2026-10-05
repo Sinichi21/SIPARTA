@@ -8,6 +8,8 @@ use App\Models\Letter;
 use App\Models\LetterType;
 use App\Models\Personnel;
 use App\Models\PersonnelTeam;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -321,6 +323,12 @@ class LetterService
         Letter $letter,
         int $userId
     ): Letter {
+        $actor = User::query()->findOrFail($userId);
+
+        if (! $actor->can('letters.publish')) {
+            throw new AuthorizationException('Anda tidak memiliki izin untuk menerbitkan SPT.');
+        }
+
         return DB::transaction(function () use (
             $letter,
             $userId
@@ -405,6 +413,12 @@ class LetterService
         string $reason,
         int $userId
     ): Letter {
+        $actor = User::query()->findOrFail($userId);
+
+        if (! $actor->can('letters.cancel')) {
+            throw new AuthorizationException('Anda tidak memiliki izin untuk membatalkan SPT.');
+        }
+
         return DB::transaction(function () use (
             $letter,
             $reason,

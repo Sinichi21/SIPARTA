@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\LetterStatus;
 use App\Models\Letter;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -13,6 +15,12 @@ class SptSubmissionService
 
     public function submit(Letter $letter, int $actorId): Letter
     {
+        $actor = User::query()->findOrFail($actorId);
+
+        if (! $actor->can('letters.submit')) {
+            throw new AuthorizationException('Anda tidak memiliki izin untuk mengajukan SPT.');
+        }
+
         return DB::transaction(function () use ($letter, $actorId): Letter {
             $locked = Letter::query()->with('letterType')->lockForUpdate()->findOrFail($letter->id);
             if ($locked->letterType?->code !== 'SPT' || $locked->source === 'import') {

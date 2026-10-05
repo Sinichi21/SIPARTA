@@ -12,11 +12,34 @@ use App\Services\SptReviewService;
 use App\Services\SptSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class PhaseThreeBPublishingTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function grantWorkflowPermissions(User $user): void
+    {
+        foreach ([
+            'letters.submit',
+            'letters.verify',
+            'letters.approve',
+            'letters.publish',
+        ] as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $user->givePermissionTo([
+            'letters.submit',
+            'letters.verify',
+            'letters.approve',
+            'letters.publish',
+        ]);
+    }
 
     private function makeDraft(User $user, string $source = 'manual'): Letter
     {
@@ -53,6 +76,7 @@ class PhaseThreeBPublishingTest extends TestCase
     public function test_draft_submitted_and_verified_cannot_be_published(): void
     {
         $user = User::factory()->create();
+        $this->grantWorkflowPermissions($user);
         $letter = $this->makeDraft($user);
         $this->assertPublishRejected($letter, $user);
 
@@ -66,6 +90,7 @@ class PhaseThreeBPublishingTest extends TestCase
     public function test_only_approved_spt_receives_official_number_on_publication(): void
     {
         $user = User::factory()->create();
+        $this->grantWorkflowPermissions($user);
         $submitted = app(SptSubmissionService::class)->submit($this->makeDraft($user), $user->id);
         $verified = app(SptReviewService::class)->verify($submitted, $user->id);
         $approved = app(SptReviewService::class)->approve($verified, $user->id);
@@ -98,6 +123,7 @@ class PhaseThreeBPublishingTest extends TestCase
     public function test_imported_spt_cannot_enter_new_publication_flow(): void
     {
         $user = User::factory()->create();
+        $this->grantWorkflowPermissions($user);
         $letter = $this->makeDraft($user, 'import');
         $letter->forceFill([
             'status' => LetterStatus::Approved,

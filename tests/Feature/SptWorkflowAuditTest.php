@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\SptReviewService;
 use App\Services\SptSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class SptWorkflowAuditTest extends TestCase
@@ -19,6 +20,10 @@ class SptWorkflowAuditTest extends TestCase
     public function test_submission_verification_approval_and_revision_write_audit_events(): void
     {
         $user = User::factory()->create();
+        Permission::firstOrCreate(['name' => 'letters.submit', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.verify', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.approve', 'guard_name' => 'web']);
+        $user->givePermissionTo(["letters.submit","letters.verify","letters.approve"]);
         $this->actingAs($user);
         $type = LetterType::create(['code' => 'SPT', 'name' => 'SPT', 'is_active' => true]);
         $activity = ActivityType::create(['name' => 'Monitoring Audit', 'is_active' => true]);

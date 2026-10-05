@@ -11,6 +11,7 @@ use App\Services\SptReviewService;
 use App\Services\SptSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class PhaseThreeAReviewTest extends TestCase
@@ -20,6 +21,10 @@ class PhaseThreeAReviewTest extends TestCase
     private function submittedSpt(): array
     {
         $user = User::factory()->create();
+        Permission::firstOrCreate(['name' => 'letters.submit', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.verify', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.approve', 'guard_name' => 'web']);
+        $user->givePermissionTo(["letters.submit","letters.verify","letters.approve"]);
         $type = LetterType::create(['code' => 'SPT', 'name' => 'Surat Perintah Tugas', 'is_active' => true]);
         $activity = ActivityType::create(['name' => 'Monitoring Review', 'is_active' => true]);
         $letter = Letter::create([

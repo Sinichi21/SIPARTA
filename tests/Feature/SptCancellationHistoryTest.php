@@ -11,15 +11,41 @@ use App\Services\LetterService;
 use App\Services\SptReviewService;
 use App\Services\SptSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class SptCancellationHistoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function grantWorkflowPermissions(User $user): void
+    {
+        foreach ([
+            'letters.submit',
+            'letters.verify',
+            'letters.approve',
+            'letters.publish',
+            'letters.cancel',
+        ] as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $user->givePermissionTo([
+            'letters.submit',
+            'letters.verify',
+            'letters.approve',
+            'letters.publish',
+            'letters.cancel',
+        ]);
+    }
+
     public function test_published_spt_cancellation_preserves_timeline_and_reason(): void
     {
         $user = User::factory()->create();
+        $this->grantWorkflowPermissions($user);
         $this->actingAs($user);
         $type = LetterType::create(['code' => 'SPT', 'name' => 'SPT', 'is_active' => true]);
         $activity = ActivityType::create(['name' => 'Monitoring', 'is_active' => true]);
@@ -60,6 +86,7 @@ class SptCancellationHistoryTest extends TestCase
     public function test_legacy_draft_without_submission_reference_has_no_workflow_event(): void
     {
         $user = User::factory()->create();
+        $this->grantWorkflowPermissions($user);
         $this->actingAs($user);
         $type = LetterType::create(['code' => 'SPT', 'name' => 'SPT', 'is_active' => true]);
         $letter = Letter::create([

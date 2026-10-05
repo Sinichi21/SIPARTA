@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\LetterStatus;
 use App\Models\Letter;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -13,12 +15,12 @@ class SptReviewService
 
     public function verify(Letter $letter, int $actorId, ?string $note = null): Letter
     {
-        return $this->transition($letter, $actorId, LetterStatus::Submitted, LetterStatus::Verified, 'verified', $note);
+        return $this->transition($letter, $actorId, LetterStatus::Submitted, LetterStatus::Verified, 'verified', $note, 'letters.verify');
     }
 
     public function approve(Letter $letter, int $actorId, ?string $note = null): Letter
     {
-        return $this->transition($letter, $actorId, LetterStatus::Verified, LetterStatus::Approved, 'approved', $note);
+        return $this->transition($letter, $actorId, LetterStatus::Verified, LetterStatus::Approved, 'approved', $note, 'letters.approve');
     }
 
     public function returnForRevision(Letter $letter, int $actorId, string $note): Letter
@@ -35,6 +37,15 @@ class SptReviewService
                 throw ValidationException::withMessages(['status' => 'Hanya pengajuan yang diajukan atau diverifikasi yang dapat dikembalikan.']);
             }
             $previous = $locked->status;
+            $actor = User::query()->findOrFail($actorId);
+            $ability = $previous === LetterStatus::Verified
+                ? 'letters.approve'
+                : 'letters.verify';
+
+            if (! $actor->can($ability)) {
+                throw new AuthorizationException('Anda tidak memiliki izin untuk mengembalikan pengajuan SPT.');
+            }
+
             $locked->forceFill([
                 'status' => LetterStatus::Draft,
                 'approved_by' => null,
@@ -62,15 +73,22 @@ class SptReviewService
         LetterStatus $from,
         LetterStatus $to,
         string $event,
-        ?string $note
+        ?string $note,
+        string $ability
     ): Letter {
         $note = trim((string) $note);
         if (mb_strlen($note) > 2000) {
             throw ValidationException::withMessages(['reviewNote' => 'Catatan maksimal 2000 karakter.']);
         }
-        return DB::transaction(function () use ($letter, $actorId, $from, $to, $event, $note): Letter {
+        return DB::transaction(function () use ($letter, $actorId, $from, $to, $event, $note, $ability): Letter {
             $locked = Letter::query()->with('letterType')->lockForUpdate()->findOrFail($letter->id);
             $this->ensureReviewableSpt($locked);
+            $actor = User::query()->findOrFail($actorId);
+
+            if (! $actor->can($ability)) {
+                throw new AuthorizationException('Anda tidak memiliki izin untuk memproses pengajuan SPT.');
+            }
+
             if ($locked->status !== $from) {
                 throw ValidationException::withMessages(['status' => 'Status pengajuan sudah berubah. Muat ulang halaman dan periksa riwayatnya.']);
             }

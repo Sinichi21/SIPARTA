@@ -70,6 +70,26 @@ class Create extends Component
                 ->with(['personnels','activityType'])
                 ->findOrFail($sourceId);
 
+            if (
+                $source->status !== \App\Enums\LetterStatus::Published
+                || $source->source === 'import'
+                || blank($source->number)
+                || ! $source->letter_date
+            ) {
+                session()->flash(
+                    'error',
+                    'Surat keluar hanya dapat dibuat dari SPT baru yang sudah diterbitkan dan memiliki nomor serta tanggal resmi.'
+                );
+
+                $this->redirectRoute(
+                    'letters.show',
+                    $source,
+                    navigate: true
+                );
+
+                return;
+            }
+
             $this->source_spt_id = $source->id;
             $this->letter_type_id = $source->letter_type_id;
             $this->recipient = 'Personil yang ditugaskan';
