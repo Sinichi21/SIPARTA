@@ -200,6 +200,29 @@ class Dashboard extends Component
 
         $access->apply($base, auth()->user());
 
+        $reportable = Letter::query()
+            ->spt()
+            ->where(function ($query) {
+                $query
+                    ->whereNull('source')
+                    ->orWhere('source', '!=', 'import');
+            })
+            ->whereIn('status', [
+                LetterStatus::Published->value,
+                LetterStatus::Archived->value,
+            ])
+            ->where(function ($query) {
+                $query
+                    ->whereDate('end_date', '<=', today())
+                    ->orWhere(function ($query) {
+                        $query
+                            ->whereNull('end_date')
+                            ->whereDate('start_date', '<=', today());
+                    });
+            });
+
+        $access->apply($reportable, auth()->user());
+
         return view(
             'livewire.dashboard-personal',
             [
@@ -221,6 +244,44 @@ class Dashboard extends Component
                     ->with('activityType')
                     ->orderByDesc('letter_date')
                     ->orderByDesc('id')
+                    ->limit(5)
+                    ->get(),
+
+                'personalSkpPending' => (clone $reportable)
+                    ->whereDoesntHave('sptReport')
+                    ->count(),
+
+                'personalSkpDraft' => (clone $reportable)
+                    ->whereHas(
+                        'sptReport',
+                        fn ($query) => $query->where('status', 'draft')
+                    )
+                    ->count(),
+
+                'personalSkpSubmitted' => (clone $reportable)
+                    ->whereHas(
+                        'sptReport',
+                        fn ($query) => $query->where('status', 'submitted')
+                    )
+                    ->count(),
+
+                'personalSkpQueue' => (clone $reportable)
+                    ->with([
+                        'activityType',
+                        'sptReport.creator',
+                    ])
+                    ->where(function ($query) {
+                        $query
+                            ->whereDoesntHave('sptReport')
+                            ->orWhereHas(
+                                'sptReport',
+                                fn ($reportQuery) =>
+                                    $reportQuery->where('status', 'draft')
+                            );
+                    })
+                    ->orderBy('end_date')
+                    ->orderBy('start_date')
+                    ->orderBy('id')
                     ->limit(5)
                     ->get(),
             ]
