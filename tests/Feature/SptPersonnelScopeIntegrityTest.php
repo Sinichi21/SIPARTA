@@ -90,7 +90,8 @@ class SptPersonnelScopeIntegrityTest extends TestCase
             $this->user->id
         );
 
-        $published = $service->publish($letter, $this->user->id);
+        $approved = app(\App\Services\SptReviewService::class)->approve(app(\App\Services\SptReviewService::class)->verify(app(\App\Services\SptSubmissionService::class)->submit($letter, $this->user->id), $this->user->id), $this->user->id);
+        $published = $service->publish($approved, $this->user->id);
 
         $this->assertSame('published', $published->status->value);
         $this->assertSame(Letter::PERSONNEL_SCOPE_ALL, $published->personnel_scope);
@@ -109,6 +110,8 @@ class SptPersonnelScopeIntegrityTest extends TestCase
             $this->user->id
         );
 
+        // Force an approved fixture to verify the defense-in-depth personnel guard.
+        $letter->forceFill(['status' => \App\Enums\LetterStatus::Approved])->save();
         try {
             $service->publish($letter, $this->user->id);
             $this->fail('SPT scope selected tanpa personil seharusnya tidak dapat diterbitkan.');
@@ -116,7 +119,7 @@ class SptPersonnelScopeIntegrityTest extends TestCase
             $this->assertArrayHasKey('personnel_ids', $exception->errors());
         }
 
-        $this->assertSame('draft', $letter->fresh()->status->value);
+        $this->assertSame('approved', $letter->fresh()->status->value);
     }
 
     public function test_personnel_recap_separates_individual_and_all_personnel_spt(): void

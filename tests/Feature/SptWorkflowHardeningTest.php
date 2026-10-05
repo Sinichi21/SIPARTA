@@ -71,8 +71,9 @@ class SptWorkflowHardeningTest extends TestCase
         $letter = $this->letter();
         $letter->personnels()->attach($person);
 
+        $approved = app(\App\Services\SptReviewService::class)->approve(app(\App\Services\SptReviewService::class)->verify(app(\App\Services\SptSubmissionService::class)->submit($letter, $this->user->id), $this->user->id), $this->user->id);
         $published = app(LetterService::class)->publish(
-            $letter,
+            $approved,
             $this->user->id
         );
 
@@ -106,6 +107,8 @@ class SptWorkflowHardeningTest extends TestCase
     public function test_selected_scope_without_personnel_cannot_be_published(): void
     {
         $letter = $this->letter();
+        // An approved fixture checks the personnel guard independently of workflow status.
+        $letter->forceFill(['status' => LetterStatus::Approved])->save();
 
         try {
             app(LetterService::class)->publish(
@@ -128,8 +131,9 @@ class SptWorkflowHardeningTest extends TestCase
             'personnel_scope' => Letter::PERSONNEL_SCOPE_ALL,
         ]);
 
+        $approved = app(\App\Services\SptReviewService::class)->approve(app(\App\Services\SptReviewService::class)->verify(app(\App\Services\SptSubmissionService::class)->submit($letter, $this->user->id), $this->user->id), $this->user->id);
         $published = app(LetterService::class)->publish(
-            $letter,
+            $approved,
             $this->user->id
         );
 

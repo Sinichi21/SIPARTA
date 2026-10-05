@@ -327,9 +327,9 @@ class LetterService
         ) {
             $letter = $this->lockSptForUpdate($letter);
 
-            if ($letter->status !== LetterStatus::Draft) {
+            if ($letter->status !== LetterStatus::Approved || $letter->source === 'import') {
                 throw ValidationException::withMessages([
-                    'status' => 'Hanya SPT berstatus draft yang dapat diterbitkan.',
+                    'status' => 'Hanya SPT baru yang sudah disetujui yang dapat diterbitkan.',
                 ]);
             }
 
