@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SptReport extends Model
 {
@@ -48,6 +49,11 @@ class SptReport extends Model
     public function submitter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(SptReportAttachment::class);
     }
 
     public function isSubmitted(): bool
