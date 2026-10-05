@@ -49,6 +49,8 @@ class Show extends Component
             'letterType',
             'activityType',
             'personnels.unit',
+            'sptReport.creator',
+            'sptReport.submitter',
         ]);
     }
 
