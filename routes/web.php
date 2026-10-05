@@ -44,6 +44,7 @@ use App\Livewire\Roles\Index as RoleIndex;
 use App\Livewire\Roles\Edit as RoleEdit;
 use App\Livewire\MySpt\Index as MySptIndex;
 use App\Livewire\MySpt\Show as MySptShow;
+use App\Livewire\MySpt\Report as MySptReport;
 use App\Livewire\MyRecap\Index as MyRecapIndex;
 use App\Livewire\IncomingLetters\Index as IncomingLetterIndex;
 use App\Livewire\IncomingLetters\Create as IncomingLetterCreate;
@@ -345,6 +346,9 @@ Route::get('/surat-keluar', OutgoingLetterIndex::class)
 
     Route::get('/my/spt/{letter}', MySptShow::class)
         ->name('my-spt.show');
+
+    Route::get('/my/spt/{letter}/report', MySptReport::class)
+        ->name('my-spt.report');
 
     Route::get('/my/recap', MyRecapIndex::class)
         ->name('my-recap.index');
