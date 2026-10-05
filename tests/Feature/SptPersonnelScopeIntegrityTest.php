@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\LetterService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class SptPersonnelScopeIntegrityTest extends TestCase
@@ -26,6 +27,11 @@ class SptPersonnelScopeIntegrityTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
+        Permission::firstOrCreate(['name' => 'letters.submit', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.verify', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.approve', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'letters.publish', 'guard_name' => 'web']);
+        $this->user->givePermissionTo(["letters.submit","letters.verify","letters.approve","letters.publish"]);
         $this->actingAs($this->user);
 
         $this->sptType = LetterType::create([
