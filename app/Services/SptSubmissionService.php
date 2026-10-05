@@ -9,6 +9,8 @@ use Illuminate\Validation\ValidationException;
 
 class SptSubmissionService
 {
+    public function __construct(private readonly AuditService $audit) {}
+
     public function submit(Letter $letter, int $actorId): Letter
     {
         return DB::transaction(function () use ($letter, $actorId): Letter {
@@ -42,6 +44,10 @@ class SptSubmissionService
                 'from_status' => LetterStatus::Draft->value,
                 'to_status' => LetterStatus::Submitted->value,
             ]);
+            $this->audit->sptWorkflowEvent(
+                $locked, 'SUBMIT', LetterStatus::Draft->value,
+                LetterStatus::Submitted->value, $actorId
+            );
             return $locked->fresh(['submissionEvents.actor']);
         }, 3);
     }
