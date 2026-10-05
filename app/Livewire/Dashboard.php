@@ -109,9 +109,36 @@ class Dashboard extends Component
                 ->where('status', LetterStatus::Draft->value)
                 ->count(),
 
+            'submittedSpt' => (clone $sptQuery)
+                ->where('status', LetterStatus::Submitted->value)
+                ->count(),
+
+            'verifiedSpt' => (clone $sptQuery)
+                ->where('status', LetterStatus::Verified->value)
+                ->count(),
+
+            'approvedSpt' => (clone $sptQuery)
+                ->where('status', LetterStatus::Approved->value)
+                ->count(),
+
             'publishedSpt' => (clone $sptQuery)
                 ->where('status', LetterStatus::Published->value)
                 ->count(),
+
+            'sptWorkflowQueue' =>
+                auth()->user()->can('letters.view')
+                    ? (clone $sptQuery)
+                        ->with(['activityType', 'creator'])
+                        ->whereIn('status', [
+                            LetterStatus::Submitted->value,
+                            LetterStatus::Verified->value,
+                            LetterStatus::Approved->value,
+                        ])
+                        ->orderBy('submitted_at')
+                        ->orderBy('id')
+                        ->limit(5)
+                        ->get()
+                    : collect(),
 
             'activePersonnel' => Personnel::query()
                 ->where('is_active', true)
