@@ -444,6 +444,7 @@ class LetterService
                 ]);
             }
 
+            $previousStatus = $letter->status;
             $oldValues = $letter->getOriginal();
 
             $letter->update([
@@ -458,6 +459,17 @@ class LetterService
                 $letter,
                 $oldValues
             );
+
+            // Historical imported SPTs are archived without a submission workflow.
+            if (filled($letter->submission_reference)) {
+                $letter->submissionEvents()->create([
+                    'actor_id' => $userId,
+                    'event' => 'cancelled',
+                    'from_status' => $previousStatus->value,
+                    'to_status' => LetterStatus::Cancelled->value,
+                    'note' => $reason,
+                ]);
+            }
 
             return $letter->fresh();
         });
