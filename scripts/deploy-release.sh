@@ -111,6 +111,7 @@ cd "$RELEASE_DIR"
 
 composer check-platform-reqs --no-dev
 php artisan package:discover --no-interaction
+php artisan app:preflight --strict --no-interaction
 
 MAINTENANCE=1
 php artisan down --retry=60 --no-interaction
