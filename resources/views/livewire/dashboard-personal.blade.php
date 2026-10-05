@@ -7,6 +7,40 @@
         <x-app.stat-card label="Diterbitkan" :value="number_format($personalPublishedSpt, 0, ',', '.')" description="Surat tugas berstatus diterbitkan" icon="shield" tone="green" />
         <x-app.stat-card label="Mendatang" :value="number_format($personalUpcomingSpt, 0, ',', '.')" description="Penugasan setelah hari ini" icon="clock" tone="amber" />
     </div>
+
+    <section class="portal-card">
+        <header class="portal-card-heading">
+            <h2><x-app.icon name="chart" /> Status Laporan SKP</h2>
+            <span class="portal-caption">Satu laporan mewakili seluruh peserta SPT</span>
+        </header>
+
+        <div class="dashboard-stats">
+            <x-app.stat-card label="Belum Dilaporkan" :value="number_format($personalSkpPending, 0, ',', '.')" description="SPT selesai tanpa laporan" icon="clock" tone="amber" />
+            <x-app.stat-card label="Draft Laporan" :value="number_format($personalSkpDraft, 0, ',', '.')" description="Sedang disusun salah satu peserta" icon="document" tone="violet" />
+            <x-app.stat-card label="Sudah Dilaporkan" :value="number_format($personalSkpSubmitted, 0, ',', '.')" description="Laporan berlaku untuk semua peserta" icon="shield" tone="green" />
+        </div>
+
+        <div class="mt-5 grid gap-3">
+            @forelse($personalSkpQueue as $item)
+                <a href="{{ route('my-spt.report', $item) }}" wire:navigate class="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 transition hover:bg-slate-50">
+                    <div class="min-w-0">
+                        <strong class="block truncate text-sm">{{ $item->number ?: 'SPT #'.$item->id }}</strong>
+                        <span class="mt-1 block truncate text-xs text-slate-500">{{ $item->subject ?: $item->activityType?->name ?: '-' }}</span>
+                        @if($item->sptReport)
+                            <span class="mt-1 block text-xs text-slate-500">Draft oleh {{ $item->sptReport->creator?->name ?: '-' }}</span>
+                        @endif
+                    </div>
+                    <span class="status-badge {{ $item->sptReport ? 'status-warning' : 'status-info' }}">
+                        {{ $item->sptReport ? 'Draft' : 'Belum Dilaporkan' }}
+                    </span>
+                </a>
+            @empty
+                <div class="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                    Tidak ada laporan SKP yang memerlukan perhatian.
+                </div>
+            @endforelse
+        </div>
+    </section>
     <section class="portal-card">
         <header class="portal-card-heading"><h2><x-app.icon name="arrow" /> Akses Cepat</h2><span class="portal-caption">Administrasi Saya</span></header>
         <div class="portal-quick-links">
