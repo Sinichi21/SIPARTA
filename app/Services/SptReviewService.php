@@ -33,7 +33,12 @@ class SptReviewService
                 throw ValidationException::withMessages(['status' => 'Hanya pengajuan yang diajukan atau diverifikasi yang dapat dikembalikan.']);
             }
             $previous = $locked->status;
-            $locked->forceFill(['status' => LetterStatus::Draft, 'updated_by' => $actorId])->save();
+            $locked->forceFill([
+                'status' => LetterStatus::Draft,
+                'approved_by' => null,
+                'approved_at' => null,
+                'updated_by' => $actorId,
+            ])->save();
             $locked->submissionEvents()->create([
                 'actor_id' => $actorId,
                 'event' => 'returned_for_revision',
