@@ -36,6 +36,7 @@ use App\Http\Controllers\IssuedSptDocxController;
 use App\Http\Controllers\IssuedSptAnnexController;
 use App\Http\Controllers\LetterDocumentController;
 use App\Http\Controllers\ReadinessController;
+use App\Http\Controllers\SptReportAttachmentController;
 use App\Livewire\Security\AccountRecoveryIndex;
 use App\Livewire\Users\Index as UserIndex;
 use App\Livewire\Users\Create as UserCreate;
@@ -349,6 +350,11 @@ Route::get('/surat-keluar', OutgoingLetterIndex::class)
 
     Route::get('/my/spt/{letter}/report', MySptReport::class)
         ->name('my-spt.report');
+
+    Route::get(
+        '/my/spt-report-attachments/{attachment}',
+        SptReportAttachmentController::class
+    )->name('my-spt-report-attachments.download');
 
     Route::get('/my/recap', MyRecapIndex::class)
         ->name('my-recap.index');
