@@ -13,6 +13,9 @@ import {
     BlockQuote,
     Table,
     TableToolbar,
+    TableProperties,
+    TableCellProperties,
+    TableColumnResize,
     Undo,
 } from 'ckeditor5';
 
@@ -41,6 +44,9 @@ async function mount(element, initialData, onChange) {
             BlockQuote,
             Table,
             TableToolbar,
+            TableProperties,
+            TableCellProperties,
+            TableColumnResize,
             Undo,
         ],
         toolbar: [
@@ -68,7 +74,10 @@ async function mount(element, initialData, onChange) {
                 'tableColumn',
                 'tableRow',
                 'mergeTableCells',
+                'tableProperties',
+                'tableCellProperties',
             ],
+            showHiddenBorders: true,
         },
         initialData: initialData || '',
     });
