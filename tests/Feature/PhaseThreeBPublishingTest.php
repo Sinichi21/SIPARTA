@@ -78,7 +78,14 @@ class PhaseThreeBPublishingTest extends TestCase
         $this->assertNotNull($published->published_at);
         $this->assertSame($approved->submission_reference, $published->submission_reference);
         $this->assertSame($user->id, $published->approved_by);
-        $this->assertDatabaseCount('spt_submission_events', 3);
+        $this->assertDatabaseCount('spt_submission_events', 4);
+        $this->assertDatabaseHas('spt_submission_events', [
+            'letter_id' => $published->id,
+            'actor_id' => $user->id,
+            'event' => 'published',
+            'from_status' => LetterStatus::Approved->value,
+            'to_status' => LetterStatus::Published->value,
+        ]);
 
         try {
             app(LetterService::class)->publish($published, $user->id);
