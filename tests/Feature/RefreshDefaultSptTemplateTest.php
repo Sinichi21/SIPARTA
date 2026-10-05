@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\LetterTemplate;
 use App\Models\LetterType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,6 +14,8 @@ class RefreshDefaultSptTemplateTest extends TestCase
 
     public function test_command_updates_only_active_default_spt_template(): void
     {
+        $user = User::factory()->create();
+
         $type = LetterType::create([
             'code' => 'SPT',
             'name' => 'Surat Perintah Tugas',
@@ -27,6 +30,8 @@ class RefreshDefaultSptTemplateTest extends TestCase
             'version' => 1,
             'is_default' => true,
             'is_active' => true,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
         ]);
 
         $other = LetterTemplate::create([
@@ -37,6 +42,8 @@ class RefreshDefaultSptTemplateTest extends TestCase
             'version' => 3,
             'is_default' => false,
             'is_active' => true,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
         ]);
 
         $this->artisan('spt:refresh-default-template', ['--force' => true])
