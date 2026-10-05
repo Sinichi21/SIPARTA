@@ -58,7 +58,11 @@ class SptOutgoingSourceGuardTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('outgoing-letters.create', ['source_spt' => $spt->id]))
-            ->assertSessionHasErrors('source_spt_id');
+            ->assertRedirect(route('letters.show', $spt))
+            ->assertSessionHas(
+                'error',
+                'Surat keluar hanya dapat dibuat dari SPT baru yang sudah diterbitkan dan memiliki nomor serta tanggal resmi.'
+            );
     }
 
     public function test_outgoing_draft_rejects_imported_spt_source(): void
@@ -68,7 +72,11 @@ class SptOutgoingSourceGuardTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('outgoing-letters.create', ['source_spt' => $spt->id]))
-            ->assertSessionHasErrors('source_spt_id');
+            ->assertRedirect(route('letters.show', $spt))
+            ->assertSessionHas(
+                'error',
+                'Surat keluar hanya dapat dibuat dari SPT baru yang sudah diterbitkan dan memiliki nomor serta tanggal resmi.'
+            );
     }
 
     public function test_outgoing_draft_accepts_published_system_spt_with_official_identity(): void
