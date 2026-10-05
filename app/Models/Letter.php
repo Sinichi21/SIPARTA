@@ -188,5 +188,5 @@ class Letter extends Model
         $completionDate = $this->end_date ?: $this->start_date;
 
         return $completionDate !== null
-            && $completionDate->isTodayOrBefore();
+            && $completionDate->lte(today());
     }}
