@@ -93,6 +93,86 @@
             </label>
         </div>
 
+        <div class="mt-6 border-t border-slate-200 pt-5">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h3 class="font-semibold text-slate-900">Dokumen Pendukung</h3>
+                    <p class="mt-1 text-xs text-slate-500">PDF privat, maksimal 5 file dan 10 MB per file.</p>
+                </div>
+            </div>
+
+            @error('attachments')
+                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+            @error('attachments.*')
+                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+
+            @if($this->canEdit)
+                <div class="mt-4 rounded-xl border border-dashed border-slate-300 p-4">
+                    @if(!$report)
+                        <p class="text-sm text-amber-700">Simpan draft laporan terlebih dahulu sebelum mengunggah dokumen pendukung.</p>
+                    @else
+                        <input
+                            type="file"
+                            wire:model="attachments"
+                            multiple
+                            accept="application/pdf,.pdf"
+                            class="block w-full text-sm"
+                        >
+                        <div class="mt-3 flex justify-end">
+                            <button
+                                type="button"
+                                wire:click="uploadAttachments"
+                                wire:loading.attr="disabled"
+                                wire:target="attachments,uploadAttachments"
+                                class="spt-action spt-action-back"
+                            >
+                                <span wire:loading.remove wire:target="uploadAttachments">Unggah PDF</span>
+                                <span wire:loading wire:target="uploadAttachments">Mengunggah...</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            <div class="mt-4 grid gap-3">
+                @forelse($report?->attachments ?? collect() as $attachment)
+                    <div class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0">
+                            <strong class="block truncate text-sm">{{ $attachment->original_name }}</strong>
+                            <span class="mt-1 block text-xs text-slate-500">
+                                {{ number_format($attachment->size / 1024, 1, ',', '.') }} KB
+                                · diunggah oleh {{ $attachment->uploader?->name ?: '-' }}
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <a
+                                href="{{ route('my-spt-report-attachments.download', $attachment) }}"
+                                class="spt-action spt-action-view"
+                            >
+                                Unduh
+                            </a>
+                            @if($this->canEdit)
+                                <button
+                                    type="button"
+                                    wire:click="deleteAttachment({{ $attachment->id }})"
+                                    wire:confirm="Hapus dokumen pendukung ini?"
+                                    class="spt-action spt-action-back"
+                                >
+                                    Hapus
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500">
+                        Belum ada dokumen pendukung.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
         @if($this->canEdit)
             <div class="mt-6 flex flex-wrap justify-end gap-3">
                 <button type="button" wire:click="saveDraft" class="spt-action spt-action-back">Simpan Draft</button>
