@@ -9,6 +9,8 @@ use Illuminate\Validation\ValidationException;
 
 class SptReviewService
 {
+    public function __construct(private readonly AuditService $audit) {}
+
     public function verify(Letter $letter, int $actorId, ?string $note = null): Letter
     {
         return $this->transition($letter, $actorId, LetterStatus::Submitted, LetterStatus::Verified, 'verified', $note);
@@ -46,6 +48,10 @@ class SptReviewService
                 'to_status' => LetterStatus::Draft->value,
                 'note' => $note,
             ]);
+            $this->audit->sptWorkflowEvent(
+                $locked, 'RETURN_FOR_REVISION', $previous->value,
+                LetterStatus::Draft->value, $actorId, $note
+            );
             return $locked->fresh(['submissionEvents.actor']);
         }, 3);
     }
@@ -81,6 +87,10 @@ class SptReviewService
                 'to_status' => $to->value,
                 'note' => $note !== '' ? $note : null,
             ]);
+            $this->audit->sptWorkflowEvent(
+                $locked, strtoupper($event), $from->value,
+                $to->value, $actorId, $note !== '' ? $note : null
+            );
             return $locked->fresh(['submissionEvents.actor']);
         }, 3);
     }
