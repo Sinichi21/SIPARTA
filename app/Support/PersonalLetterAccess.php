@@ -16,14 +16,17 @@ class PersonalLetterAccess
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->whereHas(
-            'personnels',
-            fn (Builder $personnelQuery) =>
-                $personnelQuery->where(
-                    'personnels.id',
-                    $user->personnel_id
-                )
-        );
+        return $query->where(function (Builder $query) use ($user) {
+            $query->where('personnel_scope', Letter::PERSONNEL_SCOPE_ALL)
+                ->orWhereHas(
+                    'personnels',
+                    fn (Builder $personnelQuery) =>
+                        $personnelQuery->where(
+                            'personnels.id',
+                            $user->personnel_id
+                        )
+                );
+        });
     }
 
     public function canAccess(
@@ -32,6 +35,10 @@ class PersonalLetterAccess
     ): bool {
         if (! $user->personnel_id) {
             return false;
+        }
+
+        if ($letter->assignsAllPersonnel()) {
+            return true;
         }
 
         return $letter->personnels()
