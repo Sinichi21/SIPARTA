@@ -61,7 +61,7 @@ class DeploymentPreflight extends Command
         }
 
         try {
-            $probe = 'health/deployment-preflight.txt';
+            $probe = '.deployment-preflight-'.getmypid().'.txt';
 
             if (! Storage::disk('local')->put($probe, 'ok')) {
                 $errors[] = 'Local storage is not writable.';
