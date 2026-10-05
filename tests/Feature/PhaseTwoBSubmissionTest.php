@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\SptSubmissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class PhaseTwoBSubmissionTest extends TestCase
@@ -19,6 +20,8 @@ class PhaseTwoBSubmissionTest extends TestCase
     public function test_draft_all_personnel_can_be_submitted_once_without_official_number(): void
     {
         $user = User::factory()->create();
+        Permission::firstOrCreate(['name' => 'letters.submit', 'guard_name' => 'web']);
+        $user->givePermissionTo(["letters.submit"]);
         $type = LetterType::create(['code' => 'SPT', 'name' => 'Surat Perintah Tugas', 'is_active' => true]);
         $activity = ActivityType::create(['name' => 'Monitoring', 'is_active' => true]);
         $letter = Letter::create([
