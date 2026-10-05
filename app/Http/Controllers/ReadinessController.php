@@ -19,7 +19,7 @@ class ReadinessController extends Controller
         }
 
         try {
-            $probe = 'health/readiness-probe.txt';
+            $probe = '.readiness-probe-'.getmypid().'.txt';
             Storage::disk('local')->put($probe, 'ok');
             Storage::disk('local')->delete($probe);
         } catch (\Throwable) {
