@@ -165,4 +165,28 @@ class Letter extends Model
         return $this->hasOne(
             LetterDocumentSnapshot::class
         );
+    }
+
+    public function sptReport(): HasOne
+    {
+        return $this->hasOne(SptReport::class);
+    }
+
+    public function requiresSptReport(): bool
+    {
+        if ($this->source === 'import') {
+            return false;
+        }
+
+        if (! in_array($this->status, [
+            LetterStatus::Published,
+            LetterStatus::Archived,
+        ], true)) {
+            return false;
+        }
+
+        $completionDate = $this->end_date ?: $this->start_date;
+
+        return $completionDate !== null
+            && $completionDate->isTodayOrBefore();
     }}
