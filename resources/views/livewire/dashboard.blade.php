@@ -230,6 +230,24 @@
                 />
             @endforeach
         </div>
+
+        @can('letters.view')
+            <div class="dashboard-stats">
+                @foreach ([
+                    ['Menunggu Verifikasi', $submittedSpt, 'SPT yang sudah diajukan', 'clock', 'amber'],
+                    ['Menunggu Persetujuan', $verifiedSpt, 'SPT yang sudah diverifikasi', 'shield', 'violet'],
+                    ['Siap Diterbitkan', $approvedSpt, 'SPT yang telah disetujui', 'document', 'green'],
+                ] as [$label, $value, $description, $icon, $tone])
+                    <x-app.stat-card
+                        :label="$label"
+                        :value="number_format($value, 0, ',', '.')"
+                        :description="$description"
+                        :icon="$icon"
+                        :tone="$tone"
+                    />
+                @endforeach
+            </div>
+        @endcan
     </section>
 
     <div class="dashboard-main">
@@ -306,6 +324,45 @@
         </section>
 
         <div class="dashboard-side">
+            @can('letters.view')
+                <section class="dashboard-card">
+                    <header class="dashboard-card-heading">
+                        <h2>
+                            <x-app.icon name="clock" class="text-violet-600" />
+                            Workflow SPT
+                        </h2>
+                        <a href="{{ route('letters.index') }}" wire:navigate>
+                            Lihat Semua <x-app.icon name="arrow" />
+                        </a>
+                    </header>
+
+                    <div class="schedule-list">
+                        @forelse($sptWorkflowQueue as $letter)
+                            <a
+                                href="{{ route('letters.show', $letter) }}"
+                                wire:navigate
+                                class="schedule-item"
+                            >
+                                <span class="detail-icon violet">
+                                    <x-app.icon name="document" />
+                                </span>
+
+                                <span class="min-w-0 flex-1">
+                                    <strong>{{ $letter->submission_reference ?: 'SPT #'.$letter->id }}</strong>
+                                    <span class="schedule-date">
+                                        {{ $letter->subject ?: $letter->activityType?->name ?: 'SPT' }}
+                                    </span>
+                                </span>
+
+                                <x-app.status-badge :status="$letter->status" />
+                            </a>
+                        @empty
+                            <p class="detail-empty">Tidak ada SPT yang menunggu proses.</p>
+                        @endforelse
+                    </div>
+                </section>
+            @endcan
+
             <section class="dashboard-card">
                 <header class="dashboard-card-heading">
                     <h2>
