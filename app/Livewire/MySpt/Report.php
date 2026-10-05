@@ -26,7 +26,7 @@ class Report extends Component
     ): void {
         Gate::authorize('my-reports.view');
 
-        $letter->loadMissing([
+        $letter->load([
             'letterType',
             'activityType',
             'personnels.unit',
