@@ -60,7 +60,10 @@
             <p class="text-sm">Nomor Pengajuan: <strong>{{ $letter->submission_reference }}</strong></p>
             <p class="text-xs text-slate-500">Nomor ini bukan nomor surat resmi.</p>
             @foreach($letter->submissionEvents as $event)
-                <p class="mt-2 text-sm">{{ $event->created_at?->translatedFormat('d M Y H:i') }} — {{ $event->actor?->name ?: 'Pengguna' }}: {{ $event->event === 'submitted' ? 'Diajukan' : $event->event }}</p>
+                <p class="mt-2 text-sm">{{ $event->created_at?->translatedFormat('d M Y H:i') }} — {{ $event->actor?->name ?: 'Pengguna' }}: {{ match($event->event) { 'submitted' => 'Diajukan', 'verified' => 'Diverifikasi', 'approved' => 'Disetujui', 'returned_for_revision' => 'Dikembalikan untuk revisi', 'published' => 'Diterbitkan', default => $event->event } }}</p>
+                @if(filled($event->note))
+                    <p class="ml-4 mt-1 whitespace-pre-line text-xs text-slate-600">{{ $event->note }}</p>
+                @endif
             @endforeach
         </section>
     @endif

@@ -366,6 +366,14 @@ class LetterService
                 $letter,
                 $oldValues
             );
+            // Preserve the complete submission-to-publication history.
+            $letter->submissionEvents()->create([
+                'actor_id' => $userId,
+                'event' => 'published',
+                'from_status' => LetterStatus::Approved->value,
+                'to_status' => LetterStatus::Published->value,
+            ]);
+
             $this->documents
                 ->snapshotPublished(
                     $letter,
