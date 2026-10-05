@@ -56,6 +56,7 @@
             <h2 class="font-bold text-slate-900">Isi Template</h2>
             <p class="mt-1 text-xs text-slate-500">
                 Editor CKEditor 5. Placeholder dipertahankan dalam format <code>@{{nama_placeholder}}</code>.
+                Klik tabel untuk mengatur properti tabel/cell; lebar kolom dapat diubah dengan menarik batas kolom.
             </p>
         </div>
 
