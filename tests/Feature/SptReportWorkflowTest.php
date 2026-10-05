@@ -9,6 +9,8 @@ use App\Models\Personnel;
 use App\Models\SptReport;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -70,6 +72,53 @@ class SptReportWorkflowTest extends TestCase
             ->get(route('my-spt.report', $letter))
             ->assertOk()
             ->assertSee('berlaku untuk seluruh peserta SPT');
+    }
+
+    public function test_pdf_supporting_documents_are_private_and_locked_after_submit(): void
+    {
+        Storage::fake('local');
+
+        [$user, $personnel] = $this->staff('Pelapor Lampiran');
+
+        $letter = $this->completedSpt($user);
+        $letter->personnels()->attach($personnel);
+
+        Livewire::actingAs($user)
+            ->test(Report::class, ['letter' => $letter])
+            ->set('activity_summary', 'Pelaksanaan kegiatan berjalan sesuai dengan surat tugas.')
+            ->set('results', 'Kegiatan menghasilkan data dan dokumentasi yang dibutuhkan.')
+            ->call('saveDraft')
+            ->assertHasNoErrors()
+            ->set('attachments', [
+                UploadedFile::fake()->create(
+                    'bukti-kegiatan.pdf',
+                    512,
+                    'application/pdf'
+                ),
+            ])
+            ->call('uploadAttachments')
+            ->assertHasNoErrors()
+            ->assertSee('bukti-kegiatan.pdf');
+
+        $attachment = \App\Models\SptReportAttachment::query()->firstOrFail();
+
+        Storage::disk('local')->assertExists($attachment->path);
+
+        $this->actingAs($user)
+            ->get(route('my-spt-report-attachments.download', $attachment))
+            ->assertOk();
+
+        Livewire::actingAs($user)
+            ->test(Report::class, ['letter' => $letter])
+            ->call('submit')
+            ->assertHasNoErrors();
+
+        Livewire::actingAs($user)
+            ->test(Report::class, ['letter' => $letter])
+            ->call('deleteAttachment', $attachment->id)
+            ->assertHasErrors(['attachments']);
+
+        Storage::disk('local')->assertExists($attachment->path);
     }
 
     public function test_all_personnel_spt_is_visible_and_reportable_without_personnel_pivot(): void
